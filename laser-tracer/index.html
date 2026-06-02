@@ -474,6 +474,15 @@ function showScreen(id){
 function setErr(id,msg){const el=document.getElementById(id);if(el){el.textContent=msg;setTimeout(()=>el.textContent='',3e3);}}
 function addChat(name,text){const b=document.getElementById('chatBox');const d=document.createElement('div');d.className='cmsg';d.innerHTML=`<span class="cname">${name}:</span> ${text}`;b.appendChild(d);setTimeout(()=>d.remove(),5e3);}
 window.goPortal=()=>window.location.href='../menu.html';
+window.startSolo=()=>startSolo();
+window.toggleMulti=()=>toggleMulti();
+window.showJoin=()=>showJoin();
+window.createRoom=()=>createRoom();
+window.joinRoom=()=>joinRoom();
+window.leaveRoom=()=>leaveRoom();
+window.copyCode=()=>copyCode();
+window.startMulti=()=>startMulti();
+window.sendEmote=(e,n)=>sendEmote(e,n);
 
 // ═══════════════════════════════════════════
 //  CONTROLS
@@ -513,7 +522,7 @@ document.getElementById('jumpBtn').addEventListener('mousedown',doJump);
 })();
 
 // Emote
-window.sendEmote=(emoji,name)=>{
+function sendEmote(emoji,name){
   const now=Date.now();if(now-lastEmoteT<800)return;lastEmoteT=now;
   if(players[myId]){players[myId].emote=emoji;players[myId].emoteTime=now;}
   if(mode==='multi'&&channel)channel.send({type:'broadcast',event:'emote',payload:{id:myId,emote:emoji}});
@@ -625,7 +634,7 @@ function runCountdown(cb){
 // ═══════════════════════════════════════════
 //  SOLO MODE
 // ═══════════════════════════════════════════
-window.startSolo=()=>{
+function startSolo(){
   mode='solo'; cleanAll();
   Object.values(players).forEach(p=>{if(p.mesh)scene.remove(p.mesh);}); players={};
   spawnMe(0); soloWave=0; soloSurvTime=0; waveTimer=0;
@@ -787,22 +796,22 @@ function renderLobby(){
   else{btn.className='btn bcyan';btn.disabled=false;hint.textContent='Bereit! 🚀';}
 }
 
-window.toggleMulti=()=>{
+function toggleMulti(){
   if(!isOnline){setErr('menuErr','Login nötig für Multiplayer!');return;}
   const m=document.getElementById('multiOpts'); m.style.display=m.style.display==='none'?'flex':'none';
 };
 window.showJoin=()=>document.getElementById('joinArea').style.display='flex';
-window.createRoom=async()=>{
+async function createRoom(){
   if(!isOnline){setErr('menuErr','Login nötig!');return;}
   mode='multi'; roomCode=randCode(); isHost=true; spawnMe(0); await joinChannel();
 };
-window.joinRoom=async()=>{
+async function joinRoom(){
   const code=document.getElementById('joinCode').value.trim().toUpperCase();
   if(code.length!==4){setErr('menuErr','4 Zeichen!');return;}
   if(!isOnline){setErr('menuErr','Login nötig!');return;}
   mode='multi'; roomCode=code; isHost=false; spawnMe(0); await joinChannel();
 };
-window.leaveRoom=()=>{leaveChannel();cleanAll();Object.values(players).forEach(p=>{if(p.id!==myId&&p.mesh)scene.remove(p.mesh);});players={};spawnMe(0);showScreen('sMenu');};
+function leaveRoom(){leaveChannel();cleanAll();Object.values(players).forEach(p=>{if(p.id!==myId&&p.mesh)scene.remove(p.mesh);});players={};spawnMe(0);showScreen('sMenu');};
 window.copyCode=()=>{if(navigator.clipboard)navigator.clipboard.writeText(roomCode);setErr('lobbyErr','Kopiert!');};
 
 window.startMulti=()=>{
