@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GAME PORTAL</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Russo+One&family=Exo+2:wght@400;700;900&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{background:#050510;color:#fff;font-family:'Exo 2',sans-serif;min-height:100vh;overflow-x:hidden}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,245,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.04) 1px,transparent 1px);background-size:40px 40px;animation:grid 20s linear infinite;pointer-events:none;z-index:0}
+  @keyframes grid{0%{background-position:0 0}100%{background-position:40px 40px}}
+  .wrap{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:32px 16px 48px}
+  .portal-title{font-family:'Russo One',sans-serif;font-size:clamp(32px,9vw,72px);background:linear-gradient(90deg,#00f5ff,#ff006e,#ffff00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:3px;text-align:center;filter:drop-shadow(0 0 30px #00f5ff);animation:pulse 3s ease-in-out infinite}
+  @keyframes pulse{0%,100%{filter:drop-shadow(0 0 20px #00f5ff)}50%{filter:drop-shadow(0 0 50px #ff006e)}}
+  .subtitle{color:rgba(255,255,255,0.4);letter-spacing:6px;font-size:12px;text-transform:uppercase;margin-top:-8px;margin-bottom:28px}
+  .sep{width:60px;height:2px;background:linear-gradient(90deg,transparent,#00f5ff,transparent);margin-bottom:28px}
+
+  /* profile strip */
+  .profile-strip{display:flex;align-items:center;gap:12px;background:rgba(10,10,31,0.9);border:1px solid rgba(0,245,255,0.3);border-radius:14px;padding:12px 16px;width:min(480px,95vw);margin-bottom:28px}
+  .p-avatar{width:44px;height:44px;flex-shrink:0}
+  .p-info{flex:1;min-width:0}
+  .p-name{font-weight:900;font-size:16px;color:#00f5ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .p-lvl{font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1px}
+  .p-coins{display:flex;align-items:center;gap:4px;font-family:'Russo One',sans-serif;color:#ffd700;font-size:15px}
+
+  /* games grid */
+  .games-label{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:4px;color:rgba(255,255,255,0.3);text-transform:uppercase;align-self:flex-start;margin-left:calc((100% - min(480px,95vw))/2);margin-bottom:12px}
+  .games-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:min(480px,95vw)}
+  .game-card{background:rgba(10,10,31,0.9);border:2px solid rgba(255,255,255,0.08);border-radius:18px;padding:20px 14px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:transform 0.15s,box-shadow 0.2s;text-decoration:none;color:inherit;position:relative;overflow:hidden}
+  .game-card:active{transform:scale(0.96)}
+  .game-card.laser{border-color:rgba(0,245,255,0.3)}
+  .game-card.laser:hover,.game-card.laser:active{box-shadow:0 0 30px rgba(0,245,255,0.25)}
+  .game-card.auslaender{border-color:rgba(255,215,0,0.3)}
+  .game-card.auslaender:hover{box-shadow:0 0 30px rgba(255,215,0,0.25)}
+  .game-card.soon{opacity:0.5;cursor:default}
+  .game-icon{font-size:44px;filter:drop-shadow(0 0 12px currentColor)}
+  .game-name{font-family:'Russo One',sans-serif;font-size:16px;letter-spacing:1px;text-align:center}
+  .game-desc{font-size:11px;color:rgba(255,255,255,0.4);text-align:center;letter-spacing:0.5px}
+  .game-badge{position:absolute;top:10px;right:10px;font-size:10px;letter-spacing:1px;font-weight:700;padding:3px 8px;border-radius:20px}
+  .badge-live{background:rgba(57,255,20,0.15);color:#39ff14;border:1px solid rgba(57,255,20,0.3)}
+  .badge-soon{background:rgba(255,140,0,0.15);color:#ff8c00;border:1px solid rgba(255,140,0,0.3)}
+  .game-players{font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:1px}
+
+  .logout-btn{margin-top:32px;font-size:11px;color:rgba(255,255,255,0.25);cursor:pointer;letter-spacing:1px;text-decoration:underline;background:none;border:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="portal-title">GAME PORTAL</div>
+  <div class="subtitle">Wähle dein Spiel</div>
+  <div class="sep"></div>
+
+  <div class="profile-strip">
+    <div class="p-avatar" id="pAvatar"></div>
+    <div class="p-info">
+      <div class="p-name" id="pName">Lade...</div>
+      <div class="p-lvl">Level <span id="pLvl">1</span> • <span id="pXp">0</span> XP</div>
+    </div>
+    <div class="p-coins">🪙 <span id="pCoins">0</span></div>
+  </div>
+
+  <div class="games-label">SPIELE</div>
+  <div class="games-grid">
+    <a class="game-card laser" href="laser-tracer/index.html">
+      <div class="game-badge badge-live">LIVE</div>
+      <div class="game-icon" style="color:#00f5ff">⚡</div>
+      <div class="game-name">LASER TRACER</div>
+      <div class="game-desc">Weiche Lasern aus, überlebe am längsten</div>
+      <div class="game-players" id="ltPlayers">Multiplayer • Solo</div>
+    </a>
+    <div class="game-card auslaender soon">
+      <div class="game-badge badge-soon">BALD</div>
+      <div class="game-icon" style="color:#ffd700">🌍</div>
+      <div class="game-name">WHO IS THE AUSLÄNDER?</div>
+      <div class="game-desc">Finde den Ausländer unter euch</div>
+      <div class="game-players">Multiplayer</div>
+    </div>
+  </div>
+
+  <button class="logout-btn" onclick="logout()">Abmelden</button>
+</div>
+
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "../supabase-config.js";
+
+function avatarSVG(color, size){
+  const cid='g'+color.replace('#','');
+  return `<svg width="${size}" height="${size}" viewBox="0 0 60 60">
+    <defs><radialGradient id="${cid}" cx="40%" cy="35%"><stop offset="0%" stop-color="#fff"/><stop offset="45%" stop-color="${color}"/><stop offset="100%" stop-color="${color}"/></radialGradient></defs>
+    <circle cx="30" cy="30" r="22" fill="url(#${cid})" stroke="${color}" stroke-width="2"/>
+    <circle cx="23" cy="26" r="4.5" fill="#1a1a2e"/><circle cx="37" cy="26" r="4.5" fill="#1a1a2e"/>
+    <circle cx="24.5" cy="24.5" r="1.8" fill="#fff"/><circle cx="38.5" cy="24.5" r="1.8" fill="#fff"/>
+    <path d="M 23 38 Q 30 43 37 38" stroke="#1a1a2e" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`;
+}
+
+const SKIN_COLORS = {cyan:'#00f5ff',pink:'#ff006e',green:'#39ff14',orange:'#ff8800',purple:'#cc00ff',ice:'#aaffff',lava:'#ff3300',toxic:'#aaff00',galaxy:'#7b2fff',gold:'#ffd700',rainbow:'#ff0088',void:'#5500aa'};
+
+let sb;
+try {
+  sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session){ window.location.href='../index.html'; }
+  else {
+    const { data } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+    if(data){
+      const color = SKIN_COLORS[data.equipped||'cyan']||'#00f5ff';
+      document.getElementById('pAvatar').innerHTML = avatarSVG(color, 44);
+      document.getElementById('pName').textContent = data.name||'Player';
+      document.getElementById('pLvl').textContent = data.level||1;
+      document.getElementById('pXp').textContent = data.xp||0;
+      document.getElementById('pCoins').textContent = data.coins||0;
+    }
+  }
+} catch(e){ console.error(e); }
+
+window.logout = async()=>{
+  if(sb) await sb.auth.signOut();
+  window.location.href='../index.html';
+};
+</script>
+</body>
+</html>
