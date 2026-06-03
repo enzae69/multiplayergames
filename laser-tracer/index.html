@@ -233,10 +233,15 @@ function render(t) {
   for (var id in peers) {
     if (id !== myId) {
       var p = peers[id];
+      if (p.isDead) ctx.globalAlpha = 0.35;
       drawChar(p.x||0, p.y||0, p.z||0, p.color||'#ff006e', p.name||'?', false, p.wp||0, (p.y||0)>0.1);
+      ctx.globalAlpha = 1;
     }
   }
+  // Draw self (semi-transparent when dead so you can still see the game)
+  if (myDead) ctx.globalAlpha = 0.30;
   drawChar(myX, myY, myZ, '#00f5ff', progress.name, true, myWalkPhase, myY>0.1);
+  ctx.globalAlpha = 1;
 }
 
 // ── FLOOR (checkered tiles) ────────────────────────────────────────────────
@@ -670,6 +675,8 @@ function loop(ts) {
         else {
           // Multi death: stay on game screen and spectate
           myDead = true;
+          // Immediately send final position so survivor still sees us
+          syncPos(); lastSyncTime = ts;
           if (roomCh) roomCh.send({type:'broadcast',event:'dead',payload:{id:myId}});
           var eb = document.getElementById('elimBanner');
           if (eb) eb.style.display = 'flex';
@@ -677,9 +684,10 @@ function loop(ts) {
       }
     }
     render(ts/1000);
-    // Throttle position sync to ~20/s to avoid Supabase rate limiting
-    if (gameState === 'multi' && !myDead && ts - lastSyncTime > 50) {
-      syncPos(); lastSyncTime = ts;
+    if (gameState === 'multi') {
+      // Alive: 20/s   Dead: 1/2s keepalive so channel stays live + survivor keeps seeing body
+      var interval = myDead ? 2000 : 50;
+      if (ts - lastSyncTime > interval) { syncPos(); lastSyncTime = ts; }
     }
   }
 }
@@ -778,6 +786,9 @@ function joinChannel() {
         peers[d.id] = {x:d.x,y:d.y,z:d.z, tx:d.x,ty:d.y,tz:d.z,
                        wp:d.wp||0, color:d.color, name:d.name, id:d.id};
       }
+    })
+    .on('broadcast',{event:'dead'},function(m){
+      if (peers[m.payload.id]) peers[m.payload.id].isDead = true;
     })
     .on('broadcast',{event:'start'},function(){
       if (!isHost) beginMulti();
