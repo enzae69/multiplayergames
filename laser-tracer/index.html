@@ -380,8 +380,8 @@ var channel=null;
 var isMobile=('ontouchstart' in window)||navigator.maxTouchPoints>0;
 
 // Camera
-var camYaw=0, camPitch=0.38, swipeActive=false, swX=0, swY=0;
-var CAM_DIST=13, CAM_H=8;
+var camYaw=0, camPitch=0.42, swipeActive=false, swX=0, swY=0;
+var CAM_DIST=12, CAM_H=7;
 
 // Input
 var keys={}, joyVec={x:0,y:0};
@@ -389,7 +389,7 @@ var lastEmoteT=0, movePushT=0, laserSyncT=0;
 
 // Player physics
 var myX=0,myZ=0,myY=0,myYaw=0,velY=0,onGround=true;
-var GRAVITY=22, JUMP_V=8.5, WALK_SPEED=7;
+var GRAVITY=22, JUMP_V=9.5, WALK_SPEED=7;
 
 // ═══════════════════════════════════════════
 //  SCREEN HELPERS
@@ -590,8 +590,9 @@ function checkHit(){
 function doWave(w){
   soloWave=w; waveTimer=0;
   if(w>progress.bestWave)progress.bestWave=w;
-  var count=Math.min(3+Math.floor((w-1)/2),8);
-  laserBaseSpeed=0.38+w*0.1;
+  // Start with 6 lasers, add one every 3 waves, max 12
+  var count=Math.min(6+Math.floor((w-1)/3),12);
+  laserBaseSpeed=0.42+w*0.09;
   buildLasers(count);
   var b=document.getElementById('waveBanner');
   b.textContent='WELLE '+w;
@@ -618,9 +619,17 @@ function runCountdown(cb){
 function updateSolo(dt){
   var me=players[myId]; if(!me||!me.alive)return;
   soloSurvTime+=dt; waveTimer+=dt;
-  var waveInterval=soloWave===1?10:13;
+  var waveInterval=soloWave===1?12:15;
   if(waveTimer>waveInterval)doWave(soloWave+1);
+  var mv=getMove();
   moveMe(dt);
+  // Auto-follow camera behind player (Stumble Guys style)
+  if(Math.abs(mv.dx)>0.15||Math.abs(mv.dz)>0.15){
+    var tgt=myYaw+Math.PI;
+    var d=tgt-camYaw;
+    while(d>Math.PI)d-=Math.PI*2; while(d<-Math.PI)d+=Math.PI*2;
+    camYaw+=d*0.04;
+  }
   laserPivots.forEach(function(p,i){p.rotation.y+=laserSpeeds[i]*dt;});
   document.getElementById('hudAlive').textContent='🌊 '+soloWave;
   document.getElementById('hudTimer').textContent=Math.floor(soloSurvTime)+'s';
