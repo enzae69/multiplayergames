@@ -172,6 +172,7 @@ var keys = {};
 var joyDX = 0, joyDZ = 0, joyActive = false;
 var camTouchId = null, camTouchLastX = 0, camTouchLastY = 0;
 var jumpHeld = false;
+var myWalkPhase = 0, myIsMoving = false;
 var sb = null, myRoom = null, myId = null, peers = {}, isHost = false;
 var roomCh = null;
 
@@ -224,10 +225,10 @@ function render(t) {
   for (var id in peers) {
     if (id !== myId) {
       var p = peers[id];
-      drawChar(p.x||0, p.y||0, p.z||0, p.color||'#ff006e', p.name||'?', false);
+      drawChar(p.x||0, p.y||0, p.z||0, p.color||'#ff006e', p.name||'?', false, p.wp||0, (p.y||0)>0.1);
     }
   }
-  drawChar(myX, myY, myZ, '#00f5ff', progress.name, true);
+  drawChar(myX, myY, myZ, '#00f5ff', progress.name, true, myWalkPhase, myY>0.1);
 }
 
 // ── FLOOR (checkered tiles) ────────────────────────────────────────────────
@@ -369,28 +370,44 @@ function rrect(x, y, w, h, r) {
   ctx.closePath();
   ctx.fill();
 }
+// Draw a tapered leg quad from (hx,hy) hip to (fx,fy) foot
+function drawLegShape(hx, hy, fx, fy, hw, fw) {
+  var nx = fy-hy, ny = -(fx-hx), len = Math.sqrt(nx*nx+ny*ny);
+  if (len < 0.01) return;
+  nx /= len; ny /= len;
+  ctx.beginPath();
+  ctx.moveTo(hx+nx*hw, hy+ny*hw); ctx.lineTo(hx-nx*hw, hy-ny*hw);
+  ctx.lineTo(fx-nx*fw, fy-ny*fw); ctx.lineTo(fx+nx*fw, fy+ny*fw);
+  ctx.closePath(); ctx.fill();
+}
 
-// ── CHARACTER (realistic rounded figure) ──────────────────────────────────
-function drawChar(wx, wy, wz, color, name, isMe) {
+// ── CHARACTER (Stumble Guys chibi style + walk/jump animation) ────────────
+function drawChar(wx, wy, wz, color, name, isMe, walkPhase, isJumping) {
+  walkPhase  = walkPhase  || 0;
+  isJumping  = isJumping  || false;
+  var legSw  = isJumping ? -0.55 : Math.sin(walkPhase) * 0.42;
+  var armSw  = isJumping ?  0.60 : -Math.sin(walkPhase) * 0.38;
+  var bodyBob= isJumping ?  0    : Math.abs(Math.sin(walkPhase)) * 0.04;
+
+  // Shadow
   var shp = proj(wx, 0.01, wz);
   if (shp) {
     ctx.save();
-    ctx.globalAlpha = 0.32;
-    var gr = ctx.createRadialGradient(shp.x,shp.y,0,shp.x,shp.y,shp.s*0.75);
-    gr.addColorStop(0,'rgba(0,0,0,0.9)'); gr.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle = gr;
-    ctx.beginPath(); ctx.ellipse(shp.x,shp.y,shp.s*0.7,shp.s*0.27,0,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha = isJumping ? 0.13 : 0.30;
+    var sgr = ctx.createRadialGradient(shp.x,shp.y,0,shp.x,shp.y,shp.s*0.72);
+    sgr.addColorStop(0,'rgba(0,0,0,0.9)'); sgr.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle = sgr;
+    ctx.beginPath(); ctx.ellipse(shp.x,shp.y,shp.s*0.68,shp.s*0.26,0,0,Math.PI*2); ctx.fill();
     ctx.restore();
   }
 
-  var pFoot  = proj(wx, wy+0.05, wz);
-  var pAnkle = proj(wx, wy+0.38, wz);
-  var pHip   = proj(wx, wy+1.18, wz);
-  var pBelly = proj(wx, wy+1.35, wz);
-  var pChest = proj(wx, wy+1.72, wz);
-  var pNeck  = proj(wx, wy+1.96, wz);
-  var pHead  = proj(wx, wy+2.28, wz);
-  var pTop   = proj(wx, wy+2.70, wz);
+  // Stumble Guys proportions — big head, short stubby body
+  var pFoot = proj(wx, wy+0.04,         wz);
+  var pHip  = proj(wx, wy+0.52,         wz);
+  var pShld = proj(wx, wy+0.90+bodyBob, wz);
+  var pNeck = proj(wx, wy+1.08+bodyBob, wz);
+  var pHead = proj(wx, wy+1.50+bodyBob, wz);  // BIG head center
+  var pTop  = proj(wx, wy+2.05+bodyBob, wz);
 
   if (!pFoot && !pHip) return;
   var ref = pHip || pFoot;
@@ -400,98 +417,116 @@ function drawChar(wx, wy, wz, color, name, isMe) {
   ctx.shadowBlur  = isMe ? 18 : 8;
   ctx.shadowColor = color;
 
-  // Shoes
-  if (pAnkle) {
-    var sw = sc*0.21;
-    ctx.fillStyle = '#111128';
-    ctx.beginPath(); ctx.ellipse(pAnkle.x - sw*1.15, pAnkle.y+sw*0.35, sw*0.8, sw*0.32, 0, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(pAnkle.x + sw*0.85, pAnkle.y+sw*0.35, sw*0.8, sw*0.32, 0, 0, Math.PI*2); ctx.fill();
-  }
+  // ── LEGS (animated, tapered) ──
+  if (pFoot && pHip) {
+    var lw = sc*0.20;
+    var hipY = pHip.y, fY = pFoot.y;
+    // Leg swing shifts foot X left/right
+    var lfx = pHip.x - lw*0.7  + legSw*sc*0.45;
+    var rfx = pHip.x + lw*0.3  - legSw*sc*0.45;
+    var lfh = pHip.x - lw*0.7;
+    var rfh = pHip.x + lw*0.3;
+    // Tuck feet up when jumping
+    var ftY = isJumping ? hipY + (fY-hipY)*0.45 : fY;
 
-  // Legs (pill shape)
-  if (pAnkle && pHip) {
-    var lh = pAnkle.y - pHip.y;
-    var lw = sc * 0.195;
     ctx.fillStyle = color;
-    rrect(pAnkle.x - lw*1.35, pHip.y, lw, lh, lw*0.5);
-    rrect(pAnkle.x + lw*0.35, pHip.y, lw, lh, lw*0.5);
-    ctx.fillStyle = 'rgba(0,0,0,0.2)';
-    rrect(pAnkle.x - lw*1.15, pHip.y+lh*0.08, lw*0.45, lh*0.72, lw*0.22);
-    rrect(pAnkle.x + lw*0.55, pHip.y+lh*0.08, lw*0.45, lh*0.72, lw*0.22);
+    drawLegShape(lfh, hipY, lfx, ftY, lw*0.55, lw*0.48);
+    drawLegShape(rfh, hipY, rfx, ftY, lw*0.55, lw*0.48);
+
+    // Shoes
+    if (!isJumping) {
+      ctx.fillStyle = '#12122a';
+      ctx.beginPath(); ctx.ellipse(lfx, ftY+lw*0.18, lw*0.72, lw*0.28, 0, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(rfx, ftY+lw*0.18, lw*0.72, lw*0.28, 0, 0, Math.PI*2); ctx.fill();
+    }
   }
 
-  // Torso
-  if (pBelly && pNeck) {
-    var tw = sc*0.58, th = pBelly.y - pNeck.y, r = sc*0.10;
+  // ── BODY (fat round Stumble Guys torso) ──
+  if (pShld && pHip) {
+    var bw = sc*0.68, bh = pShld.y - pHip.y - sc*0.02;
+    var br = sc*0.14;
     ctx.fillStyle = color;
-    rrect(pNeck.x - tw*0.5, pNeck.y, tw, th + r, r);
-    ctx.fillStyle = 'rgba(0,0,0,0.22)';
-    rrect(pNeck.x - tw*0.26, pNeck.y + th*0.12, tw*0.52, th*0.55, r*0.5);
-    ctx.fillStyle = 'rgba(255,255,255,0.10)';
-    rrect(pNeck.x - tw*0.44, pNeck.y + th*0.04, tw*0.28, th*0.38, r*0.5);
+    rrect(pShld.x - bw*0.5, pHip.y, bw, -bh, br);
+    // Belly highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.13)';
+    rrect(pShld.x - bw*0.40, pHip.y - bh*0.7, bw*0.28, bh*0.42, br*0.5);
+    // Chest shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    rrect(pShld.x - bw*0.22, pHip.y - bh*0.82, bw*0.44, bh*0.50, br*0.4);
   }
 
-  // Arms
-  if (pChest && pNeck) {
-    var aw = sc*0.165, ah = sc*0.66;
+  // ── ARMS (stubby, animated swing) ──
+  if (pShld) {
+    var aw = sc*0.20, ah = sc*0.50;
     ctx.fillStyle = color; ctx.globalAlpha = 0.92;
-    rrect(pNeck.x - sc*0.50, pChest.y, aw, ah, aw*0.5);
-    rrect(pNeck.x + sc*0.33, pChest.y, aw, ah, aw*0.5);
+    // Left arm swings forward when right leg goes back
+    var laY = pShld.y + armSw*sc*0.38;
+    var raY = pShld.y - armSw*sc*0.38;
+    rrect(pShld.x - sc*0.56, laY, aw, ah, aw*0.5);
+    rrect(pShld.x + sc*0.36, raY, aw, ah, aw*0.5);
     ctx.globalAlpha = 1;
   }
 
-  // Neck
-  if (pNeck && pHead) {
-    var nw = sc*0.13;
-    ctx.fillStyle = color;
-    ctx.fillRect(pNeck.x - nw*0.5, pHead.y, nw, pNeck.y - pHead.y + sc*0.05);
-  }
-
-  // Head (round)
+  // ── HEAD (Stumble Guys: massive round head ~45% of height) ──
   if (pHead) {
-    var hr = sc*0.30;
-    ctx.shadowBlur = isMe ? 22 : 11;
+    var hr = sc * 0.46;
+    ctx.shadowBlur = isMe ? 26 : 13;
     ctx.fillStyle = color;
     ctx.beginPath(); ctx.arc(pHead.x, pHead.y, hr, 0, Math.PI*2); ctx.fill();
-    // Specular highlight
-    ctx.fillStyle = 'rgba(255,255,255,0.18)';
-    ctx.beginPath(); ctx.arc(pHead.x - hr*0.24, pHead.y - hr*0.27, hr*0.44, 0, Math.PI*2); ctx.fill();
+    // Top-left specular blob
+    ctx.fillStyle = 'rgba(255,255,255,0.20)';
+    ctx.beginPath(); ctx.arc(pHead.x-hr*0.28, pHead.y-hr*0.30, hr*0.42, 0, Math.PI*2); ctx.fill();
     ctx.shadowBlur = 0;
-    // Eye whites
-    var er = hr*0.145;
-    ctx.fillStyle = 'rgba(255,255,255,0.92)';
-    ctx.beginPath(); ctx.arc(pHead.x - hr*0.31, pHead.y - hr*0.09, er*1.2, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(pHead.x + hr*0.31, pHead.y - hr*0.09, er*1.2, 0, Math.PI*2); ctx.fill();
-    // Pupils
-    ctx.fillStyle = '#0a0a1a';
-    ctx.beginPath(); ctx.arc(pHead.x - hr*0.29, pHead.y - hr*0.08, er*0.72, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(pHead.x + hr*0.33, pHead.y - hr*0.08, er*0.72, 0, Math.PI*2); ctx.fill();
-    // Eye shine
+
+    // Eye whites — big oval (Stumble Guys style)
+    var er = hr*0.185;
     ctx.fillStyle = '#ffffff';
-    ctx.beginPath(); ctx.arc(pHead.x - hr*0.23, pHead.y - hr*0.15, er*0.34, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(pHead.x + hr*0.39, pHead.y - hr*0.15, er*0.34, 0, Math.PI*2); ctx.fill();
-    // Smile
-    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.beginPath(); ctx.ellipse(pHead.x-hr*0.30, pHead.y-hr*0.06, er*1.25, er*1.55, -0.12, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(pHead.x+hr*0.30, pHead.y-hr*0.06, er*1.25, er*1.55,  0.12, 0, Math.PI*2); ctx.fill();
+
+    // Irises (colored ring)
+    ctx.fillStyle = color === '#00f5ff' ? '#006080' : '#333';
+    ctx.beginPath(); ctx.arc(pHead.x-hr*0.28, pHead.y-hr*0.05, er*0.90, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(pHead.x+hr*0.32, pHead.y-hr*0.05, er*0.90, 0, Math.PI*2); ctx.fill();
+
+    // Pupils
+    ctx.fillStyle = '#050510';
+    ctx.beginPath(); ctx.arc(pHead.x-hr*0.27, pHead.y-hr*0.04, er*0.60, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(pHead.x+hr*0.33, pHead.y-hr*0.04, er*0.60, 0, Math.PI*2); ctx.fill();
+
+    // Eye shine (two dots per eye)
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(pHead.x-hr*0.21, pHead.y-hr*0.13, er*0.30, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(pHead.x-hr*0.34, pHead.y-hr*0.01, er*0.16, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(pHead.x+hr*0.39, pHead.y-hr*0.13, er*0.30, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(pHead.x+hr*0.26, pHead.y-hr*0.01, er*0.16, 0, Math.PI*2); ctx.fill();
+
+    // Smile (wide Stumble Guys grin)
+    ctx.strokeStyle = 'rgba(0,0,0,0.55)';
     ctx.lineWidth = hr*0.10; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.arc(pHead.x, pHead.y + hr*0.14, hr*0.22, 0.18, Math.PI-0.18); ctx.stroke();
+    ctx.beginPath(); ctx.arc(pHead.x, pHead.y+hr*0.20, hr*0.28, 0.22, Math.PI-0.22); ctx.stroke();
+
+    // Cheek blushes
+    ctx.fillStyle = 'rgba(255,120,120,0.28)';
+    ctx.beginPath(); ctx.ellipse(pHead.x-hr*0.50, pHead.y+hr*0.10, er*0.80, er*0.45, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(pHead.x+hr*0.50, pHead.y+hr*0.10, er*0.80, er*0.45, 0, 0, Math.PI*2); ctx.fill();
   }
 
   // Glow ring (self)
   if (isMe && pFoot) {
-    ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.45; ctx.shadowBlur = 10;
-    ctx.beginPath(); ctx.ellipse(pFoot.x, pFoot.y, sc*0.75, sc*0.29, 0, 0, Math.PI*2); ctx.stroke();
+    ctx.strokeStyle=color; ctx.lineWidth=1.5; ctx.globalAlpha=0.40; ctx.shadowBlur=10;
+    ctx.beginPath(); ctx.ellipse(pFoot.x,pFoot.y,sc*0.68,sc*0.26,0,0,Math.PI*2); ctx.stroke();
   }
-
   ctx.restore();
 
+  // Name tag
   if (pTop) {
-    var fontSize = Math.max(10, Math.min(18, sc*0.36));
+    var fs = Math.max(10, Math.min(18, sc*0.34));
     ctx.save();
-    ctx.font = 'bold '+fontSize+'px Exo\\ 2, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.shadowBlur = 6; ctx.shadowColor = color;
-    ctx.fillStyle = isMe ? '#ffffff' : 'rgba(255,255,255,0.85)';
-    ctx.fillText(name, pTop.x, pTop.y - sc*0.10);
+    ctx.font='bold '+fs+'px Exo\\ 2, sans-serif';
+    ctx.textAlign='center'; ctx.shadowBlur=7; ctx.shadowColor=color;
+    ctx.fillStyle = isMe ? '#fff' : 'rgba(255,255,255,0.85)';
+    ctx.fillText(name, pTop.x, pTop.y - sc*0.06);
     ctx.restore();
   }
 }
@@ -508,8 +543,8 @@ function updatePlayer(dt) {
     var len = Math.sqrt(dx*dx+dz*dz);
     if (len > 0.01) { dx/=len; dz/=len; }
   }
-  if (Math.abs(dx) > 0.05 || Math.abs(dz) > 0.05) {
-    // Transform joystick to world using camera yaw
+  myIsMoving = (Math.abs(dx) > 0.05 || Math.abs(dz) > 0.05);
+  if (myIsMoving) {
     var cy = Math.cos(camYaw), sy = Math.sin(camYaw);
     var wx = -dx*cy + dz*sy;
     var wz =  dx*sy + dz*cy;
@@ -519,6 +554,7 @@ function updatePlayer(dt) {
     if (d > ARENA_R-0.8) { nx=nx/d*(ARENA_R-0.8); nz=nz/d*(ARENA_R-0.8); }
     myX=nx; myZ=nz;
     myYaw = Math.atan2(wx, wz);
+    myWalkPhase += 5.5 * dt;
   }
   myVY -= GRAVITY*dt;
   myY  += myVY*dt;
@@ -713,7 +749,8 @@ function beginMulti() {
 }
 function syncPos() {
   if (roomCh) roomCh.send({type:'broadcast',event:'pos',payload:{
-    id:myId, x:myX, y:myY, z:myZ, color:'#00f5ff', name:progress.name
+    id:myId, x:myX, y:myY, z:myZ, color:'#00f5ff', name:progress.name,
+    wp:myWalkPhase
   }});
 }
 function leaveRoom() {
