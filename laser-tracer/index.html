@@ -103,6 +103,7 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
     <div class="hud-top">
       <div class="hudpill" id="hudWave">W1</div>
       <div class="hudpill" id="hudTime">0.0s</div>
+      <div class="hudpill" id="hudRound" style="display:none;background:rgba(0,245,255,0.15);border-color:rgba(0,245,255,0.4)">R1/5</div>
     </div>
     <div style="background:rgba(5,5,16,0.7);border:1px solid rgba(0,245,255,0.2);border-radius:20px;padding:5px 12px;font-size:10px;color:rgba(0,245,255,0.4);letter-spacing:1px;pointer-events:none">🎥 Rechts = Kamera</div>
   </div>
@@ -133,9 +134,26 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
     <div class="codebig" id="codeVal" onclick="copyCode()">----</div>
     <div style="font-size:10px;color:rgba(255,255,255,.3);letter-spacing:2px;text-align:center;margin-bottom:10px">TIPPE ZUM KOPIEREN</div>
     <div class="plist" id="plistHost"></div>
+    <div id="roundPicker" style="display:none;margin-bottom:4px">
+      <div style="font-size:10px;color:rgba(255,255,255,.4);letter-spacing:2px;text-align:center;margin-bottom:8px">RUNDEN WÄHLEN</div>
+      <div style="display:flex;gap:8px;justify-content:center">
+        <button onclick="setRounds(5)"  id="rb5"  class="btn bgreen"  style="width:64px;padding:9px 0;font-size:15px">5</button>
+        <button onclick="setRounds(10)" id="rb10" class="btn bghost" style="width:64px;padding:9px 0;font-size:15px">10</button>
+        <button onclick="setRounds(15)" id="rb15" class="btn bghost" style="width:64px;padding:9px 0;font-size:15px">15</button>
+      </div>
+    </div>
+    <div id="roundInfo" style="display:none;text-align:center;color:rgba(0,245,255,.6);font-size:12px;letter-spacing:2px;margin-bottom:4px"></div>
     <button class="btn bgreen" id="startBtn" style="margin-bottom:8px">▶ STARTEN</button>
     <button class="btn bghost" id="leaveBtn">← VERLASSEN</button>
   </div>
+</div>
+
+<!-- ROUND END -->
+<div id="sRoundEnd" class="screen off" style="background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+  <div id="reRound" style="font-size:12px;color:rgba(255,255,255,.4);letter-spacing:3px;text-transform:uppercase"></div>
+  <div id="reWinner" style="font-family:'Russo One',sans-serif;font-size:26px;color:#00f5ff;letter-spacing:3px;text-align:center;padding:0 20px"></div>
+  <div id="reScores" style="font-size:13px;color:rgba(255,255,255,.6);text-align:center;line-height:2;padding:0 20px"></div>
+  <div id="reCountdown" style="font-family:'Russo One',sans-serif;font-size:48px;color:#fff;margin-top:8px"></div>
 </div>
 
 <!-- Mobile controls -->
@@ -183,6 +201,7 @@ var myWalkPhase = 0, myIsMoving = false;
 var myDead = false, lastSyncTime = 0;
 var sb = null, myRoom = null, myId = null, peers = {}, isHost = false;
 var roomCh = null;
+var totalRounds = 5, roundNum = 1, myWins = 0, roundEndActive = false;
 
 // ── LOOKAT CAMERA MATRIX ───────────────────────────────────────────────────
 function buildCamMatrix() {
@@ -680,6 +699,7 @@ function loop(ts) {
           if (roomCh) roomCh.send({type:'broadcast',event:'dead',payload:{id:myId}});
           var eb = document.getElementById('elimBanner');
           if (eb) eb.style.display = 'flex';
+          checkRoundWin();
         }
       }
     }
@@ -725,6 +745,7 @@ function endSolo() {
 function updateHUD() {
   var w = document.getElementById('hudWave');
   var t = document.getElementById('hudTime');
+  var hr = document.getElementById('hudRound');
   if (w) w.textContent = 'W'+soloWave+' ('+lasers.length+' Laser)';
   if (t) {
     if (soloTime < soloGrace) {
@@ -736,6 +757,7 @@ function updateHUD() {
       t.textContent = pt.toFixed(1)+'s  +Laser:'+till+'s';
     }
   }
+  if (hr && gameState === 'multi') hr.textContent = 'R'+roundNum+'/'+totalRounds+'  ⭐'+myWins;
 }
 
 // ── MULTIPLAYER ───────────────────────────────────────────────────────────
@@ -748,8 +770,12 @@ function createRoom() {
   if (!sb) { document.getElementById('menuErr').textContent = 'Warte kurz...'; return; }
   var code = Math.random().toString(36).substr(2,4).toUpperCase();
   myRoom=code; myId=progress.name+'_'+Date.now(); isHost=true;
+  totalRounds=5; setRounds(5);
   document.getElementById('codeVal').textContent = code;
   document.getElementById('plistHost').innerHTML = '<div class="pslot filled">'+progress.name+' (DU)</div>';
+  document.getElementById('roundPicker').style.display = 'block';
+  document.getElementById('roundInfo').style.display = 'none';
+  document.getElementById('startBtn').style.display = '';
   showScreen('sLobby'); joinChannel();
 }
 function joinRoom() {
@@ -758,6 +784,10 @@ function joinRoom() {
   if (code.length < 3) return;
   myRoom=code; myId=progress.name+'_'+Date.now(); isHost=false;
   document.getElementById('codeVal').textContent = code;
+  document.getElementById('roundPicker').style.display = 'none';
+  document.getElementById('roundInfo').style.display = 'block';
+  document.getElementById('roundInfo').textContent = 'Warte auf Host...';
+  document.getElementById('startBtn').style.display = 'none';
   showScreen('sLobby'); joinChannel();
 }
 function copyCode() {
@@ -793,29 +823,109 @@ function joinChannel() {
     })
     .on('broadcast',{event:'dead'},function(m){
       if (peers[m.payload.id]) peers[m.payload.id].isDead = true;
+      checkRoundWin();
     })
-    .on('broadcast',{event:'start'},function(){
-      if (!isHost) beginMulti();
+    .on('broadcast',{event:'start'},function(m){
+      if (!isHost) {
+        if (m.payload && m.payload.rounds) totalRounds = m.payload.rounds;
+        if (m.payload && m.payload.round)  roundNum = m.payload.round;
+        var ri = document.getElementById('roundInfo');
+        if (ri) ri.textContent = totalRounds + ' Runden';
+        beginMulti();
+      }
     })
     .subscribe();
   setTimeout(function(){
     if (roomCh) roomCh.send({type:'broadcast',event:'join',payload:{id:myId,name:progress.name}});
   }, 500);
 }
+function setRounds(n) {
+  totalRounds = n;
+  [5,10,15].forEach(function(v){
+    var b = document.getElementById('rb'+v);
+    if (b) b.className = 'btn ' + (v===n ? 'bgreen' : 'bghost');
+    if (b) b.style.cssText = 'width:64px;padding:9px 0;font-size:15px';
+  });
+}
 function startMulti() {
   if (!isHost) return;
-  if (roomCh) roomCh.send({type:'broadcast',event:'start',payload:{}});
+  roundNum = 1; myWins = 0;
+  Object.keys(peers).forEach(function(id){ peers[id].wins = 0; });
+  if (roomCh) roomCh.send({type:'broadcast',event:'start',payload:{rounds:totalRounds}});
   beginMulti();
 }
 function beginMulti() {
+  roundEndActive = false;
+  Object.keys(peers).forEach(function(id){ peers[id].isDead = false; });
   myX=(Math.random()-0.5)*8; myZ=(Math.random()-0.5)*8; myY=0; myVY=0;
   camYaw=Math.PI; camPitch=0.54; buildCamMatrix();
   soloWave=1; soloAlive=true; nextWaveSec=10;
   soloStart=performance.now(); soloTime=0; soloGrace=2.5;
   myDead=false;
   var eb=document.getElementById('elimBanner'); if(eb) eb.style.display='none';
+  var hr=document.getElementById('hudRound');
+  if (hr) { hr.style.display=''; hr.textContent='R'+roundNum+'/'+totalRounds; }
   buildLasers(2); gameState='multi';
   showScreen('sGame');
+}
+function checkRoundWin() {
+  if (gameState !== 'multi' || roundEndActive) return;
+  var alivePeers = Object.keys(peers).filter(function(id){ return !peers[id].isDead; });
+  var aliveCount = (!myDead ? 1 : 0) + alivePeers.length;
+  if (aliveCount > 1) return;
+  roundEndActive = true;
+  var winnerName = null;
+  if (!myDead) {
+    winnerName = progress.name; myWins++;
+  } else if (alivePeers.length === 1) {
+    winnerName = peers[alivePeers[0]].name;
+    peers[alivePeers[0]].wins = (peers[alivePeers[0]].wins||0) + 1;
+  }
+  showRoundEnd(winnerName);
+}
+function showRoundEnd(winnerName) {
+  gameState = 'roundEnd';
+  var reR = document.getElementById('reRound');
+  var reW = document.getElementById('reWinner');
+  var reS = document.getElementById('reScores');
+  var reC = document.getElementById('reCountdown');
+  if (reR) reR.textContent = 'RUNDE ' + roundNum + ' / ' + totalRounds;
+  if (reW) reW.textContent = winnerName ? winnerName + ' GEWINNT!' : 'UNENTSCHIEDEN';
+  var scores = [{name:progress.name, wins:myWins}];
+  Object.keys(peers).forEach(function(id){ scores.push({name:peers[id].name, wins:peers[id].wins||0}); });
+  scores.sort(function(a,b){ return b.wins-a.wins; });
+  if (reS) reS.innerHTML = scores.map(function(s){ return s.name+': '+s.wins+' Pkt'; }).join('<br>');
+  showScreen('sRoundEnd');
+  var isLast = roundNum >= totalRounds;
+  var cnt = 5;
+  if (reC) reC.textContent = isLast ? cnt : 'Nächste Runde in: '+cnt;
+  var iv = setInterval(function(){
+    cnt--;
+    if (reC) reC.textContent = isLast ? cnt : 'Nächste Runde in: '+cnt;
+    if (cnt <= 0) {
+      clearInterval(iv);
+      if (isLast) {
+        showFinalResult(scores);
+      } else {
+        roundNum++;
+        if (isHost) startMultiRound();
+      }
+    }
+  }, 1000);
+}
+function startMultiRound() {
+  if (!isHost) return;
+  if (roomCh) roomCh.send({type:'broadcast',event:'start',payload:{rounds:totalRounds, round:roundNum}});
+  beginMulti();
+}
+function showFinalResult(scores) {
+  var reR = document.getElementById('reRound');
+  var reW = document.getElementById('reWinner');
+  var reC = document.getElementById('reCountdown');
+  if (reR) reR.textContent = 'SPIEL BEENDET';
+  if (reW) reW.textContent = scores[0] ? '🏆 ' + scores[0].name : '';
+  if (reC) reC.innerHTML = '<button class="btn bghost" onclick="leaveRoom()" style="font-size:14px;padding:12px 28px">← VERLASSEN</button>';
+  gameState = 'menu';
 }
 function syncPos() {
   if (roomCh) roomCh.send({type:'broadcast',event:'pos',payload:{
@@ -826,6 +936,8 @@ function syncPos() {
 function leaveRoom() {
   if (roomCh) { roomCh.unsubscribe(); roomCh=null; }
   myRoom=null; peers={}; isHost=false; gameState='menu';
+  roundNum=1; myWins=0; roundEndActive=false;
+  var hr=document.getElementById('hudRound'); if(hr) hr.style.display='none';
   showScreen('sMenu');
 }
 
