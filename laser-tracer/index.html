@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>LASER TRACER v4</title>
+<title>LASER TRACER</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Russo+One&family=Exo+2:wght@400;700;900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -56,12 +56,11 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
 .rsstat{font-size:13px;color:rgba(255,255,255,.5);letter-spacing:1px;text-align:center}
 .rsval{font-family:'Russo One',sans-serif;font-size:28px;color:#00f5ff}
 
-#joyBase{position:fixed;display:none;width:90px;height:90px;border:2px solid rgba(255,255,255,0.25);border-radius:50%;background:rgba(255,255,255,0.04);z-index:100;pointer-events:none;touch-action:none}
-#joyKnob{position:absolute;left:22px;top:22px;width:46px;height:46px;background:rgba(0,245,255,0.35);border:2px solid rgba(0,245,255,0.7);border-radius:50%;transition:none}
+#joyBase{position:fixed;display:none;width:90px;height:90px;border:2px solid rgba(255,255,255,0.25);border-radius:50%;background:rgba(255,255,255,0.05);z-index:100;pointer-events:none;touch-action:none}
+#joyKnob{position:absolute;left:22px;top:22px;width:46px;height:46px;background:rgba(0,245,255,0.35);border:2px solid rgba(0,245,255,0.7);border-radius:50%}
 #joyZone{position:fixed;bottom:0;left:0;width:55%;height:55%;z-index:90;touch-action:none;display:none}
 #jumpBtn{position:fixed;bottom:44px;right:28px;width:76px;height:76px;border-radius:50%;background:rgba(57,255,20,0.2);border:2px solid #39ff14;color:#39ff14;font-family:'Russo One',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation;z-index:100;display:none;box-shadow:0 0 20px rgba(57,255,20,.3)}
 #jumpBtn:active{background:rgba(57,255,20,0.4)}
-
 #errBanner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:999;background:#c00;color:#fff;font-size:12px;padding:8px 12px;font-family:monospace;white-space:pre-wrap;max-height:120px;overflow-y:auto}
 </style>
 </head>
@@ -98,14 +97,14 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
   <div class="berr" id="menuErr"></div>
 </div>
 
-<!-- HUD (transparent overlay while playing) -->
+<!-- HUD -->
 <div id="sGame" class="screen hud off">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;width:100%">
     <div class="hud-top">
       <div class="hudpill" id="hudWave">W1</div>
       <div class="hudpill" id="hudTime">0.0s</div>
     </div>
-    <div style="background:rgba(5,5,16,0.7);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:5px 12px;font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:1px;pointer-events:none">👆 Kamera</div>
+    <div style="background:rgba(5,5,16,0.7);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:5px 12px;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:1px;pointer-events:none">👆 Kamera</div>
   </div>
 </div>
 
@@ -137,8 +136,6 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
 <div id="joyBase"><div id="joyKnob"></div></div>
 <div id="joyZone"></div>
 <button id="jumpBtn">JUMP</button>
-
-<!-- Error display -->
 <div id="errBanner"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -146,24 +143,27 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
 'use strict';
 
 // ── CONSTANTS ─────────────────────────────────────────────────────────────
-var ARENA_R    = 18;
-var LASER_Y    = 0.65;
-var GRAVITY    = 22;
-var JUMP_V     = 9.5;
-var WALK_SPEED = 7;
-var CAM_DIST   = 9;
-var CAM_H      = 4;
-var CAM_PITCH  = 0.22;
-var FOV        = 380;
-var SUPA_URL   = 'https://ozvyymrqibpyqccgszlz.supabase.co';
-var SUPA_KEY   = 'sb_publishable_30WmZF8d8h_rUSrTGtBwnQ_Kn9gquwL';
-var COLORS     = ['#ff006e','#ff6b00','#ffff00','#39ff14','#00f5ff','#bf00ff','#ff3cac','#00ffa3'];
+var ARENA_R      = 18;
+var LASER_Y      = 0.65;
+var GRAVITY      = 22;
+var JUMP_V       = 9.5;
+var WALK_SPEED   = 7;
+var CAM_DIST     = 10;
+var CAM_H        = 6;
+var CAM_TARGET_H = 3.5;  // camera looks at this height above player feet
+var FOV          = 380;
+var SUPA_URL     = 'https://ozvyymrqibpyqccgszlz.supabase.co';
+var SUPA_KEY     = 'sb_publishable_30WmZF8d8h_rUSrTGtBwnQ_Kn9gquwL';
+var COLORS       = ['#ff006e','#ff6b00','#ffff00','#39ff14','#00f5ff','#bf00ff','#ff3cac','#00ffa3'];
 
 // ── STATE ──────────────────────────────────────────────────────────────────
 var canvas, ctx, W, H, lastTS = 0;
 var myX = 0, myY = 0, myZ = 10, myVY = 0, myYaw = Math.PI;
-var camX = 0, camY = CAM_H, camZ = 17, camYaw = Math.PI;
-var _cy, _sy, _cp, _sp;
+var camX = 0, camY = CAM_H, camZ = 20, camYaw = Math.PI;
+// Camera basis vectors (lookAt matrix, updated each frame)
+var _rx = 1, _ry = 0, _rz = 0; // right
+var _ux = 0, _uy = 1, _uz = 0; // up
+var _fx = 0, _fy = 0, _fz = 1; // forward
 var lasers = [];
 var gameState = 'menu';
 var soloAlive = false, soloWave = 1, soloStart = 0, soloTime = 0, soloGrace = 2.5;
@@ -174,27 +174,36 @@ var camTouchId = null, camTouchLastX = 0, camManualUntil = 0;
 var sb = null, myRoom = null, myId = null, peers = {}, isHost = false;
 var roomCh = null;
 
-// ── PROJECTION ────────────────────────────────────────────────────────────
-function setCamTrig() {
-  _cy = Math.cos(-camYaw); _sy = Math.sin(-camYaw);
-  _cp = Math.cos(CAM_PITCH); _sp = Math.sin(CAM_PITCH);
+// ── LOOKAT CAMERA MATRIX ───────────────────────────────────────────────────
+function buildCamMatrix() {
+  // Camera looks toward (myX, myY+CAM_TARGET_H, myZ)
+  var tx = myX - camX, ty = (myY + CAM_TARGET_H) - camY, tz = myZ - camZ;
+  var tl = Math.sqrt(tx*tx + ty*ty + tz*tz);
+  if (tl < 0.01) return;
+  _fx = tx/tl; _fy = ty/tl; _fz = tz/tl;
+  // Right = cross(forward, worldUp=(0,1,0)) = (-fz, 0, fx)
+  var rl = Math.sqrt(_fx*_fx + _fz*_fz);
+  if (rl < 0.01) { _rx=1; _ry=0; _rz=0; }
+  else { _rx = -_fz/rl; _ry = 0; _rz = _fx/rl; }
+  // Up = cross(right, forward)
+  _ux = -_rz*_fy;
+  _uy =  _rz*_fx - _rx*_fz;
+  _uz =  _rx*_fy;
 }
 
+// ── PERSPECTIVE PROJECTION ─────────────────────────────────────────────────
 function proj(wx, wy, wz) {
-  var dx = wx - camX, dy = wy - camY, dz = wz - camZ;
-  var rx = dx*_cy - dz*_sy;
-  var ry = dy;
-  var rz = dx*_sy + dz*_cy;
-  var ry2 = ry*_cp - rz*_sp;
-  var rz2 = ry*_sp + rz*_cp;
-  if (rz2 < 0.1) return null;
-  var s = FOV / rz2;
-  return {x: W*0.5 + rx*s, y: H*0.5 - ry2*s, s: s};
+  var dx = wx-camX, dy = wy-camY, dz = wz-camZ;
+  var cx = dx*_rx + dy*_ry + dz*_rz; // right
+  var cy = dx*_ux + dy*_uy + dz*_uz; // up
+  var cz = dx*_fx + dy*_fy + dz*_fz; // forward (depth)
+  if (cz < 0.1) return null;
+  var s = FOV / cz;
+  return {x: W*0.5 + cx*s, y: H*0.5 - cy*s, s: s};
 }
 
 // ── CAMERA ────────────────────────────────────────────────────────────────
 function updateCam() {
-  // Auto-follow only when player moves AND not manually rotating
   if (performance.now() > camManualUntil) {
     var moving = joyActive || keys['w']||keys['W']||keys['a']||keys['A']||
                  keys['s']||keys['S']||keys['d']||keys['D']||
@@ -202,7 +211,7 @@ function updateCam() {
     if (moving) {
       var tgt = myYaw + Math.PI;
       var d = tgt - camYaw;
-      while (d > Math.PI)  d -= 2*Math.PI;
+      while (d >  Math.PI) d -= 2*Math.PI;
       while (d < -Math.PI) d += 2*Math.PI;
       camYaw += d * 0.05;
     }
@@ -210,139 +219,236 @@ function updateCam() {
   camX = myX - Math.sin(camYaw)*CAM_DIST;
   camZ = myZ - Math.cos(camYaw)*CAM_DIST;
   camY = myY + CAM_H;
-  setCamTrig();
+  buildCamMatrix();
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────
 function render(t) {
-  ctx.fillStyle = '#050510';
+  ctx.fillStyle = '#08101e';
   ctx.fillRect(0, 0, W, H);
-
-  // Ambient glow
-  var bg = ctx.createRadialGradient(W*0.5, H*0.65, 0, W*0.5, H*0.65, W*0.65);
-  bg.addColorStop(0, 'rgba(15,5,40,0.5)');
-  bg.addColorStop(1, 'rgba(5,5,16,0)');
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, W, H);
-
   drawFloor();
+  drawWall();
   drawLasers(t);
+  // Other players (behind me — draw first)
   for (var id in peers) {
-    var p = peers[id];
-    if (id !== myId) drawChar(p.x||0, p.y||0, p.z||0, p.color||'#ff006e', false);
+    if (id !== myId) {
+      var p = peers[id];
+      drawChar(p.x||0, p.y||0, p.z||0, p.color||'#ff006e', p.name||'?', false);
+    }
   }
-  drawChar(myX, myY, myZ, '#00f5ff', true);
+  drawChar(myX, myY, myZ, '#00f5ff', progress.name, true);
 }
 
+// ── FLOOR (checkered tiles) ────────────────────────────────────────────────
 function drawFloor() {
-  ctx.strokeStyle = 'rgba(0,245,255,0.13)';
-  ctx.lineWidth = 1;
-  for (var ring = 1; ring <= 4; ring++) {
-    var r = ARENA_R * ring / 4;
-    var prev = null;
-    for (var i = 0; i <= 36; i++) {
-      var a = i/36*Math.PI*2;
-      var p = proj(Math.cos(a)*r, 0, Math.sin(a)*r);
-      if (p && prev) {
-        ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(p.x, p.y); ctx.stroke();
-      }
-      prev = p;
-    }
-  }
-  for (var i = 0; i < 12; i++) {
-    var a = i/12*Math.PI*2;
-    var p0 = proj(0,0,0);
-    var p1 = proj(Math.cos(a)*ARENA_R, 0, Math.sin(a)*ARENA_R);
-    if (p0 && p1) {
-      ctx.beginPath(); ctx.moveTo(p0.x,p0.y); ctx.lineTo(p1.x,p1.y); ctx.stroke();
+  var TILE = 2;
+  var N = Math.ceil(ARENA_R / TILE) + 1;
+  var col0 = '#0d2444', col1 = '#0a1c38';
+  for (var tx = -N; tx <= N; tx++) {
+    for (var tz = -N; tz <= N; tz++) {
+      var wx = tx*TILE, wz = tz*TILE;
+      // check center of tile inside arena
+      var cx = wx+TILE*0.5, cz = wz+TILE*0.5;
+      if (cx*cx + cz*cz > ARENA_R*ARENA_R + 2) continue;
+      var c00 = proj(wx,      0, wz);
+      var c10 = proj(wx+TILE, 0, wz);
+      var c11 = proj(wx+TILE, 0, wz+TILE);
+      var c01 = proj(wx,      0, wz+TILE);
+      if (!c00 || !c10 || !c11 || !c01) continue;
+      ctx.fillStyle = ((tx+tz) % 2 === 0) ? col0 : col1;
+      ctx.beginPath();
+      ctx.moveTo(c00.x, c00.y);
+      ctx.lineTo(c10.x, c10.y);
+      ctx.lineTo(c11.x, c11.y);
+      ctx.lineTo(c01.x, c01.y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0,180,255,0.1)';
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
     }
   }
 }
 
+// ── ARENA WALL ────────────────────────────────────────────────────────────
+function drawWall() {
+  var WALL_H = 2.2;
+  var SEGS   = 32;
+  for (var i = 0; i < SEGS; i++) {
+    var a0 = (i/SEGS)*Math.PI*2;
+    var a1 = ((i+1)/SEGS)*Math.PI*2;
+    var x0 = Math.cos(a0)*ARENA_R, z0 = Math.sin(a0)*ARENA_R;
+    var x1 = Math.cos(a1)*ARENA_R, z1 = Math.sin(a1)*ARENA_R;
+    var b00 = proj(x0, 0,      z0);
+    var b01 = proj(x0, WALL_H, z0);
+    var b10 = proj(x1, 0,      z1);
+    var b11 = proj(x1, WALL_H, z1);
+    if (!b00 || !b01 || !b10 || !b11) continue;
+    // Alternate panel colors (like hazard stripes)
+    ctx.fillStyle = i%2===0 ? '#1a0040' : '#280060';
+    ctx.beginPath();
+    ctx.moveTo(b00.x, b00.y);
+    ctx.lineTo(b10.x, b10.y);
+    ctx.lineTo(b11.x, b11.y);
+    ctx.lineTo(b01.x, b01.y);
+    ctx.closePath();
+    ctx.fill();
+    // Top edge glow
+    ctx.strokeStyle = i%2===0 ? 'rgba(0,245,255,0.6)' : 'rgba(180,0,255,0.5)';
+    ctx.lineWidth = 2;
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = i%2===0 ? '#00f5ff' : '#bf00ff';
+    ctx.beginPath();
+    ctx.moveTo(b01.x, b01.y);
+    ctx.lineTo(b11.x, b11.y);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+}
+
+// ── LASERS ────────────────────────────────────────────────────────────────
 function drawLasers(t) {
   for (var i = 0; i < lasers.length; i++) {
     var L = lasers[i];
     var a = L.ang;
-    var r = ARENA_R - 1;
+    var r = ARENA_R - 0.5;
     var x1 = Math.cos(a)*r,  z1 = Math.sin(a)*r;
     var x2 = -x1, z2 = -z1;
+
+    // Project endpoints (use center fallback if clipped)
     var pa = proj(x1, LASER_Y, z1);
     var pb = proj(x2, LASER_Y, z2);
-    var pc = proj(0, LASER_Y, 0);
+    var pc = proj(0,  LASER_Y, 0);
     var p1 = pa || pc, p2 = pb || pc;
     if (!p1 || !p2) continue;
+
     var alpha = 0.75 + 0.25*Math.sin(t*3 + i);
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.shadowBlur = 22;
+    ctx.lineCap = 'round';
+
+    // Outer glow
+    ctx.shadowBlur = 28;
     ctx.shadowColor = L.color;
     ctx.strokeStyle = L.color;
-    ctx.lineWidth = pa ? Math.max(3, pa.s*0.55) : 3;
-    ctx.lineCap = 'round';
+    ctx.lineWidth = pa ? Math.max(4, pa.s*0.7) : 4;
     ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
-    ctx.globalAlpha = alpha*0.45;
-    ctx.shadowBlur = 4;
+
+    // Bright core
+    ctx.shadowBlur = 6;
     ctx.strokeStyle = '#fff';
-    ctx.lineWidth = pa ? Math.max(1, pa.s*0.15) : 1;
+    ctx.lineWidth = pa ? Math.max(1.5, pa.s*0.2) : 1.5;
+    ctx.globalAlpha = alpha * 0.6;
     ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
     ctx.restore();
   }
 }
 
-function drawChar(wx, wy, wz, color, isMe) {
+// ── CHARACTER (Roblox-style blocky figure) ────────────────────────────────
+function drawChar(wx, wy, wz, color, name, isMe) {
+  // Shadow on floor
   var sh = proj(wx, 0.01, wz);
   if (sh) {
     ctx.save();
-    ctx.globalAlpha = 0.22;
-    var gr = ctx.createRadialGradient(sh.x,sh.y,0, sh.x,sh.y, sh.s*0.6);
-    gr.addColorStop(0,'rgba(0,0,0,0.9)'); gr.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.globalAlpha = 0.3;
+    var gr = ctx.createRadialGradient(sh.x,sh.y,0, sh.x,sh.y,sh.s*0.7);
+    gr.addColorStop(0,'rgba(0,0,0,0.85)'); gr.addColorStop(1,'rgba(0,0,0,0)');
     ctx.fillStyle = gr;
     ctx.beginPath();
-    ctx.ellipse(sh.x, sh.y, sh.s*0.55, sh.s*0.22, 0, 0, Math.PI*2);
+    ctx.ellipse(sh.x, sh.y, sh.s*0.65, sh.s*0.26, 0, 0, Math.PI*2);
     ctx.fill();
     ctx.restore();
   }
-  var pf = proj(wx, wy+0.1, wz);
-  var pw = proj(wx, wy+0.9, wz);
-  var ph = proj(wx, wy+1.85, wz);
-  if (!pf && !pw) return;
-  var base = pf || pw;
-  var r = base.s * 0.42;
+
+  // Key body points
+  var pFoot  = proj(wx, wy+0.05, wz);
+  var pKnee  = proj(wx, wy+0.7,  wz);
+  var pWaist = proj(wx, wy+1.1,  wz);
+  var pShld  = proj(wx, wy+1.7,  wz);
+  var pNeck  = proj(wx, wy+1.85, wz);
+  var pHead  = proj(wx, wy+2.1,  wz);
+  var pTop   = proj(wx, wy+2.55, wz);
+
+  if (!pFoot && !pWaist) return;
+  var base = pFoot || pWaist;
+  var sc = base.s; // scale factor
+
   ctx.save();
-  ctx.shadowBlur = isMe ? 18 : 7;
+  ctx.shadowBlur = isMe ? 20 : 9;
   ctx.shadowColor = color;
-  ctx.fillStyle = color;
-  if (pf) {
-    ctx.beginPath();
-    ctx.ellipse(pf.x, pf.y, r*0.9, r*0.36, 0, 0, Math.PI*2);
-    ctx.fill();
+
+  // ── LEGS ──
+  if (pFoot && pKnee) {
+    var lw = sc * 0.28;
+    ctx.fillStyle = color;
+    // Left leg
+    ctx.fillRect(pFoot.x - lw*1.2, pFoot.y - lw*0.4, lw, -(pFoot.y - pKnee.y)*0.8);
+    // Right leg
+    ctx.fillRect(pFoot.x + lw*0.2, pFoot.y - lw*0.4, lw, -(pFoot.y - pKnee.y)*0.8);
   }
-  if (pw) {
-    ctx.beginPath();
-    ctx.arc(pw.x, pw.y, pw.s*0.4, 0, Math.PI*2);
-    ctx.fill();
+
+  // ── TORSO ──
+  if (pWaist && pShld) {
+    var tw = sc * 0.7, th = pWaist.y - pShld.y;
+    ctx.fillStyle = color;
+    ctx.fillRect(pShld.x - tw*0.5, pShld.y, tw, th + sc*0.1);
+    // Darker front panel
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(pShld.x - tw*0.3, pShld.y + th*0.1, tw*0.6, th*0.7);
   }
-  if (ph) {
-    ctx.shadowBlur = 12;
-    ctx.beginPath();
-    ctx.arc(ph.x, ph.y, ph.s*0.38, 0, Math.PI*2);
-    ctx.fill();
-    ctx.fillStyle = '#050510';
+
+  // ── ARMS ──
+  if (pShld) {
+    var aw = sc*0.22, ah = sc*0.55;
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.85;
+    ctx.fillRect(pShld.x - sc*0.55, pShld.y + sc*0.05, aw, ah);
+    ctx.fillRect(pShld.x + sc*0.33, pShld.y + sc*0.05, aw, ah);
+    ctx.globalAlpha = 1;
+  }
+
+  // ── HEAD (blocky Roblox square) ──
+  if (pHead) {
+    var hs = sc * 0.45;
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = color;
+    ctx.fillRect(pHead.x - hs*0.5, pHead.y - hs*0.5, hs, hs);
+    // Face (darker panel on front)
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(pHead.x - hs*0.3, pHead.y - hs*0.25, hs*0.6, hs*0.45);
+    // Eyes (white dots)
+    ctx.fillStyle = '#ffffff';
     ctx.shadowBlur = 0;
-    var er = ph.s*0.10;
-    ctx.beginPath(); ctx.arc(ph.x - ph.s*0.13, ph.y - ph.s*0.05, er, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(ph.x + ph.s*0.13, ph.y - ph.s*0.05, er, 0, Math.PI*2); ctx.fill();
+    var er = hs*0.07;
+    ctx.beginPath(); ctx.arc(pHead.x - hs*0.13, pHead.y - hs*0.05, er, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(pHead.x + hs*0.13, pHead.y - hs*0.05, er, 0, Math.PI*2); ctx.fill();
   }
-  if (isMe && pf) {
+
+  // ── GLOW RING below feet (for self) ──
+  if (isMe && pFoot) {
     ctx.strokeStyle = color;
     ctx.lineWidth = 1.5;
-    ctx.globalAlpha = 0.4;
-    ctx.shadowBlur = 8;
+    ctx.globalAlpha = 0.5;
+    ctx.shadowBlur = 10;
     ctx.beginPath();
-    ctx.ellipse(pf.x, pf.y, r*1.3, r*0.52, 0, 0, Math.PI*2);
+    ctx.ellipse(pFoot.x, pFoot.y, sc*0.75, sc*0.3, 0, 0, Math.PI*2);
     ctx.stroke();
   }
+
   ctx.restore();
+
+  // ── NAME TAG ──
+  if (pTop) {
+    var fontSize = Math.max(10, Math.min(18, sc*0.38));
+    ctx.save();
+    ctx.font = 'bold '+fontSize+'px Exo\\ 2, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = color;
+    ctx.fillStyle = isMe ? '#ffffff' : 'rgba(255,255,255,0.85)';
+    ctx.fillText(name, pTop.x, pTop.y - sc*0.12);
+    ctx.restore();
+  }
 }
 
 // ── PHYSICS ───────────────────────────────────────────────────────────────
@@ -355,22 +461,23 @@ function updatePlayer(dt) {
     if (keys['a']||keys['A']||keys['ArrowLeft'])  dx = -1;
     if (keys['d']||keys['D']||keys['ArrowRight']) dx =  1;
     var len = Math.sqrt(dx*dx+dz*dz);
-    if (len > 0.01) { dx /= len; dz /= len; }
+    if (len > 0.01) { dx/=len; dz/=len; }
   }
   if (Math.abs(dx) > 0.05 || Math.abs(dz) > 0.05) {
+    // Transform joystick to world using camera yaw
     var cy = Math.cos(camYaw), sy = Math.sin(camYaw);
     var wx = dx*cy + dz*sy;
     var wz = -dx*sy + dz*cy;
     var nx = myX + wx*WALK_SPEED*dt;
     var nz = myZ + wz*WALK_SPEED*dt;
     var d = Math.sqrt(nx*nx+nz*nz);
-    if (d > ARENA_R - 0.8) { nx = nx/d*(ARENA_R-0.8); nz = nz/d*(ARENA_R-0.8); }
-    myX = nx; myZ = nz;
+    if (d > ARENA_R-0.8) { nx=nx/d*(ARENA_R-0.8); nz=nz/d*(ARENA_R-0.8); }
+    myX=nx; myZ=nz;
     myYaw = Math.atan2(wx, wz);
   }
   myVY -= GRAVITY*dt;
-  myY += myVY*dt;
-  if (myY < 0) { myY = 0; myVY = 0; }
+  myY  += myVY*dt;
+  if (myY < 0) { myY=0; myVY=0; }
 }
 
 function doJump() { if (myY <= 0.05) myVY = JUMP_V; }
@@ -391,7 +498,7 @@ function buildLasers(count) {
   var spd = 0.42 + soloWave*0.09;
   for (var i = 0; i < count; i++) {
     lasers.push({
-      ang: (i/count)*Math.PI,
+      ang:   (i/count)*Math.PI + 0.3, // offset so none starts at x=0
       speed: spd * (i%2===0?1:-1) * (0.85 + Math.random()*0.3),
       color: COLORS[i % COLORS.length]
     });
@@ -405,7 +512,7 @@ function updateLasers(dt) {
 // ── GAME LOOP ─────────────────────────────────────────────────────────────
 function loop(ts) {
   requestAnimationFrame(loop);
-  var dt = Math.min((ts - lastTS)/1000, 0.05);
+  var dt = Math.min((ts-lastTS)/1000, 0.05);
   lastTS = ts;
   if (gameState === 'solo' || gameState === 'multi') {
     updatePlayer(dt);
@@ -414,25 +521,25 @@ function loop(ts) {
     if (gameState === 'solo' && soloAlive) {
       soloTime = (ts - soloStart)/1000;
       updateHUD();
-      if (soloTime > soloGrace && checkHit()) { soloAlive = false; endSolo(); return; }
+      if (soloTime > soloGrace && checkHit()) { soloAlive=false; endSolo(); return; }
     }
     render(ts/1000);
     if (gameState === 'multi') syncPos();
   }
 }
 
-// ── SOLO ──────────────────────────────────────────────────────────────────
+// ── SOLO MODE ─────────────────────────────────────────────────────────────
 function startSolo() {
-  myX = 4; myZ = 8; myY = 0; myVY = 0; myYaw = Math.PI;
+  myX=4; myZ=8; myY=0; myVY=0; myYaw=Math.PI;
   camYaw = Math.PI;
   camX = myX - Math.sin(camYaw)*CAM_DIST;
   camZ = myZ - Math.cos(camYaw)*CAM_DIST;
   camY = CAM_H;
-  setCamTrig();
-  soloWave = 1; soloAlive = true;
+  buildCamMatrix();
+  soloWave=1; soloAlive=true;
   soloStart = performance.now();
   buildLasers(6);
-  gameState = 'solo';
+  gameState='solo';
   showScreen('sGame');
 }
 
@@ -442,9 +549,8 @@ function endSolo() {
   progress.coins += coins;
   if (soloWave > progress.bestWave) progress.bestWave = soloWave;
   var needed = progress.level*100;
-  while (progress.xp >= needed) { progress.level++; progress.xp -= needed; needed = progress.level*100; }
-  saveLocal();
-  renderProfile();
+  while (progress.xp >= needed) { progress.level++; progress.xp-=needed; needed=progress.level*100; }
+  saveLocal(); renderProfile();
   document.getElementById('rsWave').textContent = soloWave;
   document.getElementById('rsSurv').textContent = soloTime.toFixed(1)+'s';
   document.getElementById('rsCoins').textContent = '+'+coins;
@@ -458,9 +564,9 @@ function updateHUD() {
   if (t) {
     if (soloTime < soloGrace) {
       var left = Math.ceil(soloGrace - soloTime);
-      t.textContent = left > 0 ? left + '...' : 'GO!';
+      t.textContent = left > 0 ? left+'...' : 'GO!';
     } else {
-      t.textContent = (soloTime - soloGrace).toFixed(1)+'s';
+      t.textContent = (soloTime-soloGrace).toFixed(1)+'s';
     }
   }
 }
@@ -471,32 +577,26 @@ function toggleMulti() {
   if (el) el.classList.toggle('show');
   if (!sb) document.getElementById('menuErr').textContent = 'Multiplayer verbindet...';
 }
-
 function createRoom() {
   if (!sb) { document.getElementById('menuErr').textContent = 'Warte kurz...'; return; }
   var code = Math.random().toString(36).substr(2,4).toUpperCase();
-  myRoom = code; myId = progress.name+'_'+Date.now(); isHost = true;
+  myRoom=code; myId=progress.name+'_'+Date.now(); isHost=true;
   document.getElementById('codeVal').textContent = code;
   document.getElementById('plistHost').innerHTML = '<div class="pslot filled">'+progress.name+' (DU)</div>';
-  showScreen('sLobby');
-  joinChannel();
+  showScreen('sLobby'); joinChannel();
 }
-
 function joinRoom() {
   if (!sb) { document.getElementById('menuErr').textContent = 'Warte kurz...'; return; }
   var code = (document.getElementById('joinInput').value||'').trim().toUpperCase();
   if (code.length < 3) return;
-  myRoom = code; myId = progress.name+'_'+Date.now(); isHost = false;
+  myRoom=code; myId=progress.name+'_'+Date.now(); isHost=false;
   document.getElementById('codeVal').textContent = code;
-  showScreen('sLobby');
-  joinChannel();
+  showScreen('sLobby'); joinChannel();
 }
-
 function copyCode() {
   var v = document.getElementById('codeVal').textContent;
   if (navigator.clipboard) navigator.clipboard.writeText(v);
 }
-
 function joinChannel() {
   if (roomCh) roomCh.unsubscribe();
   roomCh = sb.channel('room_'+myRoom)
@@ -518,41 +618,39 @@ function joinChannel() {
     if (roomCh) roomCh.send({type:'broadcast',event:'join',payload:{id:myId,name:progress.name}});
   }, 500);
 }
-
 function startMulti() {
   if (!isHost) return;
   if (roomCh) roomCh.send({type:'broadcast',event:'start',payload:{}});
   beginMulti();
 }
-
 function beginMulti() {
-  myX = (Math.random()-0.5)*8; myZ = (Math.random()-0.5)*8; myY = 0; myVY = 0;
-  camYaw = Math.PI; setCamTrig();
-  buildLasers(6); gameState = 'multi';
+  myX=(Math.random()-0.5)*8; myZ=(Math.random()-0.5)*8; myY=0; myVY=0;
+  camYaw=Math.PI; buildCamMatrix();
+  buildLasers(6); gameState='multi';
   showScreen('sGame');
 }
-
 function syncPos() {
-  if (roomCh) roomCh.send({type:'broadcast',event:'pos',payload:{id:myId,x:myX,y:myY,z:myZ,color:'#00f5ff',name:progress.name}});
+  if (roomCh) roomCh.send({type:'broadcast',event:'pos',payload:{
+    id:myId, x:myX, y:myY, z:myZ, color:'#00f5ff', name:progress.name
+  }});
 }
-
 function leaveRoom() {
-  if (roomCh) { roomCh.unsubscribe(); roomCh = null; }
-  myRoom = null; peers = {}; isHost = false; gameState = 'menu';
+  if (roomCh) { roomCh.unsubscribe(); roomCh=null; }
+  myRoom=null; peers={}; isHost=false; gameState='menu';
   showScreen('sMenu');
 }
 
 // ── SCREENS ───────────────────────────────────────────────────────────────
 function showScreen(id) {
   var all = document.querySelectorAll('.screen');
-  for (var i = 0; i < all.length; i++) all[i].classList.add('off');
+  for (var i=0; i<all.length; i++) all[i].classList.add('off');
   var el = document.getElementById(id);
   if (el) el.classList.remove('off');
   var inGame = (id === 'sGame');
   var jz = document.getElementById('joyZone');
   var jb = document.getElementById('jumpBtn');
-  if (jz)  jz.style.display  = inGame ? 'block' : 'none';
-  if (jb)  jb.style.display  = inGame ? 'block' : 'none';
+  if (jz) jz.style.display = inGame ? 'block' : 'none';
+  if (jb) jb.style.display = inGame ? 'block' : 'none';
 }
 
 // ── PROFILE ───────────────────────────────────────────────────────────────
@@ -576,14 +674,14 @@ function renderProfile() {
   var l = document.getElementById('pLvl');    if (l) l.textContent = progress.level;
   var x = document.getElementById('pXp');     if (x) x.textContent = progress.xp;
   var c = document.getElementById('pCoins');  if (c) c.textContent = progress.coins;
-  var b = document.getElementById('pBest');   if (b) b.textContent = progress.bestWave || '-';
+  var b = document.getElementById('pBest');   if (b) b.textContent = progress.bestWave||'-';
 }
 function changeName() {
   var inp = document.getElementById('nameInp');
   if (!inp) return;
   var n = inp.value.trim().toUpperCase();
   if (n.length < 1) return;
-  progress.name = n; saveLocal(); renderProfile(); inp.value = '';
+  progress.name=n; saveLocal(); renderProfile(); inp.value='';
 }
 
 // ── INPUT ─────────────────────────────────────────────────────────────────
@@ -592,24 +690,23 @@ function setupInput() {
   document.addEventListener('keyup',   function(e){ keys[e.key]=false; });
   canvas.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 
+  // Mouse camera drag (desktop)
   var drag=false, lastMX=0;
   canvas.addEventListener('mousedown',  function(e){ if(e.button===2){drag=true;lastMX=e.clientX;} });
-  window.addEventListener('mousemove',  function(e){ if(drag){camYaw+=(e.clientX-lastMX)*0.004;lastMX=e.clientX;setCamTrig();} });
+  window.addEventListener('mousemove',  function(e){ if(drag){camYaw+=(e.clientX-lastMX)*0.004;lastMX=e.clientX;buildCamMatrix();} });
   window.addEventListener('mouseup',    function(e){ if(e.button===2)drag=false; });
 
+  // Joystick (left side)
   var jz = document.getElementById('joyZone');
   var jb = document.getElementById('joyBase');
   var jk = document.getElementById('joyKnob');
   var ox=0, oy=0, tid=null, MAX=45;
-
   jz.addEventListener('touchstart', function(e){
     e.preventDefault();
-    var t = e.changedTouches[0];
-    tid=t.identifier; ox=t.clientX; oy=t.clientY;
+    var t=e.changedTouches[0]; tid=t.identifier; ox=t.clientX; oy=t.clientY;
     jb.style.left=(ox-45)+'px'; jb.style.top=(oy-45)+'px'; jb.style.display='block';
     joyActive=true;
   },{passive:false});
-
   jz.addEventListener('touchmove', function(e){
     e.preventDefault();
     for(var i=0;i<e.changedTouches.length;i++){
@@ -622,57 +719,51 @@ function setupInput() {
       joyDX=dx/MAX; joyDZ=-dy/MAX;
     }
   },{passive:false});
-
   function endJoy(){
-    jb.style.display='none';
-    jk.style.left='22px'; jk.style.top='22px';
+    jb.style.display='none'; jk.style.left='22px'; jk.style.top='22px';
     joyActive=false; joyDX=0; joyDZ=0; tid=null;
   }
   jz.addEventListener('touchend',   function(e){e.preventDefault();endJoy();},{passive:false});
   jz.addEventListener('touchcancel',function(e){e.preventDefault();endJoy();},{passive:false});
 
+  // Jump button
   document.getElementById('jumpBtn').addEventListener('click', doJump);
-  document.getElementById('jumpBtn').addEventListener('touchstart', function(e){ e.preventDefault(); doJump(); },{passive:false});
+  document.getElementById('jumpBtn').addEventListener('touchstart',function(e){e.preventDefault();doJump();},{passive:false});
 
-  // ── Camera touch (right side of screen) ──────────────────────────────────
-  canvas.addEventListener('touchstart', function(e) {
-    if (gameState !== 'solo' && gameState !== 'multi') return;
-    for (var i = 0; i < e.changedTouches.length; i++) {
-      var t = e.changedTouches[i];
-      if (t.clientX > W * 0.50 && camTouchId === null) {
-        camTouchId = t.identifier;
-        camTouchLastX = t.clientX;
+  // Camera touch (right side)
+  canvas.addEventListener('touchstart', function(e){
+    if (gameState!=='solo' && gameState!=='multi') return;
+    for (var i=0;i<e.changedTouches.length;i++){
+      var t=e.changedTouches[i];
+      if (t.clientX > W*0.50 && camTouchId===null){
+        camTouchId=t.identifier; camTouchLastX=t.clientX;
       }
     }
-  }, {passive: true});
-
-  canvas.addEventListener('touchmove', function(e) {
-    if (camTouchId === null) return;
-    for (var i = 0; i < e.changedTouches.length; i++) {
-      var t = e.changedTouches[i];
-      if (t.identifier === camTouchId) {
-        var ddx = t.clientX - camTouchLastX;
-        camYaw += ddx * 0.007;
-        camTouchLastX = t.clientX;
-        camManualUntil = performance.now() + 2000;
-        setCamTrig();
+  },{passive:true});
+  canvas.addEventListener('touchmove', function(e){
+    if (camTouchId===null) return;
+    for(var i=0;i<e.changedTouches.length;i++){
+      var t=e.changedTouches[i];
+      if(t.identifier===camTouchId){
+        var ddx=t.clientX-camTouchLastX;
+        camYaw += ddx*0.007;
+        camTouchLastX=t.clientX;
+        camManualUntil=performance.now()+2000;
+        buildCamMatrix();
         break;
       }
     }
-  }, {passive: true});
-
-  function endCamTouch(e) {
-    for (var i = 0; i < e.changedTouches.length; i++) {
-      if (e.changedTouches[i].identifier === camTouchId) {
-        camTouchId = null;
-      }
+  },{passive:true});
+  function endCam(e){
+    for(var i=0;i<e.changedTouches.length;i++){
+      if(e.changedTouches[i].identifier===camTouchId){ camTouchId=null; }
     }
   }
-  canvas.addEventListener('touchend',    endCamTouch, {passive: true});
-  canvas.addEventListener('touchcancel', endCamTouch, {passive: true});
+  canvas.addEventListener('touchend',    endCam,{passive:true});
+  canvas.addEventListener('touchcancel', endCam,{passive:true});
 }
 
-// ── ERROR DISPLAY ─────────────────────────────────────────────────────────
+// ── ERROR ─────────────────────────────────────────────────────────────────
 window.onerror = function(msg, src, line) {
   var b = document.getElementById('errBanner');
   if (b) { b.style.display='block'; b.textContent='FEHLER: '+msg+' (Zeile '+line+')'; }
@@ -692,8 +783,7 @@ window.addEventListener('DOMContentLoaded', function() {
   document.getElementById('retryBtn').addEventListener('click',   startSolo);
   document.getElementById('menuBtn').addEventListener('click',    function(){ gameState='menu'; showScreen('sMenu'); });
 
-  loadLocal();
-  renderProfile();
+  loadLocal(); renderProfile();
 
   canvas = document.getElementById('c');
   ctx = canvas.getContext('2d');
@@ -703,7 +793,8 @@ window.addEventListener('DOMContentLoaded', function() {
 
   camX = myX - Math.sin(camYaw)*CAM_DIST;
   camZ = myZ - Math.cos(camYaw)*CAM_DIST;
-  setCamTrig();
+  camY = CAM_H;
+  buildCamMatrix();
 
   setupInput();
   showScreen('sMenu');
@@ -711,9 +802,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
   setTimeout(function(){
     try {
-      if (typeof supabase !== 'undefined') {
-        sb = supabase.createClient(SUPA_URL, SUPA_KEY);
-      }
+      if (typeof supabase !== 'undefined') sb = supabase.createClient(SUPA_URL, SUPA_KEY);
     } catch(e) {}
   }, 300);
 });
