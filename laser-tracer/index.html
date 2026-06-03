@@ -106,6 +106,12 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
     </div>
     <div style="background:rgba(5,5,16,0.7);border:1px solid rgba(0,245,255,0.2);border-radius:20px;padding:5px 12px;font-size:10px;color:rgba(0,245,255,0.4);letter-spacing:1px;pointer-events:none">🎥 Rechts = Kamera</div>
   </div>
+  <!-- Shown only when eliminated in multi -->
+  <div id="elimBanner" style="display:none;flex-direction:column;align-items:center;gap:10px;pointer-events:auto;margin-top:32px">
+    <div style="background:rgba(255,0,110,0.88);padding:10px 28px;border-radius:12px;font-family:'Russo One',sans-serif;font-size:22px;color:#fff;letter-spacing:4px">ELIMINATED</div>
+    <div style="color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:2px">Du schaust zu...</div>
+    <button class="btn bghost" id="elimLeaveBtn" style="width:auto;padding:10px 22px;font-size:13px;pointer-events:auto">← VERLASSEN</button>
+  </div>
 </div>
 
 <!-- RESULT -->
@@ -174,6 +180,7 @@ var joyDX = 0, joyDZ = 0, joyActive = false;
 var camTouchId = null, camTouchLastX = 0, camTouchLastY = 0;
 var jumpHeld = false;
 var myWalkPhase = 0, myIsMoving = false;
+var myDead = false, lastSyncTime = 0;
 var sb = null, myRoom = null, myId = null, peers = {}, isHost = false;
 var roomCh = null;
 
@@ -534,6 +541,7 @@ function drawChar(wx, wy, wz, color, name, isMe, walkPhase, isJumping) {
 
 // ── PHYSICS ───────────────────────────────────────────────────────────────
 function updatePlayer(dt) {
+  if (myDead) return;  // dead players don't move (spectate only)
   var dx = 0, dz = 0;
   if (joyActive) { dx = joyDX; dz = joyDZ; }
   else {
@@ -626,6 +634,18 @@ function updateLasers(dt) {
   }
 }
 
+// ── PEER INTERPOLATION ────────────────────────────────────────────────────
+function lerpPeers(dt) {
+  var f = Math.min(1, dt * 18);  // lerp factor ~18x per sec catchup
+  for (var id in peers) {
+    var p = peers[id];
+    if (p.tx === undefined) { p.tx=p.x||0; p.ty=p.y||0; p.tz=p.z||0; }
+    p.x = p.x + (p.tx - p.x) * f;
+    p.y = p.y + (p.ty - p.y) * f;
+    p.z = p.z + (p.tz - p.z) * f;
+  }
+}
+
 // ── GAME LOOP ─────────────────────────────────────────────────────────────
 function loop(ts) {
   requestAnimationFrame(loop);
@@ -634,36 +654,33 @@ function loop(ts) {
   if (gameState === 'solo' || gameState === 'multi') {
     updatePlayer(dt);
     updateLasers(dt);
-    // Auto-jump while button held
-    if (jumpHeld && myY <= 0.05) doJump();
+    if (!myDead && jumpHeld && myY <= 0.05) doJump();
+    lerpPeers(dt);
     updateCam();
     if (soloAlive) {
       soloTime = (ts - soloStart)/1000;
       updateHUD();
-      // Wave progression: add 1 laser every 10 gameplay seconds
       var playTime = soloTime - soloGrace;
       if (playTime > 0 && playTime >= nextWaveSec) {
-        soloWave++;
-        nextWaveSec += 10;
-        addLaser();
+        soloWave++; nextWaveSec += 10; addLaser();
       }
-      // Collision detection — works for both solo and multi
       if (soloTime > soloGrace && checkHit()) {
         soloAlive = false;
         if (gameState === 'solo') { endSolo(); return; }
         else {
-          // Multiplayer death
+          // Multi death: stay on game screen and spectate
+          myDead = true;
           if (roomCh) roomCh.send({type:'broadcast',event:'dead',payload:{id:myId}});
-          var mc = Math.floor(soloTime*0.5) + (soloWave-1)*5;
-          document.getElementById('rsWave').textContent = soloWave;
-          document.getElementById('rsSurv').textContent = Math.max(0,soloTime-soloGrace).toFixed(1)+'s';
-          document.getElementById('rsCoins').textContent = '+'+mc;
-          showScreen('sResult'); return;
+          var eb = document.getElementById('elimBanner');
+          if (eb) eb.style.display = 'flex';
         }
       }
     }
     render(ts/1000);
-    if (gameState === 'multi') syncPos();
+    // Throttle position sync to ~20/s to avoid Supabase rate limiting
+    if (gameState === 'multi' && !myDead && ts - lastSyncTime > 50) {
+      syncPos(); lastSyncTime = ts;
+    }
   }
 }
 
@@ -676,7 +693,7 @@ function startSolo() {
   camZ = myZ - Math.cos(camYaw)*hd;
   camY = myY + 1.0 + Math.sin(camPitch)*CAM_DIST;
   buildCamMatrix();
-  soloWave=1; soloAlive=true; nextWaveSec=10;
+  soloWave=1; soloAlive=true; nextWaveSec=10; myDead=false;
   soloStart = performance.now();
   buildLasers(2);
   gameState='solo';
@@ -750,7 +767,17 @@ function joinChannel() {
       }
     })
     .on('broadcast',{event:'pos'},function(m){
-      if (m.payload.id !== myId) peers[m.payload.id] = m.payload;
+      if (m.payload.id === myId) return;
+      var d = m.payload;
+      var p = peers[d.id];
+      if (p) {
+        // Store as lerp target; x/y/z are the smoothed render positions
+        p.tx=d.x; p.ty=d.y; p.tz=d.z;
+        p.wp=d.wp; p.color=d.color; p.name=d.name;
+      } else {
+        peers[d.id] = {x:d.x,y:d.y,z:d.z, tx:d.x,ty:d.y,tz:d.z,
+                       wp:d.wp||0, color:d.color, name:d.name, id:d.id};
+      }
     })
     .on('broadcast',{event:'start'},function(){
       if (!isHost) beginMulti();
@@ -770,6 +797,8 @@ function beginMulti() {
   camYaw=Math.PI; camPitch=0.54; buildCamMatrix();
   soloWave=1; soloAlive=true; nextWaveSec=10;
   soloStart=performance.now(); soloTime=0; soloGrace=2.5;
+  myDead=false;
+  var eb=document.getElementById('elimBanner'); if(eb) eb.style.display='none';
   buildLasers(2); gameState='multi';
   showScreen('sGame');
 }
@@ -940,6 +969,7 @@ window.addEventListener('DOMContentLoaded', function() {
   document.getElementById('leaveBtn').addEventListener('click',   leaveRoom);
   document.getElementById('retryBtn').addEventListener('click',   startSolo);
   document.getElementById('menuBtn').addEventListener('click',    function(){ gameState='menu'; showScreen('sMenu'); });
+  document.getElementById('elimLeaveBtn').addEventListener('click', leaveRoom);
 
   loadLocal(); renderProfile();
 
