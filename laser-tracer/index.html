@@ -766,8 +766,8 @@ function setupInput() {
   canvas.addEventListener('mousedown',  function(e){ if(e.button===2){drag=true;lastMX=e.clientX;lastMY=e.clientY;} });
   window.addEventListener('mousemove',  function(e){
     if(!drag) return;
-    camYaw   -= (e.clientX-lastMX)*0.004;
-    camPitch += (e.clientY-lastMY)*0.022;
+    camYaw   -= (e.clientX-lastMX)*0.005;
+    camPitch += (e.clientY-lastMY)*0.005;
     camPitch  = Math.max(0.05, Math.min(1.45, camPitch));
     lastMX=e.clientX; lastMY=e.clientY;
     buildCamMatrix();
@@ -829,8 +829,8 @@ function setupInput() {
     for (var i = 0; i < e.changedTouches.length; i++) {
       var t = e.changedTouches[i];
       if (t.identifier !== camTouchId) continue;
-      camYaw   -= (t.clientX - camTouchLastX) * 0.007;
-      camPitch += (t.clientY - camTouchLastY) * 0.028;
+      camYaw   -= (t.clientX - camTouchLastX) * 0.008;
+      camPitch += (t.clientY - camTouchLastY) * 0.008;
       camPitch  = Math.max(0.05, Math.min(1.45, camPitch));
       camTouchLastX = t.clientX;
       camTouchLastY = t.clientY;
