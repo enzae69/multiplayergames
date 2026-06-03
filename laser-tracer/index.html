@@ -204,18 +204,7 @@ function proj(wx, wy, wz) {
 
 // ── CAMERA ────────────────────────────────────────────────────────────────
 function updateCam() {
-  if (performance.now() > camManualUntil) {
-    var moving = joyActive || keys['w']||keys['W']||keys['a']||keys['A']||
-                 keys['s']||keys['S']||keys['d']||keys['D']||
-                 keys['ArrowUp']||keys['ArrowDown']||keys['ArrowLeft']||keys['ArrowRight'];
-    if (moving) {
-      var tgt = myYaw + Math.PI;
-      var d = tgt - camYaw;
-      while (d >  Math.PI) d -= 2*Math.PI;
-      while (d < -Math.PI) d += 2*Math.PI;
-      camYaw += d * 0.05;
-    }
-  }
+  // Camera position follows player, yaw stays fixed (manual only)
   camX = myX - Math.sin(camYaw)*CAM_DIST;
   camZ = myZ - Math.cos(camYaw)*CAM_DIST;
   camY = myY + CAM_H;
@@ -466,8 +455,8 @@ function updatePlayer(dt) {
   if (Math.abs(dx) > 0.05 || Math.abs(dz) > 0.05) {
     // Transform joystick to world using camera yaw
     var cy = Math.cos(camYaw), sy = Math.sin(camYaw);
-    var wx = dx*cy + dz*sy;
-    var wz = -dx*sy + dz*cy;
+    var wx = -dx*cy + dz*sy;
+    var wz =  dx*sy + dz*cy;
     var nx = myX + wx*WALK_SPEED*dt;
     var nz = myZ + wz*WALK_SPEED*dt;
     var d = Math.sqrt(nx*nx+nz*nz);
@@ -693,7 +682,7 @@ function setupInput() {
   // Mouse camera drag (desktop)
   var drag=false, lastMX=0;
   canvas.addEventListener('mousedown',  function(e){ if(e.button===2){drag=true;lastMX=e.clientX;} });
-  window.addEventListener('mousemove',  function(e){ if(drag){camYaw+=(e.clientX-lastMX)*0.004;lastMX=e.clientX;buildCamMatrix();} });
+  window.addEventListener('mousemove',  function(e){ if(drag){camYaw-=(e.clientX-lastMX)*0.004;lastMX=e.clientX;buildCamMatrix();} });
   window.addEventListener('mouseup',    function(e){ if(e.button===2)drag=false; });
 
   // Joystick (left side)
@@ -746,7 +735,7 @@ function setupInput() {
       var t=e.changedTouches[i];
       if(t.identifier===camTouchId){
         var ddx=t.clientX-camTouchLastX;
-        camYaw += ddx*0.007;
+        camYaw -= ddx*0.007;
         camTouchLastX=t.clientX;
         camManualUntil=performance.now()+2000;
         buildCamMatrix();
