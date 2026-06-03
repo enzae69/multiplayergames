@@ -167,6 +167,7 @@ var _fx = 0, _fy = 0, _fz = 1; // forward
 var lasers = [];
 var gameState = 'menu';
 var soloAlive = false, soloWave = 1, soloStart = 0, soloTime = 0, soloGrace = 2.5;
+var nextWaveSec = 10;
 var progress = {name:'PLAYER', level:1, xp:0, coins:0, bestWave:0};
 var keys = {};
 var joyDX = 0, joyDZ = 0, joyActive = false;
@@ -576,36 +577,37 @@ function checkHit() {
 }
 
 // ── LASERS ────────────────────────────────────────────────────────────────
-// type:'rot'   – rotates around center (classic)
-// type:'sweep' – fixed angle, offset sweeps edge-to-edge from outside arena
-function buildLasers(count) {
-  lasers = [];
-  var rotSpd = 0.42 + soloWave * 0.09;
-  var swpSpd = 4   + soloWave * 1.2;
-  var numRot = Math.min(2, Math.floor(count / 3));
-  var numSwp = count - numRot;
-  var r      = ARENA_R - 0.5;
-
-  for (var i = 0; i < numRot; i++) {
+// type:'rot'   – rotates around center
+// type:'sweep' – fixed angle, offset sweeps edge-to-edge
+function addLaser() {
+  var idx     = lasers.length;
+  var r       = ARENA_R - 0.5;
+  var rotSpd  = 0.42 + soloWave * 0.09;
+  var swpSpd  = 4    + soloWave * 1.0;
+  // Pattern: rot on idx 0,3,6… sweep otherwise
+  if (idx % 3 === 0) {
     lasers.push({
       type:  'rot',
-      ang:   (i / numRot) * Math.PI + 0.5,
-      speed: rotSpd * (i % 2 === 0 ? 1 : -1) * (0.85 + Math.random() * 0.3),
-      color: COLORS[i % COLORS.length]
+      ang:   (idx * 1.3 + 0.5) % Math.PI,
+      speed: rotSpd * (idx % 2 === 0 ? 1 : -1) * (0.85 + Math.random()*0.3),
+      color: COLORS[idx % COLORS.length]
     });
-  }
-
-  for (var j = 0; j < numSwp; j++) {
-    var ang = (j / numSwp) * Math.PI;          // spread angles evenly 0..π
-    var dir = (j % 2 === 0) ? 1 : -1;
+  } else {
+    var ang = (idx / (idx + 3)) * Math.PI;
+    var dir = (idx % 2 === 0) ? 1 : -1;
     lasers.push({
       type:   'sweep',
       ang:    ang,
-      offset: -dir * r,                         // start at one arena edge
-      speed:  swpSpd * dir * (0.8 + Math.random() * 0.4),
-      color:  COLORS[(j + numRot) % COLORS.length]
+      offset: -dir * r,
+      speed:  swpSpd * dir * (0.8 + Math.random()*0.4),
+      color:  COLORS[idx % COLORS.length]
     });
   }
+}
+
+function buildLasers(count) {
+  lasers = [];
+  for (var i = 0; i < count; i++) addLaser();
 }
 
 function updateLasers(dt) {
@@ -635,10 +637,30 @@ function loop(ts) {
     // Auto-jump while button held
     if (jumpHeld && myY <= 0.05) doJump();
     updateCam();
-    if (gameState === 'solo' && soloAlive) {
+    if (soloAlive) {
       soloTime = (ts - soloStart)/1000;
       updateHUD();
-      if (soloTime > soloGrace && checkHit()) { soloAlive=false; endSolo(); return; }
+      // Wave progression: add 1 laser every 10 gameplay seconds
+      var playTime = soloTime - soloGrace;
+      if (playTime > 0 && playTime >= nextWaveSec) {
+        soloWave++;
+        nextWaveSec += 10;
+        addLaser();
+      }
+      // Collision detection — works for both solo and multi
+      if (soloTime > soloGrace && checkHit()) {
+        soloAlive = false;
+        if (gameState === 'solo') { endSolo(); return; }
+        else {
+          // Multiplayer death
+          if (roomCh) roomCh.send({type:'broadcast',event:'dead',payload:{id:myId}});
+          var mc = Math.floor(soloTime*0.5) + (soloWave-1)*5;
+          document.getElementById('rsWave').textContent = soloWave;
+          document.getElementById('rsSurv').textContent = Math.max(0,soloTime-soloGrace).toFixed(1)+'s';
+          document.getElementById('rsCoins').textContent = '+'+mc;
+          showScreen('sResult'); return;
+        }
+      }
     }
     render(ts/1000);
     if (gameState === 'multi') syncPos();
@@ -654,9 +676,9 @@ function startSolo() {
   camZ = myZ - Math.cos(camYaw)*hd;
   camY = myY + 1.0 + Math.sin(camPitch)*CAM_DIST;
   buildCamMatrix();
-  soloWave=1; soloAlive=true;
+  soloWave=1; soloAlive=true; nextWaveSec=10;
   soloStart = performance.now();
-  buildLasers(6);
+  buildLasers(2);
   gameState='solo';
   showScreen('sGame');
 }
@@ -678,13 +700,15 @@ function endSolo() {
 function updateHUD() {
   var w = document.getElementById('hudWave');
   var t = document.getElementById('hudTime');
-  if (w) w.textContent = 'W'+soloWave;
+  if (w) w.textContent = 'W'+soloWave+' ('+lasers.length+' Laser)';
   if (t) {
     if (soloTime < soloGrace) {
       var left = Math.ceil(soloGrace - soloTime);
       t.textContent = left > 0 ? left+'...' : 'GO!';
     } else {
-      t.textContent = (soloTime-soloGrace).toFixed(1)+'s';
+      var pt = soloTime - soloGrace;
+      var till = Math.ceil(nextWaveSec - pt);
+      t.textContent = pt.toFixed(1)+'s  +Laser:'+till+'s';
     }
   }
 }
@@ -744,7 +768,9 @@ function startMulti() {
 function beginMulti() {
   myX=(Math.random()-0.5)*8; myZ=(Math.random()-0.5)*8; myY=0; myVY=0;
   camYaw=Math.PI; camPitch=0.54; buildCamMatrix();
-  buildLasers(6); gameState='multi';
+  soloWave=1; soloAlive=true; nextWaveSec=10;
+  soloStart=performance.now(); soloTime=0; soloGrace=2.5;
+  buildLasers(2); gameState='multi';
   showScreen('sGame');
 }
 function syncPos() {
