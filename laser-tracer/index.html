@@ -298,49 +298,60 @@ function drawWall() {
 }
 
 // ── LASERS ────────────────────────────────────────────────────────────────
+// Convert world point to camera space (returns {cx,cy,cz})
+function toCamSpace(wx, wy, wz) {
+  var dx=wx-camX, dy=wy-camY, dz=wz-camZ;
+  return {
+    cx: dx*_rx+dy*_ry+dz*_rz,
+    cy: dx*_ux+dy*_uy+dz*_uz,
+    cz: dx*_fx+dy*_fy+dz*_fz
+  };
+}
+function screenFromCam(c) {
+  var s = FOV/c.cz;
+  return {x: W*0.5+c.cx*s, y: H*0.5-c.cy*s};
+}
+
 function drawLasers(t) {
   var r = ARENA_R - 0.5;
+  var NEAR = 0.15;
   for (var i = 0; i < lasers.length; i++) {
-    var L  = lasers[i];
-    var a  = L.ang;
-    var x1, z1, x2, z2;
+    var L = lasers[i], a = L.ang;
+    var wx1, wz1, wx2, wz2;
 
     if (L.type === 'rot') {
-      // Line through center at angle a
-      x1 =  Math.cos(a) * r; z1 =  Math.sin(a) * r;
-      x2 = -x1;              z2 = -z1;
+      wx1 =  Math.cos(a)*r; wz1 =  Math.sin(a)*r;
+      wx2 = -wx1;           wz2 = -wz1;
     } else {
-      // Offset line: center is (offset*sin(a), -offset*cos(a))
-      // Half-length = sqrt(r²-offset²) along direction (cos(a), sin(a))
       var half = Math.sqrt(Math.max(0, r*r - L.offset*L.offset));
-      var cx = L.offset * Math.sin(a);
-      var cz = -L.offset * Math.cos(a);
-      x1 = cx + Math.cos(a) * half; z1 = cz + Math.sin(a) * half;
-      x2 = cx - Math.cos(a) * half; z2 = cz - Math.sin(a) * half;
+      var ocx = L.offset*Math.sin(a), ocz = -L.offset*Math.cos(a);
+      wx1 = ocx+Math.cos(a)*half; wz1 = ocz+Math.sin(a)*half;
+      wx2 = ocx-Math.cos(a)*half; wz2 = ocz-Math.sin(a)*half;
     }
 
-    var pa = proj(x1, LASER_Y, z1);
-    var pb = proj(x2, LASER_Y, z2);
-    var pc = proj(0,  LASER_Y, 0);
-    var p1 = pa || pc, p2 = pb || pc;
-    if (!p1 || !p2) continue;
+    // Near-plane clip: if an endpoint is behind camera, slide it to NEAR
+    var c1 = toCamSpace(wx1, LASER_Y, wz1);
+    var c2 = toCamSpace(wx2, LASER_Y, wz2);
+    if (c1.cz < NEAR && c2.cz < NEAR) continue;
+    if (c1.cz < NEAR) {
+      var tt = (NEAR-c1.cz)/(c2.cz-c1.cz);
+      c1 = {cx:c1.cx+tt*(c2.cx-c1.cx), cy:c1.cy+tt*(c2.cy-c1.cy), cz:NEAR};
+    } else if (c2.cz < NEAR) {
+      var tt = (NEAR-c2.cz)/(c1.cz-c2.cz);
+      c2 = {cx:c2.cx+tt*(c1.cx-c2.cx), cy:c2.cy+tt*(c1.cy-c2.cy), cz:NEAR};
+    }
 
-    var alpha = 0.75 + 0.25 * Math.sin(t * 3 + i);
+    var p1 = screenFromCam(c1), p2 = screenFromCam(c2);
+    var alpha = 0.75 + 0.25*Math.sin(t*3+i);
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.lineCap = 'round';
 
-    ctx.shadowBlur  = 28;
-    ctx.shadowColor = L.color;
-    ctx.strokeStyle = L.color;
-    ctx.lineWidth   = 5;
-    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+    ctx.shadowBlur=28; ctx.shadowColor=L.color; ctx.strokeStyle=L.color; ctx.lineWidth=5;
+    ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
 
-    ctx.shadowBlur  = 6;
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth   = 2;
-    ctx.globalAlpha = alpha * 0.6;
-    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+    ctx.shadowBlur=6; ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.globalAlpha=alpha*0.6;
+    ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
     ctx.restore();
   }
 }
