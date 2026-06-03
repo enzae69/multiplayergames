@@ -297,38 +297,48 @@ function drawWall() {
 
 // ── LASERS ────────────────────────────────────────────────────────────────
 function drawLasers(t) {
+  var r = ARENA_R - 0.5;
   for (var i = 0; i < lasers.length; i++) {
-    var L = lasers[i];
-    var a = L.ang;
-    var r = ARENA_R - 0.5;
-    var x1 = Math.cos(a)*r,  z1 = Math.sin(a)*r;
-    var x2 = -x1, z2 = -z1;
+    var L  = lasers[i];
+    var a  = L.ang;
+    var x1, z1, x2, z2;
 
-    // Project endpoints (use center fallback if clipped)
+    if (L.type === 'rot') {
+      // Line through center at angle a
+      x1 =  Math.cos(a) * r; z1 =  Math.sin(a) * r;
+      x2 = -x1;              z2 = -z1;
+    } else {
+      // Offset line: center is (offset*sin(a), -offset*cos(a))
+      // Half-length = sqrt(r²-offset²) along direction (cos(a), sin(a))
+      var half = Math.sqrt(Math.max(0, r*r - L.offset*L.offset));
+      var cx = L.offset * Math.sin(a);
+      var cz = -L.offset * Math.cos(a);
+      x1 = cx + Math.cos(a) * half; z1 = cz + Math.sin(a) * half;
+      x2 = cx - Math.cos(a) * half; z2 = cz - Math.sin(a) * half;
+    }
+
     var pa = proj(x1, LASER_Y, z1);
     var pb = proj(x2, LASER_Y, z2);
     var pc = proj(0,  LASER_Y, 0);
     var p1 = pa || pc, p2 = pb || pc;
     if (!p1 || !p2) continue;
 
-    var alpha = 0.75 + 0.25*Math.sin(t*3 + i);
+    var alpha = 0.75 + 0.25 * Math.sin(t * 3 + i);
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.lineCap = 'round';
 
-    // Outer glow
-    ctx.shadowBlur = 28;
+    ctx.shadowBlur  = 28;
     ctx.shadowColor = L.color;
     ctx.strokeStyle = L.color;
-    ctx.lineWidth = pa ? Math.max(4, pa.s*0.7) : 4;
-    ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+    ctx.lineWidth   = pa ? Math.max(4, pa.s * 0.7) : 4;
+    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
 
-    // Bright core
-    ctx.shadowBlur = 6;
+    ctx.shadowBlur  = 6;
     ctx.strokeStyle = '#fff';
-    ctx.lineWidth = pa ? Math.max(1.5, pa.s*0.2) : 1.5;
+    ctx.lineWidth   = pa ? Math.max(1.5, pa.s * 0.2) : 1.5;
     ctx.globalAlpha = alpha * 0.6;
-    ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
     ctx.restore();
   }
 }
@@ -474,28 +484,62 @@ function doJump() { if (myY <= 0.05) myVY = JUMP_V; }
 function checkHit() {
   if (myY > 1.3) return false;
   for (var i = 0; i < lasers.length; i++) {
-    var a = lasers[i].ang;
-    var perp = Math.abs(myX*Math.sin(a) - myZ*Math.cos(a));
-    if (perp < 0.65) return true;
+    var L    = lasers[i];
+    var a    = L.ang;
+    // Signed distance from player to line: x*sin(a) - z*cos(a) = offset
+    var dist = myX * Math.sin(a) - myZ * Math.cos(a) - (L.offset || 0);
+    if (Math.abs(dist) < 0.65) return true;
   }
   return false;
 }
 
 // ── LASERS ────────────────────────────────────────────────────────────────
+// type:'rot'   – rotates around center (classic)
+// type:'sweep' – fixed angle, offset sweeps edge-to-edge from outside arena
 function buildLasers(count) {
   lasers = [];
-  var spd = 0.42 + soloWave*0.09;
-  for (var i = 0; i < count; i++) {
+  var rotSpd = 0.42 + soloWave * 0.09;
+  var swpSpd = 4   + soloWave * 1.2;
+  var numRot = Math.min(2, Math.floor(count / 3));
+  var numSwp = count - numRot;
+  var r      = ARENA_R - 0.5;
+
+  for (var i = 0; i < numRot; i++) {
     lasers.push({
-      ang:   (i/count)*Math.PI + 0.3, // offset so none starts at x=0
-      speed: spd * (i%2===0?1:-1) * (0.85 + Math.random()*0.3),
+      type:  'rot',
+      ang:   (i / numRot) * Math.PI + 0.5,
+      speed: rotSpd * (i % 2 === 0 ? 1 : -1) * (0.85 + Math.random() * 0.3),
       color: COLORS[i % COLORS.length]
+    });
+  }
+
+  for (var j = 0; j < numSwp; j++) {
+    var ang = (j / numSwp) * Math.PI;          // spread angles evenly 0..π
+    var dir = (j % 2 === 0) ? 1 : -1;
+    lasers.push({
+      type:   'sweep',
+      ang:    ang,
+      offset: -dir * r,                         // start at one arena edge
+      speed:  swpSpd * dir * (0.8 + Math.random() * 0.4),
+      color:  COLORS[(j + numRot) % COLORS.length]
     });
   }
 }
 
 function updateLasers(dt) {
-  for (var i = 0; i < lasers.length; i++) lasers[i].ang += lasers[i].speed*dt;
+  var r = ARENA_R - 0.5;
+  for (var i = 0; i < lasers.length; i++) {
+    var L = lasers[i];
+    if (L.type === 'rot') {
+      L.ang += L.speed * dt;
+    } else {
+      L.offset += L.speed * dt;
+      if (Math.abs(L.offset) >= r) {
+        L.speed  = -L.speed;
+        L.offset = (L.offset > 0 ? 1 : -1) * r;
+      }
+    }
+  }
 }
 
 // ── GAME LOOP ─────────────────────────────────────────────────────────────
