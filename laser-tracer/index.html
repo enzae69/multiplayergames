@@ -159,7 +159,7 @@ var COLORS       = ['#ff006e','#ff6b00','#ffff00','#39ff14','#00f5ff','#bf00ff',
 // ── STATE ──────────────────────────────────────────────────────────────────
 var canvas, ctx, W, H, lastTS = 0;
 var myX = 0, myY = 0, myZ = 10, myVY = 0, myYaw = Math.PI;
-var camX = 0, camY = CAM_H, camZ = 20, camYaw = Math.PI, camPitch = 0;
+var camX = 0, camY = CAM_H, camZ = 20, camYaw = Math.PI, camPitch = 0.54; // radians, orbits at fixed CAM_DIST
 // Camera basis vectors (lookAt matrix, updated each frame)
 var _rx = 1, _ry = 0, _rz = 0; // right
 var _ux = 0, _uy = 1, _uz = 0; // up
@@ -205,9 +205,11 @@ function proj(wx, wy, wz) {
 
 // ── CAMERA ────────────────────────────────────────────────────────────────
 function updateCam() {
-  camX = myX - Math.sin(camYaw) * CAM_DIST;
-  camZ = myZ - Math.cos(camYaw) * CAM_DIST;
-  camY = myY + CAM_H + camPitch;
+  // Spherical orbit — fixed radius, no zoom on pitch change
+  var hDist = Math.cos(camPitch) * CAM_DIST;
+  camX = myX - Math.sin(camYaw) * hDist;
+  camZ = myZ - Math.cos(camYaw) * hDist;
+  camY = myY + 1.0 + Math.sin(camPitch) * CAM_DIST;
   buildCamMatrix();
 }
 
@@ -343,109 +345,142 @@ function drawLasers(t) {
   }
 }
 
-// ── CHARACTER (Roblox-style blocky figure) ────────────────────────────────
+// ── HELPERS ───────────────────────────────────────────────────────────────
+function rrect(x, y, w, h, r) {
+  if (r > w/2) r = w/2;
+  if (r > h/2) r = h/2;
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y); ctx.quadraticCurveTo(x+w, y,   x+w, y+r);
+  ctx.lineTo(x+w, y+h-r); ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h);   ctx.quadraticCurveTo(x,   y+h, x,   y+h-r);
+  ctx.lineTo(x, y+r);     ctx.quadraticCurveTo(x,   y,   x+r, y);
+  ctx.closePath();
+  ctx.fill();
+}
+
+// ── CHARACTER (realistic rounded figure) ──────────────────────────────────
 function drawChar(wx, wy, wz, color, name, isMe) {
-  // Shadow on floor
-  var sh = proj(wx, 0.01, wz);
-  if (sh) {
+  var shp = proj(wx, 0.01, wz);
+  if (shp) {
     ctx.save();
-    ctx.globalAlpha = 0.3;
-    var gr = ctx.createRadialGradient(sh.x,sh.y,0, sh.x,sh.y,sh.s*0.7);
-    gr.addColorStop(0,'rgba(0,0,0,0.85)'); gr.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.globalAlpha = 0.32;
+    var gr = ctx.createRadialGradient(shp.x,shp.y,0,shp.x,shp.y,shp.s*0.75);
+    gr.addColorStop(0,'rgba(0,0,0,0.9)'); gr.addColorStop(1,'rgba(0,0,0,0)');
     ctx.fillStyle = gr;
-    ctx.beginPath();
-    ctx.ellipse(sh.x, sh.y, sh.s*0.65, sh.s*0.26, 0, 0, Math.PI*2);
-    ctx.fill();
+    ctx.beginPath(); ctx.ellipse(shp.x,shp.y,shp.s*0.7,shp.s*0.27,0,0,Math.PI*2); ctx.fill();
     ctx.restore();
   }
 
-  // Key body points
   var pFoot  = proj(wx, wy+0.05, wz);
-  var pKnee  = proj(wx, wy+0.7,  wz);
-  var pWaist = proj(wx, wy+1.1,  wz);
-  var pShld  = proj(wx, wy+1.7,  wz);
-  var pNeck  = proj(wx, wy+1.85, wz);
-  var pHead  = proj(wx, wy+2.1,  wz);
-  var pTop   = proj(wx, wy+2.55, wz);
+  var pAnkle = proj(wx, wy+0.38, wz);
+  var pHip   = proj(wx, wy+1.18, wz);
+  var pBelly = proj(wx, wy+1.35, wz);
+  var pChest = proj(wx, wy+1.72, wz);
+  var pNeck  = proj(wx, wy+1.96, wz);
+  var pHead  = proj(wx, wy+2.28, wz);
+  var pTop   = proj(wx, wy+2.70, wz);
 
-  if (!pFoot && !pWaist) return;
-  var base = pFoot || pWaist;
-  var sc = base.s; // scale factor
+  if (!pFoot && !pHip) return;
+  var ref = pHip || pFoot;
+  var sc  = ref.s;
 
   ctx.save();
-  ctx.shadowBlur = isMe ? 20 : 9;
+  ctx.shadowBlur  = isMe ? 18 : 8;
   ctx.shadowColor = color;
 
-  // ── LEGS ──
-  if (pFoot && pKnee) {
-    var lw = sc * 0.28;
-    ctx.fillStyle = color;
-    // Left leg
-    ctx.fillRect(pFoot.x - lw*1.2, pFoot.y - lw*0.4, lw, -(pFoot.y - pKnee.y)*0.8);
-    // Right leg
-    ctx.fillRect(pFoot.x + lw*0.2, pFoot.y - lw*0.4, lw, -(pFoot.y - pKnee.y)*0.8);
+  // Shoes
+  if (pAnkle) {
+    var sw = sc*0.21;
+    ctx.fillStyle = '#111128';
+    ctx.beginPath(); ctx.ellipse(pAnkle.x - sw*1.15, pAnkle.y+sw*0.35, sw*0.8, sw*0.32, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(pAnkle.x + sw*0.85, pAnkle.y+sw*0.35, sw*0.8, sw*0.32, 0, 0, Math.PI*2); ctx.fill();
   }
 
-  // ── TORSO ──
-  if (pWaist && pShld) {
-    var tw = sc * 0.7, th = pWaist.y - pShld.y;
+  // Legs (pill shape)
+  if (pAnkle && pHip) {
+    var lh = pAnkle.y - pHip.y;
+    var lw = sc * 0.195;
     ctx.fillStyle = color;
-    ctx.fillRect(pShld.x - tw*0.5, pShld.y, tw, th + sc*0.1);
-    // Darker front panel
-    ctx.fillStyle = 'rgba(0,0,0,0.25)';
-    ctx.fillRect(pShld.x - tw*0.3, pShld.y + th*0.1, tw*0.6, th*0.7);
+    rrect(pAnkle.x - lw*1.35, pHip.y, lw, lh, lw*0.5);
+    rrect(pAnkle.x + lw*0.35, pHip.y, lw, lh, lw*0.5);
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    rrect(pAnkle.x - lw*1.15, pHip.y+lh*0.08, lw*0.45, lh*0.72, lw*0.22);
+    rrect(pAnkle.x + lw*0.55, pHip.y+lh*0.08, lw*0.45, lh*0.72, lw*0.22);
   }
 
-  // ── ARMS ──
-  if (pShld) {
-    var aw = sc*0.22, ah = sc*0.55;
+  // Torso
+  if (pBelly && pNeck) {
+    var tw = sc*0.58, th = pBelly.y - pNeck.y, r = sc*0.10;
     ctx.fillStyle = color;
-    ctx.globalAlpha = 0.85;
-    ctx.fillRect(pShld.x - sc*0.55, pShld.y + sc*0.05, aw, ah);
-    ctx.fillRect(pShld.x + sc*0.33, pShld.y + sc*0.05, aw, ah);
+    rrect(pNeck.x - tw*0.5, pNeck.y, tw, th + r, r);
+    ctx.fillStyle = 'rgba(0,0,0,0.22)';
+    rrect(pNeck.x - tw*0.26, pNeck.y + th*0.12, tw*0.52, th*0.55, r*0.5);
+    ctx.fillStyle = 'rgba(255,255,255,0.10)';
+    rrect(pNeck.x - tw*0.44, pNeck.y + th*0.04, tw*0.28, th*0.38, r*0.5);
+  }
+
+  // Arms
+  if (pChest && pNeck) {
+    var aw = sc*0.165, ah = sc*0.66;
+    ctx.fillStyle = color; ctx.globalAlpha = 0.92;
+    rrect(pNeck.x - sc*0.50, pChest.y, aw, ah, aw*0.5);
+    rrect(pNeck.x + sc*0.33, pChest.y, aw, ah, aw*0.5);
     ctx.globalAlpha = 1;
   }
 
-  // ── HEAD (blocky Roblox square) ──
-  if (pHead) {
-    var hs = sc * 0.45;
-    ctx.shadowBlur = 14;
+  // Neck
+  if (pNeck && pHead) {
+    var nw = sc*0.13;
     ctx.fillStyle = color;
-    ctx.fillRect(pHead.x - hs*0.5, pHead.y - hs*0.5, hs, hs);
-    // Face (darker panel on front)
-    ctx.fillStyle = 'rgba(0,0,0,0.3)';
-    ctx.fillRect(pHead.x - hs*0.3, pHead.y - hs*0.25, hs*0.6, hs*0.45);
-    // Eyes (white dots)
-    ctx.fillStyle = '#ffffff';
-    ctx.shadowBlur = 0;
-    var er = hs*0.07;
-    ctx.beginPath(); ctx.arc(pHead.x - hs*0.13, pHead.y - hs*0.05, er, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(pHead.x + hs*0.13, pHead.y - hs*0.05, er, 0, Math.PI*2); ctx.fill();
+    ctx.fillRect(pNeck.x - nw*0.5, pHead.y, nw, pNeck.y - pHead.y + sc*0.05);
   }
 
-  // ── GLOW RING below feet (for self) ──
+  // Head (round)
+  if (pHead) {
+    var hr = sc*0.30;
+    ctx.shadowBlur = isMe ? 22 : 11;
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(pHead.x, pHead.y, hr, 0, Math.PI*2); ctx.fill();
+    // Specular highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.beginPath(); ctx.arc(pHead.x - hr*0.24, pHead.y - hr*0.27, hr*0.44, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Eye whites
+    var er = hr*0.145;
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.beginPath(); ctx.arc(pHead.x - hr*0.31, pHead.y - hr*0.09, er*1.2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(pHead.x + hr*0.31, pHead.y - hr*0.09, er*1.2, 0, Math.PI*2); ctx.fill();
+    // Pupils
+    ctx.fillStyle = '#0a0a1a';
+    ctx.beginPath(); ctx.arc(pHead.x - hr*0.29, pHead.y - hr*0.08, er*0.72, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(pHead.x + hr*0.33, pHead.y - hr*0.08, er*0.72, 0, Math.PI*2); ctx.fill();
+    // Eye shine
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(pHead.x - hr*0.23, pHead.y - hr*0.15, er*0.34, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(pHead.x + hr*0.39, pHead.y - hr*0.15, er*0.34, 0, Math.PI*2); ctx.fill();
+    // Smile
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.lineWidth = hr*0.10; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(pHead.x, pHead.y + hr*0.14, hr*0.22, 0.18, Math.PI-0.18); ctx.stroke();
+  }
+
+  // Glow ring (self)
   if (isMe && pFoot) {
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1.5;
-    ctx.globalAlpha = 0.5;
-    ctx.shadowBlur = 10;
-    ctx.beginPath();
-    ctx.ellipse(pFoot.x, pFoot.y, sc*0.75, sc*0.3, 0, 0, Math.PI*2);
-    ctx.stroke();
+    ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.45; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.ellipse(pFoot.x, pFoot.y, sc*0.75, sc*0.29, 0, 0, Math.PI*2); ctx.stroke();
   }
 
   ctx.restore();
 
-  // ── NAME TAG ──
   if (pTop) {
-    var fontSize = Math.max(10, Math.min(18, sc*0.38));
+    var fontSize = Math.max(10, Math.min(18, sc*0.36));
     ctx.save();
     ctx.font = 'bold '+fontSize+'px Exo\\ 2, sans-serif';
     ctx.textAlign = 'center';
-    ctx.shadowBlur = 6;
-    ctx.shadowColor = color;
+    ctx.shadowBlur = 6; ctx.shadowColor = color;
     ctx.fillStyle = isMe ? '#ffffff' : 'rgba(255,255,255,0.85)';
-    ctx.fillText(name, pTop.x, pTop.y - sc*0.12);
+    ctx.fillText(name, pTop.x, pTop.y - sc*0.10);
     ctx.restore();
   }
 }
@@ -566,10 +601,11 @@ function loop(ts) {
 // ── SOLO MODE ─────────────────────────────────────────────────────────────
 function startSolo() {
   myX=4; myZ=8; myY=0; myVY=0; myYaw=Math.PI;
-  camYaw = Math.PI;
-  camX = myX - Math.sin(camYaw)*CAM_DIST;
-  camZ = myZ - Math.cos(camYaw)*CAM_DIST;
-  camY = CAM_H;
+  camYaw = Math.PI; camPitch = 0.54;
+  var hd = Math.cos(camPitch)*CAM_DIST;
+  camX = myX - Math.sin(camYaw)*hd;
+  camZ = myZ - Math.cos(camYaw)*hd;
+  camY = myY + 1.0 + Math.sin(camPitch)*CAM_DIST;
   buildCamMatrix();
   soloWave=1; soloAlive=true;
   soloStart = performance.now();
@@ -660,7 +696,7 @@ function startMulti() {
 }
 function beginMulti() {
   myX=(Math.random()-0.5)*8; myZ=(Math.random()-0.5)*8; myY=0; myVY=0;
-  camYaw=Math.PI; buildCamMatrix();
+  camYaw=Math.PI; camPitch=0.54; buildCamMatrix();
   buildLasers(6); gameState='multi';
   showScreen('sGame');
 }
@@ -731,8 +767,8 @@ function setupInput() {
   window.addEventListener('mousemove',  function(e){
     if(!drag) return;
     camYaw   -= (e.clientX-lastMX)*0.004;
-    camPitch += (e.clientY-lastMY)*0.010;
-    camPitch  = Math.max(-5, Math.min(12, camPitch));
+    camPitch += (e.clientY-lastMY)*0.022;
+    camPitch  = Math.max(0.05, Math.min(1.45, camPitch));
     lastMX=e.clientX; lastMY=e.clientY;
     buildCamMatrix();
   });
@@ -794,8 +830,8 @@ function setupInput() {
       var t = e.changedTouches[i];
       if (t.identifier !== camTouchId) continue;
       camYaw   -= (t.clientX - camTouchLastX) * 0.007;
-      camPitch += (t.clientY - camTouchLastY) * 0.013;
-      camPitch  = Math.max(-5, Math.min(12, camPitch));
+      camPitch += (t.clientY - camTouchLastY) * 0.028;
+      camPitch  = Math.max(0.05, Math.min(1.45, camPitch));
       camTouchLastX = t.clientX;
       camTouchLastY = t.clientY;
       buildCamMatrix();
@@ -839,9 +875,10 @@ window.addEventListener('DOMContentLoaded', function() {
   H = canvas.height = window.innerHeight;
   window.addEventListener('resize', function(){ W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; });
 
-  camX = myX - Math.sin(camYaw)*CAM_DIST;
-  camZ = myZ - Math.cos(camYaw)*CAM_DIST;
-  camY = CAM_H;
+  var hd0 = Math.cos(camPitch)*CAM_DIST;
+  camX = myX - Math.sin(camYaw)*hd0;
+  camZ = myZ - Math.cos(camYaw)*hd0;
+  camY = myY + 1.0 + Math.sin(camPitch)*CAM_DIST;
   buildCamMatrix();
 
   setupInput();
