@@ -23,6 +23,8 @@
   .p-name{font-weight:900;font-size:16px;color:#00f5ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .p-lvl{font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1px}
   .p-coins{display:flex;align-items:center;gap:4px;font-family:'Russo One',sans-serif;color:#ffd700;font-size:15px}
+  .edit-btn{background:none;border:1px solid rgba(0,245,255,0.25);border-radius:8px;color:rgba(0,245,255,0.6);cursor:pointer;font-size:13px;padding:5px 10px;flex-shrink:0;transition:border-color .2s}
+  .edit-btn:hover{border-color:#00f5ff;color:#00f5ff}
 
   /* games grid */
   .games-label{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:4px;color:rgba(255,255,255,0.3);text-transform:uppercase;align-self:flex-start;margin-left:calc((100% - min(480px,95vw))/2);margin-bottom:12px}
@@ -42,10 +44,32 @@
   .badge-soon{background:rgba(255,140,0,0.15);color:#ff8c00;border:1px solid rgba(255,140,0,0.3)}
   .game-players{font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:1px}
 
-  .logout-btn{margin-top:32px;font-size:11px;color:rgba(255,255,255,0.25);cursor:pointer;letter-spacing:1px;text-decoration:underline;background:none;border:none}
+  /* name modal */
+  .modal-overlay{position:fixed;inset:0;background:rgba(5,5,16,0.97);z-index:200;display:flex;align-items:center;justify-content:center}
+  .modal-overlay.off{display:none}
+  .modal-box{background:rgba(10,10,31,0.99);border:2px solid rgba(0,245,255,0.4);border-radius:20px;padding:36px 28px;width:min(400px,92vw);display:flex;flex-direction:column;gap:20px;align-items:center}
+  .modal-title{font-family:'Russo One',sans-serif;font-size:26px;color:#00f5ff;letter-spacing:3px;text-align:center}
+  .modal-sub{font-size:12px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-align:center;line-height:1.6}
+  .name-inp{background:rgba(15,15,42,1);border:2px solid rgba(0,245,255,0.3);color:#00f5ff;font-family:'Russo One',sans-serif;font-size:22px;padding:14px 18px;border-radius:10px;outline:none;width:100%;text-align:center;letter-spacing:5px;text-transform:uppercase}
+  .name-inp:focus{border-color:#00f5ff;box-shadow:0 0 12px rgba(0,245,255,0.2)}
+  .modal-btn{font-family:'Russo One',sans-serif;font-size:16px;letter-spacing:2px;padding:14px;border:none;border-radius:10px;cursor:pointer;background:linear-gradient(135deg,#007a8a,#00c4d4);color:#050510;width:100%;text-transform:uppercase;transition:opacity .15s}
+  .modal-btn:active{opacity:0.85}
+  .name-err{color:#ff006e;font-size:12px;min-height:16px;text-align:center}
 </style>
 </head>
 <body>
+
+<!-- Name modal -->
+<div id="nameModal" class="modal-overlay off">
+  <div class="modal-box">
+    <div class="modal-title">SPIELERNAME</div>
+    <div class="modal-sub">Wähle deinen Namen — jederzeit über das Profil änderbar</div>
+    <input id="nameInput" class="name-inp" maxlength="16" placeholder="NAME..." autocomplete="off" spellcheck="false"/>
+    <div class="name-err" id="nameErr"></div>
+    <button class="modal-btn" onclick="saveName()">SPIELEN →</button>
+  </div>
+</div>
+
 <div class="wrap">
   <div class="portal-title">GAME PORTAL</div>
   <div class="subtitle">Wähle dein Spiel</div>
@@ -54,10 +78,11 @@
   <div class="profile-strip">
     <div class="p-avatar" id="pAvatar"></div>
     <div class="p-info">
-      <div class="p-name" id="pName">Lade...</div>
+      <div class="p-name" id="pName">...</div>
       <div class="p-lvl">Level <span id="pLvl">1</span> • <span id="pXp">0</span> XP</div>
     </div>
     <div class="p-coins">🪙 <span id="pCoins">0</span></div>
+    <button class="edit-btn" onclick="openNameModal()">✏️</button>
   </div>
 
   <div class="games-label">SPIELE</div>
@@ -67,7 +92,7 @@
       <div class="game-icon" style="color:#00f5ff">⚡</div>
       <div class="game-name">LASER TRACER</div>
       <div class="game-desc">Weiche Lasern aus, überlebe am längsten</div>
-      <div class="game-players" id="ltPlayers">Multiplayer • Solo</div>
+      <div class="game-players">Multiplayer • Solo</div>
     </a>
     <div class="game-card auslaender soon">
       <div class="game-badge badge-soon">BALD</div>
@@ -77,48 +102,66 @@
       <div class="game-players">Multiplayer</div>
     </div>
   </div>
-
-  <button class="logout-btn" onclick="logout()">Abmelden</button>
 </div>
 
-<script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "../supabase-config.js";
-
+<script>
 function avatarSVG(color, size){
-  const cid='g'+color.replace('#','');
-  return `<svg width="${size}" height="${size}" viewBox="0 0 60 60">
-    <defs><radialGradient id="${cid}" cx="40%" cy="35%"><stop offset="0%" stop-color="#fff"/><stop offset="45%" stop-color="${color}"/><stop offset="100%" stop-color="${color}"/></radialGradient></defs>
-    <circle cx="30" cy="30" r="22" fill="url(#${cid})" stroke="${color}" stroke-width="2"/>
-    <circle cx="23" cy="26" r="4.5" fill="#1a1a2e"/><circle cx="37" cy="26" r="4.5" fill="#1a1a2e"/>
-    <circle cx="24.5" cy="24.5" r="1.8" fill="#fff"/><circle cx="38.5" cy="24.5" r="1.8" fill="#fff"/>
-    <path d="M 23 38 Q 30 43 37 38" stroke="#1a1a2e" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`;
+  var cid='g'+color.replace('#','');
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 60 60">'
+    +'<defs><radialGradient id="'+cid+'" cx="40%" cy="35%"><stop offset="0%" stop-color="#fff"/><stop offset="45%" stop-color="'+color+'"/><stop offset="100%" stop-color="'+color+'"/></radialGradient></defs>'
+    +'<circle cx="30" cy="30" r="22" fill="url(#'+cid+')" stroke="'+color+'" stroke-width="2"/>'
+    +'<circle cx="23" cy="26" r="4.5" fill="#1a1a2e"/><circle cx="37" cy="26" r="4.5" fill="#1a1a2e"/>'
+    +'<circle cx="24.5" cy="24.5" r="1.8" fill="#fff"/><circle cx="38.5" cy="24.5" r="1.8" fill="#fff"/>'
+    +'<path d="M 23 38 Q 30 43 37 38" stroke="#1a1a2e" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>';
 }
 
-const SKIN_COLORS = {cyan:'#00f5ff',pink:'#ff006e',green:'#39ff14',orange:'#ff8800',purple:'#cc00ff',ice:'#aaffff',lava:'#ff3300',toxic:'#aaff00',galaxy:'#7b2fff',gold:'#ffd700',rainbow:'#ff0088',void:'#5500aa'};
+function showProfile(){
+  var name = localStorage.getItem('playerName') || 'Player';
+  var level = parseInt(localStorage.getItem('playerLevel') || '1') || 1;
+  var xp = parseInt(localStorage.getItem('playerXp') || '0') || 0;
+  var coins = parseInt(localStorage.getItem('playerCoins') || '0') || 0;
+  document.getElementById('pAvatar').innerHTML = avatarSVG('#00f5ff', 44);
+  document.getElementById('pName').textContent = name;
+  document.getElementById('pLvl').textContent = level;
+  document.getElementById('pXp').textContent = xp;
+  document.getElementById('pCoins').textContent = coins;
+}
 
-let sb;
-try {
-  sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  const { data:{ session } } = await sb.auth.getSession();
-  if(!session){ window.location.href='../index.html'; }
-  else {
-    const { data } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
-    if(data){
-      const color = SKIN_COLORS[data.equipped||'cyan']||'#00f5ff';
-      document.getElementById('pAvatar').innerHTML = avatarSVG(color, 44);
-      document.getElementById('pName').textContent = data.name||'Player';
-      document.getElementById('pLvl').textContent = data.level||1;
-      document.getElementById('pXp').textContent = data.xp||0;
-      document.getElementById('pCoins').textContent = data.coins||0;
-    }
+function saveName(){
+  var inp = document.getElementById('nameInput');
+  var name = inp.value.trim().toUpperCase();
+  if(!name || name.length < 1){
+    document.getElementById('nameErr').textContent = 'Bitte gib einen Namen ein!';
+    inp.style.borderColor = '#ff006e';
+    return;
   }
-} catch(e){ console.error(e); }
+  inp.style.borderColor = 'rgba(0,245,255,0.3)';
+  document.getElementById('nameErr').textContent = '';
+  localStorage.setItem('playerName', name);
+  document.getElementById('nameModal').classList.add('off');
+  showProfile();
+}
 
-window.logout = async()=>{
-  if(sb) await sb.auth.signOut();
-  window.location.href='../index.html';
-};
+function openNameModal(){
+  document.getElementById('nameInput').value = localStorage.getItem('playerName') || '';
+  document.getElementById('nameErr').textContent = '';
+  document.getElementById('nameInput').style.borderColor = 'rgba(0,245,255,0.3)';
+  document.getElementById('nameModal').classList.remove('off');
+  setTimeout(function(){ document.getElementById('nameInput').focus(); }, 100);
+}
+
+document.getElementById('nameInput').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') saveName();
+});
+
+// Boot — no login required
+var existingName = localStorage.getItem('playerName');
+if(!existingName){
+  document.getElementById('nameModal').classList.remove('off');
+  setTimeout(function(){ document.getElementById('nameInput').focus(); }, 100);
+} else {
+  showProfile();
+}
 </script>
 </body>
 </html>

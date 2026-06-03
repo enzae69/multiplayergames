@@ -138,6 +138,7 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
     </div>
   </div>
   <button class="btn bghost" onclick="window.location.href='../menu.html'" style="font-size:12px;padding:10px 20px">← SPIELAUSWAHL</button>
+  <button class="btn bghost" onclick="changeName()" style="font-size:11px;padding:8px 16px;margin-top:-6px">✏️ NAMEN ÄNDERN</button>
   <div class="berr" id="menuErr"></div>
 </div>
 
@@ -194,11 +195,24 @@ function myColor(){return SKIN_COLORS[progress.equipped]||'#00f5ff'}
 function hexCol(c){return parseInt((c||'#00f5ff').replace('#',''),16)}
 
 function saveProg(){
+  // always persist to localStorage
+  localStorage.setItem('playerName', progress.name);
+  localStorage.setItem('playerLevel', progress.level);
+  localStorage.setItem('playerXp', progress.xp);
+  localStorage.setItem('playerCoins', progress.coins);
+  localStorage.setItem('playerBestWave', progress.bestWave);
   if(!sb||!SB_USER)return;
   sb.from('profiles').upsert({id:SB_USER.id,name:progress.name,level:progress.level,xp:progress.xp,coins:progress.coins,owned:progress.owned,equipped:progress.equipped,wins:progress.wins,games:progress.games,best_wave:progress.bestWave,updated_at:new Date().toISOString()}).then(function(){});
 }
+function loadFromLocalStorage(){
+  var n=localStorage.getItem('playerName'); if(n)progress.name=n;
+  var lv=parseInt(localStorage.getItem('playerLevel')||'0'); if(lv>0)progress.level=lv;
+  var xp=parseInt(localStorage.getItem('playerXp')||'0'); if(xp>0)progress.xp=xp;
+  var co=parseInt(localStorage.getItem('playerCoins')||'0'); if(co>0)progress.coins=co;
+  var bw=parseInt(localStorage.getItem('playerBestWave')||'0'); if(bw>0)progress.bestWave=bw;
+}
 function loadProg(cb){
-  if(!sb||!SB_USER){cb();return;}
+  if(!sb||!SB_USER){loadFromLocalStorage();cb();return;}
   sb.from('profiles').select('*').eq('id',SB_USER.id).single().then(function(r){
     var d=r.data;
     if(d){progress.name=d.name||'Player';progress.level=d.level||1;progress.xp=d.xp||0;progress.coins=d.coins||200;progress.owned=Array.isArray(d.owned)?d.owned:['cyan','pink'];progress.equipped=d.equipped||'cyan';progress.wins=d.wins||0;progress.games=d.games||0;progress.bestWave=d.best_wave||0;}
@@ -409,7 +423,7 @@ function startSolo(){
 }
 
 function toggleMulti(){
-  if(!isOnline){setErr('menuErr','Login nötig für Multiplayer!');return;}
+  if(!sb){setErr('menuErr','Keine Verbindung – bitte Seite neu laden.');return;}
   var m=document.getElementById('multiOpts');
   m.classList.toggle('show');
 }
@@ -419,14 +433,14 @@ function showJoin(){
 }
 
 function createRoom(){
-  if(!isOnline){setErr('menuErr','Login nötig!');return;}
+  if(!sb){setErr('menuErr','Keine Verbindung!');return;}
   mode='multi'; roomCode=randCode(); isHost=true; spawnMe(0); joinChannel();
 }
 
 function joinRoom(){
   var code=document.getElementById('joinCode').value.trim().toUpperCase();
   if(code.length!==4){setErr('menuErr','4 Zeichen eingeben!');return;}
-  if(!isOnline){setErr('menuErr','Login nötig!');return;}
+  if(!sb){setErr('menuErr','Keine Verbindung!');return;}
   mode='multi'; roomCode=code; isHost=false; spawnMe(0); joinChannel();
 }
 
@@ -456,6 +470,17 @@ function sendEmote(emoji){
   if(players[myId]){players[myId].emote=emoji;players[myId].emoteTime=now;}
   if(mode==='multi'&&channel)channel.send({type:'broadcast',event:'emote',payload:{id:myId,emote:emoji}});
   addChat('Du',emoji);
+}
+
+function changeName(){
+  var n=prompt('Neuer Spielername (max. 16 Zeichen):',progress.name);
+  if(n===null)return;
+  n=n.trim().toUpperCase().slice(0,16);
+  if(!n)return;
+  progress.name=n;
+  localStorage.setItem('playerName',n);
+  renderProfile();
+  if(players[myId])players[myId].name=n;
 }
 
 // ═══════════════════════════════════════════
@@ -819,65 +844,36 @@ renderLoop();
 // ═══════════════════════════════════════════
 function boot(){
   if(window.__booted)return; window.__booted=true;
-  // Always start the game UI first so Solo always works
   showScreen('sMenu');
+
+  // Load local data immediately — Solo always works without any login
+  loadFromLocalStorage();
   spawnMe(0);
-  // Read config from window (set by module script)
-  SUPA_URL = window.SUPA_URL || '';
-  SUPA_KEY = window.SUPA_KEY || '';
-  // Try Supabase (optional — Solo works without it)
-  if(typeof supabase !== 'undefined' && SUPA_URL && SUPA_URL.indexOf('DEIN')===-1){
+  renderProfile();
+
+  // Init Supabase with hardcoded public anon key (safe to expose)
+  // This enables Realtime channels for Multiplayer without requiring login
+  SUPA_URL='https://ozvyymrqibpyqccgszlz.supabase.co';
+  SUPA_KEY='sb_publishable_30WmZF8d8h_rUSrTGtBwnQ_Kn9gquwL';
+  if(typeof supabase!=='undefined'){
     try{
       sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+      // Optionally load Supabase profile if user is logged in
       sb.auth.getSession().then(function(r){
-        if(r.data && r.data.session){
+        if(r.data&&r.data.session){
           SB_USER=r.data.session.user; isOnline=true;
           loadProg(function(){renderProfile();});
         }
-      }).catch(function(e){console.error('Supabase auth error',e);});
-    }catch(e){console.error('Supabase init error',e);}
+      }).catch(function(){});
+    }catch(e){}
   }
 }
 window.boot = boot;
 </script>
 
-<!-- Load supabase config as normal script (sets SUPA_URL + SUPA_KEY globals) -->
 <script>
-// This small shim reads the ES module config and sets globals
-// We load it after the main script
-</script>
-<script>
-// Boot immediately — Solo always works, no config needed
-window.SUPA_URL = '';
-window.SUPA_KEY = '';
+// Config is hardcoded in boot() — no external file needed
 window.boot();
-</script>
-<script type="module">
-// Try to load Supabase config (only works on GitHub Pages, not preview)
-try {
-  const cfg = await import('../../supabase-config.js');
-  if(cfg && cfg.SUPABASE_URL && cfg.SUPABASE_URL.indexOf('DEIN')===-1){
-    window.SUPA_URL = cfg.SUPABASE_URL;
-    window.SUPA_KEY = cfg.SUPABASE_ANON_KEY;
-    // Re-init Supabase auth now that we have the config
-    if(typeof supabase !== 'undefined'){
-      try{
-        window.__sb = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-        window.__sb.auth.getSession().then(function(r){
-          if(r.data && r.data.session){
-            window.__sbUser = r.data.session.user;
-            window.__isOnline = true;
-            // update global state
-            sb = window.__sb; SB_USER = window.__sbUser; isOnline = true;
-            loadProg(function(){renderProfile();});
-          }
-        });
-      }catch(e){}
-    }
-  }
-} catch(e) {
-  // No config file — running in preview or offline mode, Solo still works
-}
 </script>
 
 </body>
