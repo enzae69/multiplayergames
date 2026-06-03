@@ -770,8 +770,12 @@ function joinChannel() {
     .on('broadcast',{event:'join'},function(m){
       if (m.payload.id !== myId) {
         var list = document.getElementById('plistHost');
-        if (list) list.innerHTML += '<div class="pslot filled">'+m.payload.name+'</div>';
+        if (list && !peers[m.payload.id]) {
+          list.innerHTML += '<div class="pslot filled">'+m.payload.name+'</div>';
+        }
         peers[m.payload.id] = m.payload;
+        // Re-announce ourselves so the new joiner can see us
+        if (roomCh) roomCh.send({type:'broadcast',event:'join',payload:{id:myId,name:progress.name}});
       }
     })
     .on('broadcast',{event:'pos'},function(m){
