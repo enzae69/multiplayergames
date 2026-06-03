@@ -148,7 +148,7 @@ var LASER_Y      = 0.65;
 var GRAVITY      = 22;
 var JUMP_V       = 9.5;
 var WALK_SPEED   = 7;
-var CAM_DIST     = 10;
+var CAM_DIST     = 7;
 var CAM_H        = 6;
 var CAM_TARGET_H = 3.5;  // camera looks at this height above player feet
 var FOV          = 380;
@@ -333,12 +333,12 @@ function drawLasers(t) {
     ctx.shadowBlur  = 28;
     ctx.shadowColor = L.color;
     ctx.strokeStyle = L.color;
-    ctx.lineWidth   = pa ? Math.max(4, pa.s * 0.7) : 4;
+    ctx.lineWidth   = 5;
     ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
 
     ctx.shadowBlur  = 6;
     ctx.strokeStyle = '#fff';
-    ctx.lineWidth   = pa ? Math.max(1.5, pa.s * 0.2) : 1.5;
+    ctx.lineWidth   = 2;
     ctx.globalAlpha = alpha * 0.6;
     ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
     ctx.restore();
