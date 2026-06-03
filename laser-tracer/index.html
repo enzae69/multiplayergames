@@ -799,9 +799,7 @@ function setupInput() {
     e.preventDefault();
     if (camTouchId !== null) return;
     var t = e.changedTouches[0];
-    camTouchId    = t.identifier;
-    camTouchLastX = t.clientX;
-    camTouchLastY = t.clientY;
+    camTouchId = t.identifier;
     camJoyOX = t.clientX; camJoyOY = t.clientY;
     cjb.style.left = (t.clientX - 45) + 'px';
     cjb.style.top  = (t.clientY - 45) + 'px';
