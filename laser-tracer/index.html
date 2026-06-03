@@ -818,23 +818,27 @@ renderLoop();
 //  BOOT
 // ═══════════════════════════════════════════
 function boot(){
-  // Try to init Supabase using global vars set by config script
+  if(window.__booted)return; window.__booted=true;
+  // Always start the game UI first so Solo always works
+  showScreen('sMenu');
+  spawnMe(0);
+  // Read config from window (set by module script)
+  SUPA_URL = window.SUPA_URL || '';
+  SUPA_KEY = window.SUPA_KEY || '';
+  // Try Supabase (optional — Solo works without it)
   if(typeof supabase !== 'undefined' && SUPA_URL && SUPA_URL.indexOf('DEIN')===-1){
     try{
       sb=supabase.createClient(SUPA_URL,SUPA_KEY);
       sb.auth.getSession().then(function(r){
-        if(r.data&&r.data.session){
+        if(r.data && r.data.session){
           SB_USER=r.data.session.user; isOnline=true;
-          loadProg(function(){renderProfile();showScreen('sMenu');spawnMe(0);});
-        } else {
-          showScreen('sMenu'); spawnMe(0);
+          loadProg(function(){renderProfile();});
         }
-      });
-    }catch(e){showScreen('sMenu');spawnMe(0);}
-  } else {
-    showScreen('sMenu'); spawnMe(0);
+      }).catch(function(e){console.error('Supabase auth error',e);});
+    }catch(e){console.error('Supabase init error',e);}
   }
 }
+window.boot = boot;
 </script>
 
 <!-- Load supabase config as normal script (sets SUPA_URL + SUPA_KEY globals) -->
@@ -842,11 +846,38 @@ function boot(){
 // This small shim reads the ES module config and sets globals
 // We load it after the main script
 </script>
-<script type="module">
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../../supabase-config.js';
-window.SUPA_URL = SUPABASE_URL;
-window.SUPA_KEY = SUPABASE_ANON_KEY;
+<script>
+// Boot immediately — Solo always works, no config needed
+window.SUPA_URL = '';
+window.SUPA_KEY = '';
 window.boot();
+</script>
+<script type="module">
+// Try to load Supabase config (only works on GitHub Pages, not preview)
+try {
+  const cfg = await import('../../supabase-config.js');
+  if(cfg && cfg.SUPABASE_URL && cfg.SUPABASE_URL.indexOf('DEIN')===-1){
+    window.SUPA_URL = cfg.SUPABASE_URL;
+    window.SUPA_KEY = cfg.SUPABASE_ANON_KEY;
+    // Re-init Supabase auth now that we have the config
+    if(typeof supabase !== 'undefined'){
+      try{
+        window.__sb = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+        window.__sb.auth.getSession().then(function(r){
+          if(r.data && r.data.session){
+            window.__sbUser = r.data.session.user;
+            window.__isOnline = true;
+            // update global state
+            sb = window.__sb; SB_USER = window.__sbUser; isOnline = true;
+            loadProg(function(){renderProfile();});
+          }
+        });
+      }catch(e){}
+    }
+  }
+} catch(e) {
+  // No config file — running in preview or offline mode, Solo still works
+}
 </script>
 
 </body>
