@@ -59,9 +59,6 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
 #joyBase{position:fixed;display:none;width:90px;height:90px;border:2px solid rgba(255,255,255,0.25);border-radius:50%;background:rgba(255,255,255,0.05);z-index:100;pointer-events:none;touch-action:none}
 #joyKnob{position:absolute;left:22px;top:22px;width:46px;height:46px;background:rgba(0,245,255,0.35);border:2px solid rgba(0,245,255,0.7);border-radius:50%}
 #joyZone{position:fixed;bottom:0;left:0;width:55%;height:55%;z-index:90;touch-action:none;display:none}
-#camJoyBase{position:fixed;display:none;width:90px;height:90px;border:2px solid rgba(0,245,255,0.25);border-radius:50%;background:rgba(0,245,255,0.04);z-index:100;pointer-events:none;touch-action:none}
-#camJoyKnob{position:absolute;left:22px;top:22px;width:46px;height:46px;background:rgba(0,245,255,0.2);border:2px solid rgba(0,245,255,0.55);border-radius:50%}
-#camZone{position:fixed;bottom:0;right:0;width:48%;height:100%;z-index:88;touch-action:none;display:none}
 #jumpBtn{position:fixed;bottom:32px;right:20px;width:112px;height:112px;border-radius:50%;background:rgba(57,255,20,0.2);border:3px solid #39ff14;color:#39ff14;font-family:'Russo One',sans-serif;font-size:18px;cursor:pointer;touch-action:manipulation;z-index:101;display:none;align-items:center;justify-content:center;box-shadow:0 0 32px rgba(57,255,20,.45)}
 #jumpBtn:active{background:rgba(57,255,20,0.45)}
 #errBanner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:999;background:#c00;color:#fff;font-size:12px;padding:8px 12px;font-family:monospace;white-space:pre-wrap;max-height:120px;overflow-y:auto}
@@ -138,8 +135,6 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
 <!-- Mobile controls -->
 <div id="joyBase"><div id="joyKnob"></div></div>
 <div id="joyZone"></div>
-<div id="camJoyBase"><div id="camJoyKnob"></div></div>
-<div id="camZone"></div>
 <button id="jumpBtn">JUMP</button>
 <div id="errBanner"></div>
 
@@ -175,8 +170,7 @@ var soloAlive = false, soloWave = 1, soloStart = 0, soloTime = 0, soloGrace = 2.
 var progress = {name:'PLAYER', level:1, xp:0, coins:0, bestWave:0};
 var keys = {};
 var joyDX = 0, joyDZ = 0, joyActive = false;
-var camTouchId = null, camManualUntil = 0;
-var camJoyOX = 0, camJoyOY = 0, camJoyDX = 0, camJoyDY = 0;
+var camTouchId = null, camTouchLastX = 0, camTouchLastY = 0;
 var jumpHeld = false;
 var sb = null, myRoom = null, myId = null, peers = {}, isHost = false;
 var roomCh = null;
@@ -556,12 +550,6 @@ function loop(ts) {
   if (gameState === 'solo' || gameState === 'multi') {
     updatePlayer(dt);
     updateLasers(dt);
-    // Camera joystick: continuous rotation proportional to knob displacement
-    if (camJoyDX !== 0 || camJoyDY !== 0) {
-      camYaw   -= camJoyDX * 2.8 * dt;
-      camPitch += camJoyDY * 4.0 * dt;
-      camPitch  = Math.max(-5, Math.min(12, camPitch));
-    }
     // Auto-jump while button held
     if (jumpHeld && myY <= 0.05) doJump();
     updateCam();
@@ -696,10 +684,8 @@ function showScreen(id) {
   var inGame = (id === 'sGame');
   var jz = document.getElementById('joyZone');
   var jb = document.getElementById('jumpBtn');
-  var cz = document.getElementById('camZone');
   if (jz) jz.style.display = inGame ? 'block' : 'none';
   if (jb) jb.style.display = inGame ? 'flex' : 'none';
-  if (cz) cz.style.display = inGame ? 'block' : 'none';
 }
 
 // ── PROFILE ───────────────────────────────────────────────────────────────
@@ -790,48 +776,39 @@ function setupInput() {
   jBtn.addEventListener('mousedown',  function(){ jumpHeld=true; doJump(); });
   window.addEventListener('mouseup',  function(){ jumpHeld=false; });
 
-  // Camera joystick (Roblox-style, right side zone)
-  var cz2 = document.getElementById('camZone');
-  var cjb = document.getElementById('camJoyBase');
-  var cjk = document.getElementById('camJoyKnob');
-  var CAM_MAX = 44;
-  cz2.addEventListener('touchstart', function(e){
-    e.preventDefault();
-    if (camTouchId !== null) return;
-    var t = e.changedTouches[0];
-    camTouchId = t.identifier;
-    camJoyOX = t.clientX; camJoyOY = t.clientY;
-    cjb.style.left = (t.clientX - 45) + 'px';
-    cjb.style.top  = (t.clientY - 45) + 'px';
-    cjb.style.display = 'block';
-  },{passive:false});
-  cz2.addEventListener('touchmove', function(e){
-    e.preventDefault();
+  // Camera: simple finger swipe on right half of screen
+  canvas.addEventListener('touchstart', function(e){
+    if (gameState !== 'solo' && gameState !== 'multi') return;
+    for (var i = 0; i < e.changedTouches.length; i++) {
+      var t = e.changedTouches[i];
+      if (t.clientX > W * 0.50 && camTouchId === null) {
+        camTouchId    = t.identifier;
+        camTouchLastX = t.clientX;
+        camTouchLastY = t.clientY;
+      }
+    }
+  }, {passive: true});
+  canvas.addEventListener('touchmove', function(e){
+    if (camTouchId === null) return;
     for (var i = 0; i < e.changedTouches.length; i++) {
       var t = e.changedTouches[i];
       if (t.identifier !== camTouchId) continue;
-      var kx = Math.max(-CAM_MAX, Math.min(CAM_MAX, t.clientX - camJoyOX));
-      var ky = Math.max(-CAM_MAX, Math.min(CAM_MAX, t.clientY - camJoyOY));
-      camJoyDX = kx / CAM_MAX;   // -1..1, applied per-frame in loop
-      camJoyDY = ky / CAM_MAX;
-      cjk.style.left = (22 + kx) + 'px';
-      cjk.style.top  = (22 + ky) + 'px';
+      camYaw   -= (t.clientX - camTouchLastX) * 0.007;
+      camPitch += (t.clientY - camTouchLastY) * 0.013;
+      camPitch  = Math.max(-5, Math.min(12, camPitch));
+      camTouchLastX = t.clientX;
+      camTouchLastY = t.clientY;
+      buildCamMatrix();
       break;
     }
-  },{passive:false});
-  function endCamJoy(e) {
+  }, {passive: true});
+  function endCam(e) {
     for (var i = 0; i < e.changedTouches.length; i++) {
-      if (e.changedTouches[i].identifier === camTouchId) {
-        camTouchId = null;
-        camJoyDX = 0; camJoyDY = 0;
-        cjb.style.display = 'none';
-        cjk.style.left = '22px'; cjk.style.top = '22px';
-        break;
-      }
+      if (e.changedTouches[i].identifier === camTouchId) { camTouchId = null; break; }
     }
   }
-  cz2.addEventListener('touchend',    endCamJoy, {passive:false});
-  cz2.addEventListener('touchcancel', endCamJoy, {passive:false});
+  canvas.addEventListener('touchend',    endCam, {passive: true});
+  canvas.addEventListener('touchcancel', endCam, {passive: true});
 }
 
 // ── ERROR ─────────────────────────────────────────────────────────────────
