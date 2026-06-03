@@ -163,7 +163,7 @@ var camX = 0, camY = CAM_H, camZ = 17, camYaw = Math.PI;
 var _cy, _sy, _cp, _sp;
 var lasers = [];
 var gameState = 'menu';
-var soloAlive = false, soloWave = 1, soloStart = 0, soloTime = 0;
+var soloAlive = false, soloWave = 1, soloStart = 0, soloTime = 0, soloGrace = 2.5;
 var progress = {name:'PLAYER', level:1, xp:0, coins:0, bestWave:0};
 var keys = {};
 var joyDX = 0, joyDZ = 0, joyActive = false;
@@ -407,7 +407,7 @@ function loop(ts) {
     if (gameState === 'solo' && soloAlive) {
       soloTime = (ts - soloStart)/1000;
       updateHUD();
-      if (checkHit()) { soloAlive = false; endSolo(); return; }
+      if (soloTime > soloGrace && checkHit()) { soloAlive = false; endSolo(); return; }
     }
     render(ts/1000);
     if (gameState === 'multi') syncPos();
@@ -416,7 +416,7 @@ function loop(ts) {
 
 // ── SOLO ──────────────────────────────────────────────────────────────────
 function startSolo() {
-  myX = 0; myZ = 10; myY = 0; myVY = 0; myYaw = Math.PI;
+  myX = 4; myZ = 8; myY = 0; myVY = 0; myYaw = Math.PI;
   camYaw = Math.PI;
   camX = myX - Math.sin(camYaw)*CAM_DIST;
   camZ = myZ - Math.cos(camYaw)*CAM_DIST;
@@ -448,7 +448,14 @@ function updateHUD() {
   var w = document.getElementById('hudWave');
   var t = document.getElementById('hudTime');
   if (w) w.textContent = 'W'+soloWave;
-  if (t) t.textContent = soloTime.toFixed(1)+'s';
+  if (t) {
+    if (soloTime < soloGrace) {
+      var left = Math.ceil(soloGrace - soloTime);
+      t.textContent = left > 0 ? left + '...' : 'GO!';
+    } else {
+      t.textContent = (soloTime - soloGrace).toFixed(1)+'s';
+    }
+  }
 }
 
 // ── MULTIPLAYER ───────────────────────────────────────────────────────────
