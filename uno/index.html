@@ -32,6 +32,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050510;color:#fff;f
 .joinrow{display:none;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
 .joinrow.show{display:flex}
 
+/* ── SOLO BOT SELECTOR ── */
+.solo-box{background:rgba(10,10,31,.95);border:2px solid rgba(57,255,20,.3);border-radius:14px;padding:16px 20px;width:min(300px,90vw);display:none;flex-direction:column;align-items:center;gap:12px}
+.solo-box.show{display:flex}
+.solo-label{font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:3px;color:rgba(255,255,255,.5)}
+.bot-row{display:flex;gap:10px}
+.bot-btn{font-family:'Russo One',sans-serif;font-size:18px;width:54px;height:54px;border-radius:10px;border:2px solid rgba(57,255,20,.25);background:rgba(15,15,42,1);color:rgba(255,255,255,.5);cursor:pointer;transition:all .15s;touch-action:manipulation}
+.bot-btn.sel{background:rgba(57,255,20,.15);border-color:#39ff14;color:#39ff14;box-shadow:0 0 12px rgba(57,255,20,.3)}
+.bot-btn:active{transform:scale(.92)}
+
 /* ── LOBBY ── */
 .lbox{background:rgba(10,10,31,.95);border:2px solid rgba(0,245,255,.3);border-radius:18px;padding:20px;width:min(420px,95vw)}
 .ltitle{font-family:'Russo One',sans-serif;font-size:18px;color:#00f5ff;text-align:center;letter-spacing:3px;margin-bottom:12px}
@@ -43,7 +52,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050510;color:#fff;f
 
 /* ── GAME SCREEN ── */
 #sGame{padding:0;justify-content:flex-start;overflow:hidden;gap:0}
-
 .opponents-bar{display:flex;gap:6px;padding:8px 10px 6px;overflow-x:auto;min-height:78px;align-items:center;background:rgba(0,0,0,.35);width:100%;flex-shrink:0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .opponents-bar::-webkit-scrollbar{display:none}
 .opp{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:62px;padding:5px 4px;border-radius:10px;border:2px solid transparent;transition:border-color .25s,background .25s;flex-shrink:0}
@@ -54,6 +62,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050510;color:#fff;f
 .opp-count{font-family:'Russo One',sans-serif;font-size:19px;color:#fff;line-height:1}
 .opp-uno{color:#ff006e;font-size:9px;letter-spacing:2px;font-weight:900;animation:unopop .5s ease infinite alternate}
 @keyframes unopop{from{opacity:.6}to{opacity:1}}
+.opp-bot{font-size:8px;color:rgba(57,255,20,.6);letter-spacing:1px}
 
 .table-area{flex:1;display:flex;align-items:center;justify-content:center;gap:16px;padding:8px 12px;overflow:hidden;min-height:0}
 .discard-pile{display:flex;align-items:center;justify-content:center}
@@ -62,7 +71,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050510;color:#fff;f
 .info-col{display:flex;flex-direction:column;align-items:center;gap:8px}
 .color-ring{width:34px;height:34px;border-radius:50%;border:3px solid rgba(255,255,255,.5);transition:background .3s,box-shadow .3s;flex-shrink:0}
 .dir-badge{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:3px 10px;font-size:14px;color:rgba(255,255,255,.6);letter-spacing:2px}
-.last-action{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:1.5px;text-align:center;max-width:80px;line-height:1.4}
+.last-action{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:1px;text-align:center;max-width:80px;line-height:1.4}
 
 .hand-area{background:rgba(0,0,0,.45);padding:7px 10px 10px;border-top:1px solid rgba(255,255,255,.08);flex-shrink:0;width:100%}
 .hand-top{display:flex;justify-content:space-between;align-items:center;padding-bottom:5px}
@@ -71,6 +80,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050510;color:#fff;f
 .turn-me{background:rgba(57,255,20,.15);color:#39ff14;border:1px solid rgba(57,255,20,.4);animation:mepulse 1s ease-in-out infinite}
 @keyframes mepulse{0%,100%{box-shadow:0 0 0 0 rgba(57,255,20,.3)}50%{box-shadow:0 0 8px 2px rgba(57,255,20,.2)}}
 .turn-other{background:rgba(255,255,255,.05);color:rgba(255,255,255,.35);border:1px solid rgba(255,255,255,.08)}
+.turn-bot{background:rgba(255,140,0,.1);color:rgba(255,140,0,.7);border:1px solid rgba(255,140,0,.2)}
 .hand-scroll{display:flex;gap:7px;overflow-x:auto;padding:3px 3px 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .hand-scroll::-webkit-scrollbar{display:none}
 
@@ -87,16 +97,17 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050510;color:#fff;f
 .ucard-corner{position:absolute;font-family:'Russo One',sans-serif;font-size:10px;color:rgba(255,255,255,.85);line-height:1}
 .ucard-corner.tl{top:3px;left:5px}
 .ucard-corner.br{bottom:3px;right:5px;transform:rotate(180deg)}
-/* Card colour variants */
 .uc-red{background:linear-gradient(145deg,#b5101c,#e32636);border-color:rgba(255,130,130,.35)}
 .uc-blue{background:linear-gradient(145deg,#0b449a,#1565c0);border-color:rgba(100,160,255,.35)}
 .uc-green{background:linear-gradient(145deg,#185a1c,#2e7d32);border-color:rgba(100,220,100,.35)}
 .uc-yellow{background:linear-gradient(145deg,#d97000,#f9a825);border-color:rgba(255,220,80,.35)}
-.uc-wild{background:conic-gradient(#e32636 0 25%, #f9a825 25% 50%, #2e7d32 50% 75%, #1565c0 75% 100%);border-color:rgba(255,255,255,.4)}
-/* Pass button */
+.uc-wild{background:conic-gradient(#e32636 0 25%,#f9a825 25% 50%,#2e7d32 50% 75%,#1565c0 75% 100%);background-color:#111;border-color:rgba(255,255,255,.4)}
+
+/* Bot thinking indicator */
+#botThinking{position:fixed;top:88px;left:50%;transform:translateX(-50%);z-index:60;background:rgba(10,10,31,.9);border:1px solid rgba(255,140,0,.4);border-radius:20px;padding:5px 16px;font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:2px;color:rgba(255,140,0,.8);display:none;pointer-events:none}
+
 #passBtn{position:fixed;bottom:14px;right:14px;z-index:80;display:none;font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:1px;padding:11px 18px;border:none;border-radius:10px;cursor:pointer;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.2);touch-action:manipulation}
 #passBtn:active{opacity:.7}
-/* UNO shout button */
 #unoBtnWrap{position:fixed;bottom:110px;right:14px;z-index:80;display:none}
 #unoBtn{font-family:'Russo One',sans-serif;font-size:20px;letter-spacing:3px;padding:12px 18px;border:none;border-radius:12px;cursor:pointer;background:linear-gradient(135deg,#a00018,#ff006e);color:#fff;box-shadow:0 0 24px rgba(255,0,110,.55);animation:unopulse .8s ease-in-out infinite;touch-action:manipulation}
 @keyframes unopulse{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
@@ -138,6 +149,20 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050510;color:#fff;f
       <div style="font-size:11px;color:rgba(255,255,255,.4);letter-spacing:1px">Bereit zum Spielen</div>
     </div>
   </div>
+
+  <!-- Solo -->
+  <button class="btn bgreen" id="soloBtn">🤖 SOLO vs BOTS</button>
+  <div class="solo-box" id="soloBox">
+    <div class="solo-label">ANZAHL BOTS</div>
+    <div class="bot-row">
+      <button class="bot-btn sel" onclick="setBots(1)">1</button>
+      <button class="bot-btn"     onclick="setBots(2)">2</button>
+      <button class="bot-btn"     onclick="setBots(3)">3</button>
+    </div>
+    <button class="btn bgreen" id="startSoloBtn" style="width:min(220px,80vw);padding:12px;font-size:14px">▶ SPIELEN</button>
+  </div>
+
+  <!-- Multiplayer -->
   <button class="btn bcyan" id="multiBtn">⚔️ MULTIPLAYER</button>
   <div class="multibtns" id="multibtns">
     <button class="btn bcyan" id="createBtn" style="font-size:13px;padding:11px">+ RAUM ERSTELLEN</button>
@@ -147,6 +172,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050510;color:#fff;f
       <button class="btn bcyan" id="joinBtn" style="width:auto;padding:11px 18px;font-size:13px">JOIN</button>
     </div>
   </div>
+
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center">
     <input class="nameinp" id="nameInp" maxlength="16" placeholder="NAME ÄNDERN..." autocomplete="off" spellcheck="false"/>
     <button class="btn bcyan" id="nameBtn" style="width:auto;padding:11px 16px;font-size:13px">OK</button>
@@ -170,27 +196,21 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050510;color:#fff;f
 
 <!-- ══ GAME ═══════════════════════════════════════════════════════ -->
 <div id="sGame" class="screen off">
-  <!-- Opponents strip -->
   <div class="opponents-bar" id="oppsEl"></div>
-  <!-- Table -->
   <div class="table-area">
-    <!-- Discard pile -->
     <div class="discard-pile" id="discardEl"></div>
-    <!-- Draw pile -->
     <div class="draw-wrap">
-      <div id="drawPileEl" onclick="onClickDraw()" style="cursor:pointer">
+      <div id="drawPileEl" onclick="onClickDraw()">
         <div class="ucard large ucard-back"></div>
       </div>
       <div class="deck-count-lbl" id="deckCountLbl">-- Karten</div>
     </div>
-    <!-- Info column -->
     <div class="info-col">
       <div class="color-ring" id="colorRing"></div>
       <div class="dir-badge" id="dirBadge">▶▶</div>
       <div class="last-action" id="lastActionLbl"></div>
     </div>
   </div>
-  <!-- My hand -->
   <div class="hand-area">
     <div class="hand-top">
       <div class="my-label" id="myLabel">ICH (0)</div>
@@ -223,7 +243,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050510;color:#fff;f
   </div>
 </div>
 
-<!-- ══ FLOATING BUTTONS ════════════════════════════════════════════ -->
+<!-- ══ OVERLAYS ════════════════════════════════════════════════════ -->
+<div id="botThinking">🤖 Bot denkt nach…</div>
 <div id="unoBtnWrap"><button id="unoBtn" onclick="shoutUno()">UNO!</button></div>
 <button id="passBtn" onclick="onPassTurn()">PASSEN ›</button>
 
@@ -234,11 +255,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050510;color:#fff;f
 // ════════════════════════════════════════════════════════
 // CONSTANTS
 // ════════════════════════════════════════════════════════
-var SUPA_URL  = 'https://ozvyymrqibpyqccgszlz.supabase.co';
-var SUPA_KEY  = 'sb_publishable_30WmZF8d8h_rUSrTGtBwnQ_Kn9gquwL';
+var SUPA_URL   = 'https://ozvyymrqibpyqccgszlz.supabase.co';
+var SUPA_KEY   = 'sb_publishable_30WmZF8d8h_rUSrTGtBwnQ_Kn9gquwL';
 var PLR_COLORS = ['#ff006e','#ff6b00','#ffdd00','#39ff14','#00f5ff','#bf00ff','#ff3cac','#00ffa3'];
 var COLOR_HEX  = {red:'#e32636', blue:'#1565c0', green:'#2e7d32', yellow:'#f9a825'};
 var COLOR_NAME = {red:'Rot', blue:'Blau', green:'Grün', yellow:'Gelb'};
+var BOT_NAMES  = ['BOT ALEX','BOT SARA','BOT MAX'];
 
 // ════════════════════════════════════════════════════════
 // STATE
@@ -249,36 +271,39 @@ var myName = 'PLAYER';
 var isHost = false;
 var myRoom = null;
 var roomCh = null;
+var gs     = null;
 
-// gs = authoritative game state, always up-to-date on host.
-// Non-host players receive it via broadcast.
-var gs = null;
-
-// Host-only: full deck & discard pile (not broadcast to save bandwidth)
+// Host-only deck/discard
 var hDeck    = [];
 var hDiscard = [];
 
-// Lobby player registry {id: {id,name,colorIdx}}
+// Lobby registry {id: {id,name,ci}}
 var lobby = {};
 
-// Card pending colour selection (wild played but colour not yet chosen)
+// Card pending colour selection
 var pendingCard = null;
+
+// Solo / bot state
+var isSolo       = false;
+var botIds       = [];
+var selBots      = 1;
+var botTimer     = null;
 
 // ════════════════════════════════════════════════════════
 // CARD UTILITIES
 // ════════════════════════════════════════════════════════
 var _uid = 0;
-function mkCard(color, value){ return {c:color, v:value, u:++_uid}; }
+function mkCard(c,v){ return {c:c,v:v,u:++_uid}; }
 
 function buildDeck(){
-  var colors = ['red','blue','green','yellow'], deck = [];
-  colors.forEach(function(col){
-    deck.push(mkCard(col,'0'));
-    for(var n=1;n<=9;n++){ deck.push(mkCard(col,String(n))); deck.push(mkCard(col,String(n))); }
-    ['skip','reverse','draw2'].forEach(function(v){ deck.push(mkCard(col,v)); deck.push(mkCard(col,v)); });
+  var cols=['red','blue','green','yellow'], d=[];
+  cols.forEach(function(col){
+    d.push(mkCard(col,'0'));
+    for(var n=1;n<=9;n++){ d.push(mkCard(col,String(n))); d.push(mkCard(col,String(n))); }
+    ['skip','reverse','draw2'].forEach(function(v){ d.push(mkCard(col,v)); d.push(mkCard(col,v)); });
   });
-  for(var i=0;i<4;i++){ deck.push(mkCard('wild','wild')); deck.push(mkCard('wild','wild4')); }
-  return deck;
+  for(var i=0;i<4;i++){ d.push(mkCard('wild','wild')); d.push(mkCard('wild','wild4')); }
+  return d;
 }
 
 function shuffle(arr){
@@ -287,10 +312,10 @@ function shuffle(arr){
   return a;
 }
 
-function canPlay(card, topCard, curColor){
+function canPlay(card, top, curColor){
   if(card.c==='wild') return true;
   if(card.c===curColor) return true;
-  if(card.v===topCard.v) return true;
+  if(card.v===top.v) return true;
   return false;
 }
 
@@ -303,197 +328,209 @@ function cardLabel(v){
   return v;
 }
 
-function cardColorClass(card){ return 'uc-'+(card.c==='wild'?'wild':card.c); }
+function cardCls(card){ return 'uc-'+(card.c==='wild'?'wild':card.c); }
 
 // ════════════════════════════════════════════════════════
 // HOST GAME LOGIC
 // ════════════════════════════════════════════════════════
 function hostInitGame(){
   var ids = Object.keys(lobby);
-  if(ids.length < 2){ showToast('Mindestens 2 Spieler benötigt!'); return; }
-
-  _uid = 0;
-  hDeck    = shuffle(buildDeck());
-  hDiscard = [];
-
-  // Deal 7 cards per player
-  var hands = {};
+  if(ids.length<2){ showToast('Mindestens 2 Spieler!'); return; }
+  _uid=0; hDeck=shuffle(buildDeck()); hDiscard=[];
+  var hands={};
   ids.forEach(function(pid){ hands[pid]=[]; for(var i=0;i<7;i++) hands[pid].push(hDeck.pop()); });
-
-  // First discard card must not be wild
-  var top = hDeck.pop();
+  var top=hDeck.pop();
   while(top.c==='wild'){ hDeck.unshift(top); top=hDeck.pop(); }
   hDiscard.push(top);
-
-  var players = ids.map(function(pid,i){ return {id:pid, name:lobby[pid].name, ci:lobby[pid].ci||i}; });
-
-  gs = {
-    phase:'playing',
-    players: players,
-    hands: hands,
-    deckCount: hDeck.length,
-    topCard: top,
-    curColor: top.c,
-    idx: 0,
-    dir: 1,
-    pendingDraws: 0,
-    drewUid: null,
-    winner: null,
-    lastAction: 'Spiel gestartet!'
-  };
-
-  hostBroadcast();
+  var players=ids.map(function(pid,i){ return {id:pid,name:lobby[pid].name,ci:lobby[pid].ci||i}; });
+  gs={phase:'playing',players:players,hands:hands,deckCount:hDeck.length,
+      topCard:top,curColor:top.c,idx:0,dir:1,pendingDraws:0,drewUid:null,winner:null,lastAction:'Spiel gestartet!'};
+  afterStateChange();
 }
 
-function hCurPlayer(){ return gs.players[gs.idx]; }
+function hCur(){ return gs.players[gs.idx]; }
 
 function hostAdvance(skip){
-  var n = gs.players.length;
-  gs.idx = ((gs.idx + gs.dir*(skip||1)) % n + n) % n;
-  gs.drewUid = null;
+  var n=gs.players.length;
+  gs.idx=((gs.idx+gs.dir*(skip||1))%n+n)%n;
+  gs.drewUid=null;
 }
 
-function hostForceDraw(pid, amount){
-  var hand = gs.hands[pid];
-  for(var i=0;i<amount;i++){
-    if(hDeck.length===0) hostReshuffle();
-    if(hDeck.length>0) hand.push(hDeck.pop());
-  }
-  gs.deckCount  = hDeck.length;
-  gs.pendingDraws = 0;
-  var pname = gs.players.find(function(p){return p.id===pid;}).name;
-  gs.lastAction += ' → '+pname+' zieht '+amount+'!';
+function hostForceDraw(pid,amount){
+  var hand=gs.hands[pid];
+  for(var i=0;i<amount;i++){ if(hDeck.length===0) hostReshuffle(); if(hDeck.length>0) hand.push(hDeck.pop()); }
+  gs.deckCount=hDeck.length; gs.pendingDraws=0;
+  var pn=gs.players.find(function(p){return p.id===pid;}).name;
+  gs.lastAction+=' → '+pn+' zieht '+amount+'!';
 }
 
 function hostReshuffle(){
   if(hDiscard.length<=1) return;
-  var keep = hDiscard.pop();
-  hDeck = shuffle(hDiscard);
-  hDiscard = [keep];
-  gs.deckCount = hDeck.length;
+  var keep=hDiscard.pop(); hDeck=shuffle(hDiscard); hDiscard=[keep]; gs.deckCount=hDeck.length;
 }
 
 function hostPlayCard(pid, uid, chosenColor){
-  if(!gs || gs.phase!=='playing') return;
-  if(hCurPlayer().id !== pid) return;
-
-  var hand = gs.hands[pid];
-  var ci = hand.findIndex(function(c){ return c.u===uid; });
+  if(!gs||gs.phase!=='playing') return;
+  if(hCur().id!==pid) return;
+  var hand=gs.hands[pid], ci=hand.findIndex(function(c){return c.u===uid;});
   if(ci<0) return;
-  var card = hand[ci];
-
-  // If stacked draws: only draw2 on draw2, wild4 on wild4/draw2
-  if(gs.pendingDraws>0){
-    if(card.v!=='draw2' && card.v!=='wild4') return;
-  }
-  if(!canPlay(card, gs.topCard, gs.curColor)) return;
-
-  // Wild needs colour
-  if(card.c==='wild' && !chosenColor) return;
-
-  // Remove from hand
+  var card=hand[ci];
+  if(gs.pendingDraws>0 && card.v!=='draw2' && card.v!=='wild4') return;
+  if(!canPlay(card,gs.topCard,gs.curColor)) return;
+  if(card.c==='wild'&&!chosenColor) return;
   hand.splice(ci,1);
   hDiscard.push(gs.topCard);
-  gs.topCard   = card;
-  gs.drewUid   = null;
-  gs.deckCount = hDeck.length;
-
-  var pname = gs.players.find(function(p){return p.id===pid;}).name;
-  gs.lastAction = pname + ' spielt ' + cardLabel(card.v);
-
-  // Check win
-  if(hand.length===0){
-    gs.winner = pid;
-    gs.phase  = 'finished';
-    gs.lastAction = pname + ' hat gewonnen! 🎉';
-    hostBroadcast();
-    return;
-  }
-
-  // Apply effect
-  var n = gs.players.length;
+  gs.topCard=card; gs.drewUid=null; gs.deckCount=hDeck.length;
+  var pn=gs.players.find(function(p){return p.id===pid;}).name;
+  gs.lastAction=pn+' spielt '+cardLabel(card.v);
+  if(hand.length===0){ gs.winner=pid; gs.phase='finished'; gs.lastAction=pn+' hat gewonnen! 🎉'; afterStateChange(); return; }
+  var n=gs.players.length;
   if(card.c==='wild'){
-    gs.curColor = chosenColor;
+    gs.curColor=chosenColor;
     if(card.v==='wild4'){
-      gs.pendingDraws += 4;
-      hostAdvance(1);
-      hostForceDraw(hCurPlayer().id, gs.pendingDraws||4);
-      gs.pendingDraws = 0;
-      hostAdvance(1);
+      gs.lastAction+=' ('+COLOR_NAME[chosenColor]+')';
+      hostAdvance(1); hostForceDraw(hCur().id,4); hostAdvance(1);
     } else {
-      gs.lastAction += ' ('+COLOR_NAME[chosenColor]+')';
-      hostAdvance(1);
+      gs.lastAction+=' ('+COLOR_NAME[chosenColor]+')'; hostAdvance(1);
     }
   } else {
-    gs.curColor = card.c;
-    if(card.v==='skip'){
-      gs.lastAction += ' — Aussetzen!';
-      hostAdvance(2);
-    } else if(card.v==='reverse'){
-      gs.dir *= -1;
-      gs.lastAction += ' — Richtungswechsel!';
-      if(n===2){ hostAdvance(2); } else { hostAdvance(1); }
-    } else if(card.v==='draw2'){
-      gs.pendingDraws += 2;
-      hostAdvance(1);
-      hostForceDraw(hCurPlayer().id, gs.pendingDraws);
-      gs.pendingDraws = 0;
-      hostAdvance(1);
-    } else {
-      hostAdvance(1);
-    }
+    gs.curColor=card.c;
+    if(card.v==='skip'){ gs.lastAction+=' — Aussetzen!'; hostAdvance(2); }
+    else if(card.v==='reverse'){ gs.dir*=-1; gs.lastAction+=' — Wechsel!'; hostAdvance(n===2?2:1); }
+    else if(card.v==='draw2'){ hostAdvance(1); hostForceDraw(hCur().id,2); hostAdvance(1); }
+    else { hostAdvance(1); }
   }
-
-  hostBroadcast();
+  afterStateChange();
 }
 
 function hostDrawCard(pid){
-  if(!gs || gs.phase!=='playing') return;
-  if(hCurPlayer().id !== pid) return;
+  if(!gs||gs.phase!=='playing') return;
+  if(hCur().id!==pid) return;
   if(gs.drewUid) return;
-
-  if(gs.pendingDraws>0){
-    hostForceDraw(pid, gs.pendingDraws);
-    gs.pendingDraws = 0;
-    hostAdvance(1);
-    hostBroadcast();
-    return;
-  }
-
+  if(gs.pendingDraws>0){ hostForceDraw(pid,gs.pendingDraws); hostAdvance(1); afterStateChange(); return; }
   if(hDeck.length===0) hostReshuffle();
   if(hDeck.length===0) return;
-
-  var card = hDeck.pop();
-  gs.hands[pid].push(card);
-  gs.deckCount = hDeck.length;
-
-  var pname = gs.players.find(function(p){return p.id===pid;}).name;
-  gs.lastAction = pname + ' zieht eine Karte';
-
-  if(!canPlay(card, gs.topCard, gs.curColor)){
-    hostAdvance(1);
-    gs.lastAction += ' (kein Zug)';
-  } else {
-    gs.drewUid = card.u; // player may now choose to play it
-  }
-
-  hostBroadcast();
+  var card=hDeck.pop(); gs.hands[pid].push(card); gs.deckCount=hDeck.length;
+  var pn=gs.players.find(function(p){return p.id===pid;}).name;
+  gs.lastAction=pn+' zieht eine Karte';
+  if(!canPlay(card,gs.topCard,gs.curColor)){ hostAdvance(1); gs.lastAction+=' (kein Zug)'; }
+  else { gs.drewUid=card.u; }
+  afterStateChange();
 }
 
 function hostPassTurn(pid){
-  if(!gs || gs.phase!=='playing') return;
-  if(hCurPlayer().id !== pid) return;
+  if(!gs||gs.phase!=='playing') return;
+  if(hCur().id!==pid) return;
   if(!gs.drewUid) return;
-  var pname = gs.players.find(function(p){return p.id===pid;}).name;
-  gs.drewUid    = null;
-  gs.lastAction = pname + ' passt';
-  hostAdvance(1);
-  hostBroadcast();
+  var pn=gs.players.find(function(p){return p.id===pid;}).name;
+  gs.drewUid=null; gs.lastAction=pn+' passt'; hostAdvance(1); afterStateChange();
 }
 
-function hostBroadcast(){
-  if(roomCh) roomCh.send({type:'broadcast', event:'state', payload:{s:gs}});
+// Central "after any state change" — broadcasts + triggers bot
+function afterStateChange(){
+  if(roomCh) roomCh.send({type:'broadcast',event:'state',payload:{s:gs}});
   updateGameUI();
+  if(isSolo && gs && gs.phase==='playing' && isBotTurn()) scheduleBotTurn();
+}
+
+// ════════════════════════════════════════════════════════
+// BOT AI
+// ════════════════════════════════════════════════════════
+function isBotTurn(){
+  var cur=hCur();
+  return cur && botIds.indexOf(cur.id)!==-1;
+}
+
+function scheduleBotTurn(){
+  clearTimeout(botTimer);
+  document.getElementById('botThinking').style.display='block';
+  var delay = 700 + Math.random()*900;
+  botTimer = setTimeout(doBotTurn, delay);
+}
+
+function doBotTurn(){
+  document.getElementById('botThinking').style.display='none';
+  if(!gs||gs.phase!=='playing') return;
+  var cur=hCur();
+  if(!cur||botIds.indexOf(cur.id)===-1) return;
+  var hand=gs.hands[cur.id]||[];
+
+  // Handle drawn card first
+  if(gs.drewUid){
+    var drew=hand.find(function(c){return c.u===gs.drewUid;});
+    if(drew && canPlay(drew,gs.topCard,gs.curColor)){
+      var col = drew.c==='wild' ? botPickColor(hand) : null;
+      hostPlayCard(cur.id, drew.u, col);
+    } else {
+      hostPassTurn(cur.id);
+    }
+    return;
+  }
+
+  // Must draw stacked?
+  if(gs.pendingDraws>0){
+    var counter=hand.find(function(c){return c.v==='draw2'||c.v==='wild4';});
+    if(counter && canPlay(counter,gs.topCard,gs.curColor)){
+      hostPlayCard(cur.id,counter.u, counter.c==='wild'?botPickColor(hand):null);
+    } else {
+      hostDrawCard(cur.id);
+    }
+    return;
+  }
+
+  // Choose best playable card
+  var playable=hand.filter(function(c){return canPlay(c,gs.topCard,gs.curColor);});
+  if(playable.length===0){ hostDrawCard(cur.id); return; }
+
+  var card=botPickCard(playable, hand);
+  hostPlayCard(cur.id, card.u, card.c==='wild'?botPickColor(hand):null);
+}
+
+function botPickCard(playable, fullHand){
+  // Priority: draw2 > skip > reverse > wild4 > colored cards > wild
+  var prio=['draw2','skip','reverse','wild4'];
+  for(var i=0;i<prio.length;i++){
+    var f=playable.find(function(c){return c.v===prio[i];});
+    if(f) return f;
+  }
+  var colored=playable.filter(function(c){return c.c!=='wild';});
+  if(colored.length>0) return colored[Math.floor(Math.random()*colored.length)];
+  return playable[0];
+}
+
+function botPickColor(hand){
+  // Choose the most frequent colour in remaining hand
+  var counts={red:0,blue:0,green:0,yellow:0};
+  hand.forEach(function(c){ if(counts[c.c]!==undefined) counts[c.c]++; });
+  var best='red', max=-1;
+  Object.keys(counts).forEach(function(col){ if(counts[col]>max){max=counts[col];best=col;} });
+  return best;
+}
+
+// ════════════════════════════════════════════════════════
+// SOLO MODE
+// ════════════════════════════════════════════════════════
+function setBots(n){
+  selBots=n;
+  document.querySelectorAll('.bot-btn').forEach(function(b){
+    b.classList.toggle('sel', parseInt(b.textContent)===n);
+  });
+}
+
+function startSolo(){
+  if(!validateName()) return;
+  isSolo=true; isHost=true; roomCh=null;
+  myId=myName+'_YOU';
+  lobby={}; botIds=[];
+  var ci=0;
+  lobby[myId]={id:myId,name:myName,ci:ci++};
+  for(var i=0;i<selBots;i++){
+    var bid='bot_'+i;
+    botIds.push(bid);
+    lobby[bid]={id:bid,name:BOT_NAMES[i],ci:ci++};
+  }
+  hostInitGame();
+  showScreen('sGame');
 }
 
 // ════════════════════════════════════════════════════════
@@ -501,84 +538,73 @@ function hostBroadcast(){
 // ════════════════════════════════════════════════════════
 function createRoom(){
   if(!validateName()) return;
-  myRoom  = rndCode();
-  myId    = myName+'_'+Date.now();
-  isHost  = true;
-  lobby   = {};
-  lobby[myId] = {id:myId, name:myName, ci:0};
+  isSolo=false; myRoom=rndCode(); myId=myName+'_'+Date.now(); isHost=true;
+  lobby={}; botIds=[];
+  lobby[myId]={id:myId,name:myName,ci:0};
   showScreen('sLobby');
-  document.getElementById('codeVal').textContent = myRoom;
-  document.getElementById('startBtn').style.display = 'block';
+  document.getElementById('codeVal').textContent=myRoom;
+  document.getElementById('startBtn').style.display='block';
   joinChannel();
 }
 
 function joinRoom(){
   if(!validateName()) return;
-  var code = (document.getElementById('joinInput').value||'').trim().toUpperCase();
+  var code=(document.getElementById('joinInput').value||'').trim().toUpperCase();
   if(code.length!==4){ setErr('Bitte 4-stelligen Code eingeben!'); return; }
-  myRoom = code;
-  myId   = myName+'_'+Date.now();
-  isHost = false;
-  lobby  = {};
+  isSolo=false; myRoom=code; myId=myName+'_'+Date.now(); isHost=false;
+  lobby={}; botIds=[];
   showScreen('sLobby');
-  document.getElementById('codeVal').textContent = myRoom;
-  document.getElementById('startBtn').style.display = 'none';
+  document.getElementById('codeVal').textContent=myRoom;
+  document.getElementById('startBtn').style.display='none';
   joinChannel();
 }
 
 function joinChannel(){
   if(roomCh) roomCh.unsubscribe();
-  roomCh = sb.channel('uno_'+myRoom)
+  roomCh=sb.channel('uno_'+myRoom)
     .on('broadcast',{event:'join'},function(m){
-      var p = m.payload;
-      if(!lobby[p.id]) lobby[p.id] = p;
-      // Re-announce so latecomers see us
-      announce();
-      updateLobbyUI();
+      var p=m.payload;
+      if(!lobby[p.id]) lobby[p.id]=p;
+      announce(); updateLobbyUI();
     })
     .on('broadcast',{event:'leave'},function(m){
-      delete lobby[m.payload.id];
-      updateLobbyUI();
-      if(gs && gs.phase==='playing' && !isHost){
-        showToast(m.payload.name+' hat das Spiel verlassen');
-      }
+      delete lobby[m.payload.id]; updateLobbyUI();
+      if(gs&&gs.phase==='playing'&&!isHost) showToast(m.payload.name+' hat das Spiel verlassen');
     })
     .on('broadcast',{event:'state'},function(m){
-      if(isHost) return; // host has authoritative state
-      gs = m.payload.s;
-      updateGameUI();
+      if(isHost) return;
+      gs=m.payload.s; updateGameUI();
     })
     .on('broadcast',{event:'action'},function(m){
       if(!isHost) return;
-      var p = m.payload;
-      if(p.a==='play')   hostPlayCard(p.pid, p.u, p.col);
-      else if(p.a==='draw')   hostDrawCard(p.pid);
-      else if(p.a==='pass')   hostPassTurn(p.pid);
+      var p=m.payload;
+      if(p.a==='play')   hostPlayCard(p.pid,p.u,p.col);
+      else if(p.a==='draw') hostDrawCard(p.pid);
+      else if(p.a==='pass') hostPassTurn(p.pid);
     })
-    .subscribe(function(){ setTimeout(announce, 350); });
+    .subscribe(function(){ setTimeout(announce,350); });
 }
 
 function announce(){
-  var ci = Object.keys(lobby).indexOf(myId);
-  roomCh && roomCh.send({type:'broadcast', event:'join', payload:{id:myId, name:myName, ci:Math.max(ci,0)}});
+  var ci=Object.keys(lobby).indexOf(myId);
+  roomCh&&roomCh.send({type:'broadcast',event:'join',payload:{id:myId,name:myName,ci:Math.max(ci,0)}});
 }
 
 function sendAction(payload){
   if(isHost){
-    if(payload.a==='play') hostPlayCard(payload.pid, payload.u, payload.col);
+    if(payload.a==='play')   hostPlayCard(payload.pid,payload.u,payload.col);
     else if(payload.a==='draw') hostDrawCard(payload.pid);
     else if(payload.a==='pass') hostPassTurn(payload.pid);
   } else {
-    roomCh && roomCh.send({type:'broadcast', event:'action', payload:payload});
+    roomCh&&roomCh.send({type:'broadcast',event:'action',payload:payload});
   }
 }
 
 function leaveRoom(){
-  if(roomCh){
-    roomCh.send({type:'broadcast', event:'leave', payload:{id:myId, name:myName}});
-    roomCh.unsubscribe(); roomCh=null;
-  }
-  gs=null; myRoom=null; isHost=false; lobby={}; pendingCard=null;
+  clearTimeout(botTimer);
+  document.getElementById('botThinking').style.display='none';
+  if(roomCh){ roomCh.send({type:'broadcast',event:'leave',payload:{id:myId,name:myName}}); roomCh.unsubscribe(); roomCh=null; }
+  gs=null; myRoom=null; isHost=false; lobby={}; pendingCard=null; isSolo=false; botIds=[];
   showScreen('sMenu');
 }
 
@@ -588,259 +614,219 @@ function rndCode(){
 }
 
 // ════════════════════════════════════════════════════════
-// PLAYER ACTIONS (touch/click → server)
+// PLAYER ACTIONS
 // ════════════════════════════════════════════════════════
 function onClickCard(card){
   if(!gs||gs.phase!=='playing') return;
-  var cur = gs.players[gs.idx];
-  if(cur.id!==myId) return;
-  if(!canPlay(card, gs.topCard, gs.curColor)) return;
-  if(gs.pendingDraws>0 && card.v!=='draw2' && card.v!=='wild4') return;
-
-  if(card.c==='wild'){
-    pendingCard = card;
-    document.getElementById('colorPick').classList.remove('off');
-    return;
-  }
-  sendAction({a:'play', pid:myId, u:card.u});
+  if(hCur().id!==myId) return;
+  if(!canPlay(card,gs.topCard,gs.curColor)) return;
+  if(gs.pendingDraws>0&&card.v!=='draw2'&&card.v!=='wild4') return;
+  if(card.c==='wild'){ pendingCard=card; document.getElementById('colorPick').classList.remove('off'); return; }
+  sendAction({a:'play',pid:myId,u:card.u});
 }
 
 function chooseColor(color){
   document.getElementById('colorPick').classList.add('off');
   if(!pendingCard) return;
-  sendAction({a:'play', pid:myId, u:pendingCard.u, col:color});
-  pendingCard = null;
+  sendAction({a:'play',pid:myId,u:pendingCard.u,col:color}); pendingCard=null;
 }
 
 function onClickDraw(){
   if(!gs||gs.phase!=='playing') return;
-  var cur = gs.players[gs.idx];
-  if(cur.id!==myId) return;
-  if(gs.drewUid){ onPassTurn(); return; } // already drew, pass
-  sendAction({a:'draw', pid:myId});
+  if(hCur().id!==myId) return;
+  if(gs.drewUid){ onPassTurn(); return; }
+  sendAction({a:'draw',pid:myId});
 }
 
 function onPassTurn(){
   if(!gs||gs.phase!=='playing') return;
-  var cur = gs.players[gs.idx];
-  if(cur.id!==myId) return;
+  if(hCur().id!==myId) return;
   if(!gs.drewUid) return;
-  sendAction({a:'pass', pid:myId});
+  sendAction({a:'pass',pid:myId});
 }
 
 function shoutUno(){ showToast('UNO! 🃏'); }
 
 // ════════════════════════════════════════════════════════
-// UI RENDERING
+// UI
 // ════════════════════════════════════════════════════════
 function showScreen(id){
   ['sMenu','sLobby','sGame','sWinner'].forEach(function(s){
-    document.getElementById(s).classList.toggle('off', s!==id);
+    document.getElementById(s).classList.toggle('off',s!==id);
   });
 }
 
 function updateLobbyUI(){
-  var ids = Object.keys(lobby);
-  var html = '';
+  var ids=Object.keys(lobby); var html='';
   ids.forEach(function(pid,i){
-    var p = lobby[pid];
-    var col = PLR_COLORS[i % PLR_COLORS.length];
-    html += '<div class="pslot filled"><div class="pslot-dot" style="background:'+col+'"></div>'
-          +(p.name||'?')+(pid===myId?' <span style="color:rgba(0,245,255,.5);font-size:11px">(Du)</span>':'')+'</div>';
+    var p=lobby[pid]; var col=PLR_COLORS[i%PLR_COLORS.length];
+    html+='<div class="pslot filled"><div class="pslot-dot" style="background:'+col+'"></div>'
+      +(p.name||'?')+(pid===myId?' <span style="color:rgba(0,245,255,.5);font-size:11px">(Du)</span>':'')+'</div>';
   });
-  document.getElementById('pListEl').innerHTML = html;
-
-  var info = document.getElementById('lobbyInfo');
-  var sb2  = document.getElementById('startBtn');
-  if(isHost){
-    if(ids.length<2){ info.textContent='Warte auf mindestens 1 weiteren Spieler…'; sb2.style.display='none'; }
-    else { info.textContent=''; sb2.style.display='block'; }
-  } else {
-    info.textContent = ids.length+' Spieler — Warte auf Host…';
-  }
+  document.getElementById('pListEl').innerHTML=html;
+  var info=document.getElementById('lobbyInfo'), sb2=document.getElementById('startBtn');
+  if(isHost){ if(ids.length<2){info.textContent='Warte auf mindestens 1 weiteren Spieler…';sb2.style.display='none';}
+    else{info.textContent='';sb2.style.display='block';} }
+  else{ info.textContent=ids.length+' Spieler — Warte auf Host…'; }
 }
 
 function buildCardEl(card, playable, large){
-  var el = document.createElement('div');
-  el.className = 'ucard '+cardColorClass(card)+(large?' large':'')+(playable?' playable':' dim');
-  var lbl = cardLabel(card.v);
-  el.innerHTML = '<span class="ucard-corner tl">'+lbl+'</span>'
+  var el=document.createElement('div');
+  el.className='ucard '+cardCls(card)+(large?' large':'')+(playable?' playable':' dim');
+  var lbl=cardLabel(card.v);
+  el.innerHTML='<span class="ucard-corner tl">'+lbl+'</span>'
     +'<span class="ucard-val'+(lbl.length>2?' sm':'')+'">'+lbl+'</span>'
     +'<span class="ucard-corner br">'+lbl+'</span>';
-  if(playable) el.addEventListener('click', function(){ onClickCard(card); });
+  if(playable) el.addEventListener('click',function(){onClickCard(card);});
   return el;
 }
 
 function updateGameUI(){
   if(!gs) return;
-
   if(gs.phase==='finished'){
+    clearTimeout(botTimer);
+    document.getElementById('botThinking').style.display='none';
     showScreen('sWinner');
-    var winner = gs.players.find(function(p){ return p.id===gs.winner; });
-    document.getElementById('winnerNameEl').textContent = winner ? winner.name : '???';
-    var isWinner = gs.winner===myId;
-    document.getElementById('winnerSubEl').textContent = isWinner ? 'Du hast gewonnen! 🎉' : 'Besser nächstes Mal!';
-    document.getElementById('playAgainBtn').style.display = isHost ? 'block' : 'none';
+    var w=gs.players.find(function(p){return p.id===gs.winner;});
+    document.getElementById('winnerNameEl').textContent=w?w.name:'???';
+    var bot=botIds.indexOf(gs.winner)!==-1;
+    document.getElementById('winnerSubEl').textContent=
+      gs.winner===myId ? 'Du hast gewonnen! 🎉' : (bot?'Der Bot hat gewonnen!':'Besser nächstes Mal!');
+    document.getElementById('playAgainBtn').style.display=isHost?'block':'none';
     return;
   }
-
   if(gs.phase!=='playing') return;
   showScreen('sGame');
 
-  var myHand  = gs.hands[myId] || [];
-  var cur     = gs.players[gs.idx];
-  var isMyTurn = cur && cur.id===myId;
+  var myHand=gs.hands[myId]||[], cur=gs.players[gs.idx];
+  var isMyTurn=cur&&cur.id===myId;
+  var hex=COLOR_HEX[gs.curColor]||'#fff';
 
   // Colour ring
-  var ring = document.getElementById('colorRing');
-  var hex  = COLOR_HEX[gs.curColor] || '#fff';
-  ring.style.background  = hex;
-  ring.style.boxShadow   = '0 0 12px '+hex;
+  var ring=document.getElementById('colorRing');
+  ring.style.background=hex; ring.style.boxShadow='0 0 12px '+hex;
 
-  // Direction
-  document.getElementById('dirBadge').textContent = gs.dir===1 ? '▶▶' : '◀◀';
+  // Direction, deck count, last action
+  document.getElementById('dirBadge').textContent=gs.dir===1?'▶▶':'◀◀';
+  document.getElementById('deckCountLbl').textContent=(gs.deckCount||0)+' Karten';
+  document.getElementById('lastActionLbl').textContent=gs.lastAction||'';
 
-  // Deck count
-  document.getElementById('deckCountLbl').textContent = (gs.deckCount||0)+' Karten';
+  // Draw pile
+  var dp=document.getElementById('drawPileEl');
+  var canDraw=isMyTurn&&!gs.drewUid;
+  dp.style.opacity=(isMyTurn&&!isBotTurn())?'1':'0.4';
+  dp.style.cursor=canDraw?'pointer':'default';
 
-  // Draw pile opacity
-  var drawEl = document.getElementById('drawPileEl');
-  var canDraw = isMyTurn && !gs.drewUid;
-  drawEl.style.opacity = canDraw ? '1' : '0.4';
-  drawEl.style.cursor  = canDraw ? 'pointer' : (gs.drewUid && isMyTurn ? 'pointer' : 'default');
-
-  // Discard top card
-  var discEl = document.getElementById('discardEl');
-  discEl.innerHTML = '';
+  // Discard
+  var discEl=document.getElementById('discardEl'); discEl.innerHTML='';
   if(gs.topCard){
-    var tc = buildCardEl(gs.topCard, false, true);
-    tc.classList.remove('dim');
-    if(gs.topCard.c==='wild'){
-      tc.style.outline = '3px solid '+hex;
-      tc.style.outlineOffset = '2px';
-    }
+    var tc=buildCardEl(gs.topCard,false,true); tc.classList.remove('dim');
+    if(gs.topCard.c==='wild'){ tc.style.outline='3px solid '+hex; tc.style.outlineOffset='2px'; }
     discEl.appendChild(tc);
   }
 
   // Opponents
-  var oppsEl = document.getElementById('oppsEl');
-  oppsEl.innerHTML = '';
-  gs.players.forEach(function(p,i){
+  var oppsEl=document.getElementById('oppsEl'); oppsEl.innerHTML='';
+  gs.players.forEach(function(p){
     if(p.id===myId) return;
-    var hand   = gs.hands[p.id]||[];
-    var active = cur && cur.id===p.id;
-    var col    = PLR_COLORS[p.ci % PLR_COLORS.length];
-    var div = document.createElement('div');
-    div.className = 'opp'+(active?' active':'');
-    div.innerHTML = '<div class="opp-circle" style="background:'+col+'">'+
-      (p.name||'?').substring(0,2).toUpperCase()+'</div>'+
-      '<div class="opp-name" style="color:'+col+'">'+p.name+'</div>'+
-      '<div class="opp-count">'+hand.length+'</div>'+
-      (hand.length===1?'<div class="opp-uno">UNO!</div>':'');
+    var hand=gs.hands[p.id]||[], active=cur&&cur.id===p.id;
+    var col=PLR_COLORS[p.ci%PLR_COLORS.length];
+    var isBot=botIds.indexOf(p.id)!==-1;
+    var div=document.createElement('div');
+    div.className='opp'+(active?' active':'');
+    div.innerHTML='<div class="opp-circle" style="background:'+col+'">'+p.name.substring(0,2).toUpperCase()+'</div>'
+      +'<div class="opp-name" style="color:'+col+'">'+p.name+'</div>'
+      +(isBot?'<div class="opp-bot">BOT</div>':'')
+      +'<div class="opp-count">'+hand.length+'</div>'
+      +(hand.length===1?'<div class="opp-uno">UNO!</div>':'');
     oppsEl.appendChild(div);
   });
 
   // My hand
-  var handEl = document.getElementById('handEl');
-  handEl.innerHTML = '';
+  var handEl=document.getElementById('handEl'); handEl.innerHTML='';
   myHand.forEach(function(card){
-    var playable = isMyTurn
-      && canPlay(card, gs.topCard, gs.curColor)
-      && (gs.pendingDraws===0 || card.v==='draw2' || card.v==='wild4');
-    // Drawn card can always be played if playable, regardless of pendingDraws check above
-    if(isMyTurn && gs.drewUid===card.u && canPlay(card, gs.topCard, gs.curColor)) playable=true;
-    handEl.appendChild(buildCardEl(card, playable, false));
+    var pl=isMyTurn&&canPlay(card,gs.topCard,gs.curColor)&&(gs.pendingDraws===0||card.v==='draw2'||card.v==='wild4');
+    if(isMyTurn&&gs.drewUid===card.u&&canPlay(card,gs.topCard,gs.curColor)) pl=true;
+    handEl.appendChild(buildCardEl(card,pl,false));
   });
 
   // Turn badge
-  var tb = document.getElementById('turnBadge');
-  tb.textContent  = isMyTurn ? 'DEIN ZUG!' : ((cur?cur.name:'?')+' ist dran');
-  tb.className    = 'turn-badge '+(isMyTurn?'turn-me':'turn-other');
-  document.getElementById('myLabel').textContent = myName+' ('+myHand.length+')';
+  var tb=document.getElementById('turnBadge');
+  var botTurn=cur&&botIds.indexOf(cur.id)!==-1;
+  tb.textContent = isMyTurn ? (gs.pendingDraws>0?'ZIEHE '+gs.pendingDraws+'!':'DEIN ZUG!')
+                            : ((cur?cur.name:'?')+' ist dran');
+  tb.className='turn-badge '+(isMyTurn?'turn-me':botTurn?'turn-bot':'turn-other');
+  document.getElementById('myLabel').textContent=myName+' ('+myHand.length+')';
 
-  // UNO button
-  document.getElementById('unoBtnWrap').style.display = myHand.length===1 ? 'block' : 'none';
-
-  // Pass button — only when I drew a card this turn
-  document.getElementById('passBtn').style.display = (isMyTurn && gs.drewUid) ? 'block' : 'none';
-
-  // Last action
-  document.getElementById('lastActionLbl').textContent = gs.lastAction||'';
-
-  // Pending draws indicator
-  if(isMyTurn && gs.pendingDraws>0){
-    document.getElementById('turnBadge').textContent = 'ZIEHE '+gs.pendingDraws+' KARTEN!';
-  }
+  // Overlays
+  document.getElementById('unoBtnWrap').style.display=myHand.length===1?'block':'none';
+  document.getElementById('passBtn').style.display=(isMyTurn&&gs.drewUid)?'block':'none';
 }
 
 function showToast(msg){
   var t=document.createElement('div'); t.className='toast'; t.textContent=msg;
-  document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 2600);
+  document.body.appendChild(t); setTimeout(function(){t.remove();},2600);
 }
 
 function copyCode(){
-  var code = document.getElementById('codeVal').textContent;
-  if(navigator.clipboard) navigator.clipboard.writeText(code).then(function(){ showToast('Code kopiert: '+code); });
+  var code=document.getElementById('codeVal').textContent;
+  if(navigator.clipboard) navigator.clipboard.writeText(code).then(function(){showToast('Code kopiert: '+code);});
   else showToast(code);
 }
 
 function setErr(msg){ document.getElementById('menuErr').textContent=msg; }
 
 // ════════════════════════════════════════════════════════
-// NAME HANDLING
+// NAME
 // ════════════════════════════════════════════════════════
 function validateName(){
-  var inp  = document.getElementById('nameInp');
-  var name = (inp.value||'').trim().toUpperCase() || myName;
-  if(!name){ setErr('Bitte gib einen Namen ein!'); return false; }
-  myName = name;
-  localStorage.setItem('playerName', myName);
-  document.getElementById('pName').textContent = myName;
-  setErr('');
-  return true;
+  var name=(document.getElementById('nameInp').value||'').trim().toUpperCase()||myName;
+  if(!name){setErr('Bitte gib einen Namen ein!');return false;}
+  myName=name; localStorage.setItem('playerName',myName);
+  document.getElementById('pName').textContent=myName; setErr(''); return true;
 }
-
 function saveName(){
-  var inp  = document.getElementById('nameInp');
-  var name = (inp.value||'').trim().toUpperCase();
+  var name=(document.getElementById('nameInp').value||'').trim().toUpperCase();
   if(!name) return;
-  myName = name;
-  localStorage.setItem('playerName', myName);
-  document.getElementById('pName').textContent = myName;
-  showToast('Name: '+myName);
+  myName=name; localStorage.setItem('playerName',myName);
+  document.getElementById('pName').textContent=myName; showToast('Name: '+myName);
 }
 
 // ════════════════════════════════════════════════════════
 // BOOT
 // ════════════════════════════════════════════════════════
-window.addEventListener('load', function(){
-  var stored = localStorage.getItem('playerName');
-  if(stored){ myName=stored; document.getElementById('pName').textContent=myName; document.getElementById('nameInp').value=myName; }
+window.addEventListener('load',function(){
+  var stored=localStorage.getItem('playerName');
+  if(stored){myName=stored;document.getElementById('pName').textContent=myName;document.getElementById('nameInp').value=myName;}
+  if(typeof supabase!=='undefined') sb=supabase.createClient(SUPA_URL,SUPA_KEY);
 
-  if(typeof supabase!=='undefined') sb=supabase.createClient(SUPA_URL, SUPA_KEY);
-
-  document.getElementById('multiBtn').addEventListener('click',   function(){ document.getElementById('multibtns').classList.add('show'); });
-  document.getElementById('createBtn').addEventListener('click',  createRoom);
-  document.getElementById('joinShowBtn').addEventListener('click',function(){ document.getElementById('joinRow').classList.add('show'); document.getElementById('joinInput').focus(); });
-  document.getElementById('joinBtn').addEventListener('click',    joinRoom);
-  document.getElementById('joinInput').addEventListener('keydown',function(e){ if(e.key==='Enter') joinRoom(); });
-  document.getElementById('nameBtn').addEventListener('click',    saveName);
-  document.getElementById('nameInp').addEventListener('keydown',  function(e){ if(e.key==='Enter') saveName(); });
-  document.getElementById('startBtn').addEventListener('click',   function(){
-    if(!isHost) return;
-    var ids=Object.keys(lobby);
-    if(ids.length<2){ document.getElementById('lobbyInfo').textContent='Mindestens 2 Spieler!'; return; }
-    hostInitGame();
-    showScreen('sGame');
-    roomCh && roomCh.send({type:'broadcast', event:'state', payload:{s:gs}});
+  document.getElementById('soloBtn').addEventListener('click',function(){
+    document.getElementById('soloBox').classList.toggle('show');
+    document.getElementById('multibtns').classList.remove('show');
   });
-  document.getElementById('leaveBtn').addEventListener('click',   leaveRoom);
-  document.getElementById('wLeaveBtn').addEventListener('click',  leaveRoom);
+  document.getElementById('startSoloBtn').addEventListener('click',startSolo);
+  document.getElementById('multiBtn').addEventListener('click',function(){
+    document.getElementById('multibtns').classList.toggle('show');
+    document.getElementById('soloBox').classList.remove('show');
+  });
+  document.getElementById('createBtn').addEventListener('click',createRoom);
+  document.getElementById('joinShowBtn').addEventListener('click',function(){document.getElementById('joinRow').classList.add('show');document.getElementById('joinInput').focus();});
+  document.getElementById('joinBtn').addEventListener('click',joinRoom);
+  document.getElementById('joinInput').addEventListener('keydown',function(e){if(e.key==='Enter')joinRoom();});
+  document.getElementById('nameBtn').addEventListener('click',saveName);
+  document.getElementById('nameInp').addEventListener('keydown',function(e){if(e.key==='Enter')saveName();});
+  document.getElementById('startBtn').addEventListener('click',function(){
+    if(!isHost) return;
+    if(Object.keys(lobby).length<2){document.getElementById('lobbyInfo').textContent='Mindestens 2 Spieler!';return;}
+    hostInitGame(); showScreen('sGame');
+    roomCh&&roomCh.send({type:'broadcast',event:'state',payload:{s:gs}});
+  });
+  document.getElementById('leaveBtn').addEventListener('click',leaveRoom);
+  document.getElementById('wLeaveBtn').addEventListener('click',leaveRoom);
   document.getElementById('playAgainBtn').addEventListener('click',function(){
     if(!isHost) return;
-    hostInitGame();
-    showScreen('sGame');
-    roomCh && roomCh.send({type:'broadcast', event:'state', payload:{s:gs}});
+    hostInitGame(); showScreen('sGame');
+    roomCh&&roomCh.send({type:'broadcast',event:'state',payload:{s:gs}});
   });
 });
 </script>
