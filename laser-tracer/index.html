@@ -278,6 +278,21 @@ var spectatingId = null;   // peer ID being spectated when dead
 var isAdminUser    = false;
 var adminInvincible = false;
 
+// ── SKIN COLORS ───────────────────────────────────────────────────────────
+var SKIN_COLORS = {
+  'default':'#00f5ff', 'ocean':'#0088ff', 'forest':'#39ff14',
+  'sunset':'#ff6b00',  'purple':'#bf00ff', 'gold':'#ffd700',
+  'pink':'#ff3cac',    'dark':'#aaaaaa'
+};
+function getSkinColor() {
+  var skin = localStorage.getItem('activeSkin') || 'default';
+  if (skin === 'rainbow') {
+    var hue = (performance.now() / 18) % 360;
+    return 'hsl(' + Math.round(hue) + ',100%,55%)';
+  }
+  return SKIN_COLORS[skin] || '#00f5ff';
+}
+
 // ── SEEDED RNG (mulberry32) ────────────────────────────────────────────────
 function mulberry32(seed) {
   return function() {
@@ -494,7 +509,7 @@ function render(t) {
   }
   // Draw self only when alive
   if (!myDead) {
-    drawChar(myX, myY, myZ, '#00f5ff', progress.name, true, myWalkPhase, myY>0.1);
+    drawChar(myX, myY, myZ, getSkinColor(), progress.name, true, myWalkPhase, myY>0.1);
   }
 }
 
@@ -1423,7 +1438,7 @@ function showFinalResult(scores) {
 }
 function syncPos() {
   if (roomCh) roomCh.send({type:'broadcast',event:'pos',payload:{
-    id:myId, x:myX, y:myY, z:myZ, color:'#00f5ff', name:progress.name,
+    id:myId, x:myX, y:myY, z:myZ, color:getSkinColor(), name:progress.name,
     wp:myWalkPhase
   }});
 }
