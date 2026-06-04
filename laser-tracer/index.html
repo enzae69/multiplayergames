@@ -91,7 +91,7 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
       <div class="pname" id="pName">PLAYER</div>
       <div class="pstat">Lv.<span id="pLvl">1</span> &nbsp;|&nbsp; <span id="pXp">0</span> XP &nbsp;|&nbsp; Best: W<span id="pBest">-</span></div>
     </div>
-    <div style="color:#ffd700;font-family:'Russo One',sans-serif;font-size:13px">🪙<span id="pCoins">0</span></div>
+    <div style="color:#ffd700;font-family:'Russo One',sans-serif;font-size:13px">☀️<span id="pCoins">0</span></div>
   </div>
   <button class="btn bgreen" id="soloBtn">🎯 SOLO ÜBEN</button>
   <button class="btn bcyan" id="multiBtn">⚔️ MULTIPLAYER</button>
@@ -111,7 +111,7 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
   <div class="ab-shop">
     <div class="ab-shop-head">
       <span>🔮 ABILITIES</span>
-      <span style="color:#ffd700;font-size:12px">🪙<span id="abCoins">0</span></span>
+      <span style="color:#ffd700;font-size:12px">☀️<span id="abCoins">0</span></span>
     </div>
     <div class="ab-grid" id="abGrid"></div>
     <div class="ab-err" id="abErr"></div>
@@ -169,7 +169,7 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
     <button onclick="adminSendAnnounce()" style="background:rgba(255,0,110,.15);border:1px solid rgba(255,0,110,.5);color:#ff006e;border-radius:8px;font-size:12px;padding:6px 10px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;touch-action:manipulation">📢 ANNOUNCE</button>
   </div>
   <div style="border-top:1px solid rgba(255,0,110,.3);margin-top:2px;padding-top:6px;display:flex;flex-direction:column;gap:4px">
-    <div style="font-size:8px;letter-spacing:2px;color:rgba(255,215,0,.7)">🪙 COINS</div>
+    <div style="font-size:8px;letter-spacing:2px;color:rgba(255,215,0,.7)">☀️ SONNEN MÜNZEN</div>
     <input id="ltAdminCoinUser" type="text" placeholder="USERNAME" autocomplete="off" style="background:rgba(255,0,110,.1);border:1px solid rgba(255,0,110,.4);color:#fff;border-radius:7px;font-size:11px;padding:5px 8px;font-family:'Russo One',sans-serif;outline:none;width:100%;box-sizing:border-box"/>
     <input id="ltAdminCoinAmt" type="number" placeholder="BETRAG" min="0" style="background:rgba(255,0,110,.1);border:1px solid rgba(255,0,110,.4);color:#fff;border-radius:7px;font-size:11px;padding:5px 8px;font-family:'Russo One',sans-serif;outline:none;width:100%;box-sizing:border-box"/>
     <button onclick="ltAdminSetCoins()" style="background:rgba(255,215,0,.15);border:1px solid rgba(255,215,0,.5);color:#ffd700;border-radius:8px;font-size:12px;padding:6px 10px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;touch-action:manipulation">SETZEN</button>
@@ -183,7 +183,7 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
     <div class="rstitle">GAME OVER</div>
     <div class="rsstat">Welle</div><div class="rsval" id="rsWave">1</div>
     <div class="rsstat">Überlebt</div><div class="rsval" id="rsSurv">0.0s</div>
-    <div class="rsstat">Münzen</div><div class="rsval" id="rsCoins">+0</div>
+    <div class="rsstat">Sonnen Münzen</div><div class="rsval" id="rsCoins">+0 ☀️</div>
     <button class="btn bgreen" id="retryBtn">↺ NOCHMAL</button>
     <button class="btn bghost" id="menuBtn">← MENÜ</button>
   </div>
@@ -338,7 +338,7 @@ function renderAbilityShop() {
     card.className = 'ab-card' + (isEq ? ' ab-eq' : '');
     var bottomHtml = owned
       ? '<div style="font-size:9px;letter-spacing:1px;color:#39ff14;background:rgba(57,255,20,.1);border-radius:6px;padding:2px 8px">' + (isEq ? '✓ AUSGERÜSTET' : '✓ BESESSEN') + '</div>'
-      : '<div class="ab-cost">' + ab.cost + ' 🪙 KAUFEN</div>';
+      : '<div class="ab-cost">' + ab.cost + ' ☀️ KAUFEN</div>';
     card.innerHTML =
       '<div class="ab-icon">' + ab.icon + '</div>'
       + '<div class="ab-name">' + ab.name + '</div>'
@@ -357,7 +357,7 @@ function buyAbility(type, cost) {
     saveAbilities(); renderAbilityShop(); updateAbilityBtn(); return;
   }
   if (progress.coins < cost) {
-    if (errEl) errEl.textContent = 'Zu wenig Coins! (' + progress.coins + '/' + cost + ')';
+    if (errEl) errEl.textContent = 'Zu wenig Sonnen Münzen! (' + progress.coins + '/' + cost + ' ☀️)';
     return;
   }
   progress.coins -= cost;
@@ -1017,7 +1017,7 @@ function endSolo() {
   saveLocal(); renderProfile(); renderAbilityShop();
   document.getElementById('rsWave').textContent = soloWave;
   document.getElementById('rsSurv').textContent = soloTime.toFixed(1)+'s';
-  document.getElementById('rsCoins').textContent = '+'+coins;
+  document.getElementById('rsCoins').textContent = '+'+coins+' ☀️';
   showScreen('sResult');
 }
 
@@ -1186,6 +1186,13 @@ function joinChannel() {
     .on('broadcast',{event:'adminImage'},function(m){
       if (m.payload && m.payload.url) showAdminImageLT(m.payload.username, m.payload.url);
     })
+    .on('broadcast',{event:'setSunCoins'},function(m){
+      if (!m.payload) return;
+      var me = (localStorage.getItem('authUser')||localStorage.getItem('playerName')||'').toUpperCase();
+      if (m.payload.username === me) {
+        progress.coins = m.payload.amount; saveLocal(); renderProfile(); renderAbilityShop();
+      }
+    })
     .subscribe();
   setTimeout(function(){
     if (roomCh) roomCh.send({type:'broadcast',event:'join',payload:{id:myId,name:progress.name}});
@@ -1350,7 +1357,7 @@ function adminSendAnnounce() {
   }
 }
 
-async function ltAdminSetCoins() {
+function ltAdminSetCoins() {
   if (!isAdminUser) return;
   var username = (document.getElementById('ltAdminCoinUser').value || '').trim().toUpperCase();
   var amount   = parseInt(document.getElementById('ltAdminCoinAmt').value);
@@ -1358,11 +1365,15 @@ async function ltAdminSetCoins() {
   msgEl.style.color = '#ffd700'; msgEl.textContent = '';
   if (!username) { msgEl.style.color='#ff4444'; msgEl.textContent='Username?'; return; }
   if (isNaN(amount) || amount < 0) { msgEl.style.color='#ff4444'; msgEl.textContent='Betrag?'; return; }
-  if (!sb) { msgEl.style.color='#ff4444'; msgEl.textContent='Keine DB'; return; }
-  msgEl.textContent = '...';
-  var upd = await sb.from('players').update({coins: amount}).eq('username', username);
-  if (upd.error) { msgEl.style.color='#ff4444'; msgEl.textContent='Nicht gefunden'; return; }
-  msgEl.textContent = '✓ '+username+' = '+amount+' 🪙';
+  var payload = {username: username, amount: amount};
+  // Apply locally if it's our own account
+  if ((localStorage.getItem('authUser')||'').toUpperCase() === username) {
+    progress.coins = amount; saveLocal(); renderProfile(); renderAbilityShop();
+  }
+  // Broadcast to all connected clients
+  if (globalCh) globalCh.send({type:'broadcast', event:'setSunCoins', payload: payload});
+  if (gameState === 'multi' && roomCh) roomCh.send({type:'broadcast', event:'setSunCoins', payload: payload});
+  msgEl.textContent = '✓ '+username+' = '+amount+' ☀️';
 }
 
 function checkStalePeers() {
@@ -1671,6 +1682,13 @@ window.addEventListener('DOMContentLoaded', function() {
           })
           .on('broadcast', {event:'adminImage'}, function(m) {
             if (m.payload && m.payload.url) showAdminImageLT(m.payload.username, m.payload.url);
+          })
+          .on('broadcast', {event:'setSunCoins'}, function(m) {
+            if (!m.payload) return;
+            var me = (localStorage.getItem('authUser')||localStorage.getItem('playerName')||'').toUpperCase();
+            if (m.payload.username === me) {
+              progress.coins = m.payload.amount; saveLocal(); renderProfile(); renderAbilityShop();
+            }
           })
           .subscribe();
       }

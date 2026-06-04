@@ -257,6 +257,13 @@
         <div id="adminCoinMsg" style="font-size:10px;color:#39ff14;min-height:14px;text-align:center;letter-spacing:1px"></div>
       </div>
       <div style="border-top:1px solid rgba(57,255,20,.15);padding-top:10px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-size:9px;letter-spacing:2px;color:rgba(255,215,0,.8)">☀️ SONNEN MÜNZEN</div>
+        <input id="adminSunUser" type="text" placeholder="USERNAME" autocomplete="off" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;font-family:'Russo One',sans-serif;font-size:12px;outline:none;width:100%;letter-spacing:1px"/>
+        <input id="adminSunAmt" type="number" placeholder="BETRAG" min="0" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;font-family:'Russo One',sans-serif;font-size:12px;outline:none;width:100%"/>
+        <button onclick="adminSetSunCoins()" style="background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.35);color:#ffd700;border-radius:8px;padding:8px;font-size:12px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;width:100%;touch-action:manipulation">SETZEN</button>
+        <div id="adminSunMsg" style="font-size:10px;color:#ffd700;min-height:14px;text-align:center;letter-spacing:1px"></div>
+      </div>
+      <div style="border-top:1px solid rgba(57,255,20,.15);padding-top:10px;display:flex;flex-direction:column;gap:7px">
         <div style="font-size:9px;letter-spacing:2px;color:rgba(255,0,110,.8)">📢 ANKÜNDIGUNG</div>
         <input id="adminAnnounceInpPortal" type="text" placeholder="Nachricht an alle..." autocomplete="off" onkeydown="if(event.key==='Enter')adminPortalAnnounce()" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;font-family:'Russo One',sans-serif;font-size:12px;outline:none;width:100%;letter-spacing:1px"/>
         <button onclick="adminPortalAnnounce()" style="background:rgba(255,0,110,.12);border:1px solid rgba(255,0,110,.35);color:#ff006e;border-radius:8px;padding:8px;font-size:12px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;width:100%;touch-action:manipulation">SENDEN</button>
@@ -786,6 +793,19 @@ function adminSendImage() {
   document.getElementById('adminImgUrl').value = '';
 }
 
+function adminSetSunCoins() {
+  var username = (document.getElementById('adminSunUser').value || '').trim().toUpperCase();
+  var amount   = parseInt(document.getElementById('adminSunAmt').value);
+  var msgEl    = document.getElementById('adminSunMsg');
+  msgEl.style.color = '#ffd700'; msgEl.textContent = '';
+  if (!username) { msgEl.style.color='#ff4444'; msgEl.textContent='Username eingeben'; return; }
+  if (isNaN(amount) || amount < 0) { msgEl.style.color='#ff4444'; msgEl.textContent='Betrag eingeben'; return; }
+  if (!globalCh) { msgEl.style.color='#ff4444'; msgEl.textContent='Nicht verbunden'; return; }
+  globalCh.send({type:'broadcast', event:'setSunCoins', payload:{username:username, amount:amount}});
+  msgEl.textContent = '✓ '+username+' → '+amount+' ☀️';
+  document.getElementById('adminSunAmt').value = '';
+}
+
 function subscribeGlobal() {
   if (!sb || globalCh) return;
   globalCh = sb.channel('portal-global')
@@ -794,6 +814,14 @@ function subscribeGlobal() {
     })
     .on('broadcast', {event:'adminImage'}, function(m) {
       if (m.payload && m.payload.url) showAdminImage(m.payload.username, m.payload.url);
+    })
+    .on('broadcast', {event:'setSunCoins'}, function(m) {
+      if (!m.payload) return;
+      var me = (localStorage.getItem('authUser')||localStorage.getItem('playerName')||'').toUpperCase();
+      if (m.payload.username === me) {
+        localStorage.setItem('lt_coins', m.payload.amount);
+        showToastPortal('☀️ Sonnen Münzen: '+m.payload.amount);
+      }
     })
     .subscribe();
 }
