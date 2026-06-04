@@ -240,6 +240,7 @@ var ABILITIES = [
 var ownedAbilities  = {unsterblich:0, kick:0, speed:0, nolaser:0};
 var equippedAbility = 'unsterblich';
 var activeAbility   = null; // {type, endTime (performance.now ms)}
+var lastStaleCheckTS = 0;  // for watchdog: marks disconnected peers dead
 
 // ── SEEDED RNG (mulberry32) ────────────────────────────────────────────────
 function mulberry32(seed) {
@@ -872,6 +873,10 @@ function loop(ts) {
     updateLasers();
     if (!myDead && jumpHeld && myY <= 0.05) doJump();
     lerpPeers(dt);
+    if (gameState === 'multi' && isHost && ts - lastStaleCheckTS > 3000) {
+      lastStaleCheckTS = ts;
+      checkStalePeers();
+    }
     updateCam();
     if (soloAlive) {
       soloTime = (ts - soloStart)/1000;
@@ -1019,9 +1024,10 @@ function joinChannel() {
         if (typeof p.x !== 'number' || isNaN(p.x)) { p.x=d.x; p.y=d.y; p.z=d.z; }
         p.tx=d.x; p.ty=d.y; p.tz=d.z;
         p.wp=d.wp; p.color=d.color; p.name=d.name;
+        p.lastSeen = Date.now();
       } else {
         peers[d.id] = {x:d.x,y:d.y,z:d.z, tx:d.x,ty:d.y,tz:d.z,
-                       wp:d.wp||0, color:d.color, name:d.name, id:d.id};
+                       wp:d.wp||0, color:d.color, name:d.name, id:d.id, lastSeen:Date.now()};
       }
     })
     .on('broadcast',{event:'dead'},function(m){
@@ -1057,6 +1063,17 @@ function joinChannel() {
         var ri = document.getElementById('roundInfo');
         if (ri) ri.textContent = totalRounds + ' Runden';
         beginMulti(m.payload.laserSeed);
+      }
+    })
+    .on('broadcast',{event:'hostLeft'},function(m){
+      if (!isHost) {
+        if (roomCh) { roomCh.unsubscribe(); roomCh=null; }
+        myRoom=null; peers={}; isHost=false; gameState='menu';
+        roundNum=1; myWins=0; roundEndActive=false;
+        var hr=document.getElementById('hudRound'); if(hr) hr.style.display='none';
+        showScreen('sMenu');
+        var err=document.getElementById('menuErr');
+        if(err){err.textContent='Host hat das Spiel verlassen.';setTimeout(function(){err.textContent='';},4000);}
       }
     })
     .on('broadcast',{event:'kick'},function(m){
@@ -1099,7 +1116,9 @@ function startMulti() {
 }
 function beginMulti(laserSeed) {
   roundEndActive = false;
-  Object.keys(peers).forEach(function(id){ peers[id].isDead = false; });
+  lastStaleCheckTS = 0;
+  var now = Date.now();
+  Object.keys(peers).forEach(function(id){ peers[id].isDead = false; peers[id].lastSeen = now; });
   myX=(Math.random()-0.5)*8; myZ=(Math.random()-0.5)*8; myY=0; myVY=0;
   camYaw=Math.PI; camPitch=0.54; buildCamMatrix();
   soloWave=1; soloAlive=true; nextWaveSec=10;
@@ -1112,6 +1131,18 @@ function beginMulti(laserSeed) {
   if (hr) { hr.style.display=''; hr.textContent='R'+roundNum+'/'+totalRounds; }
   buildLasers(2); gameState='multi';
   showScreen('sGame');
+}
+function checkStalePeers() {
+  if (!isHost || gameState !== 'multi') return;
+  var now = Date.now();
+  var changed = false;
+  Object.keys(peers).forEach(function(id) {
+    if (!peers[id].isDead && peers[id].lastSeen && now - peers[id].lastSeen > 5000) {
+      peers[id].isDead = true;
+      changed = true;
+    }
+  });
+  if (changed) checkRoundWin();
 }
 function checkRoundWin() {
   // Only the host runs this — sole authority for round-end (fixes 3+ player race conditions)
@@ -1197,7 +1228,17 @@ function syncPos() {
   }});
 }
 function leaveRoom() {
-  if (roomCh) { roomCh.unsubscribe(); roomCh=null; }
+  if (roomCh) {
+    if ((gameState === 'multi' || gameState === 'roundEnd') && !myDead && soloAlive) {
+      // Leaving while alive — notify host so round can progress
+      roomCh.send({type:'broadcast', event:'dead', payload:{id:myId}});
+    }
+    if (isHost) {
+      // Tell everyone host left so they return to menu instead of hanging
+      roomCh.send({type:'broadcast', event:'hostLeft', payload:{id:myId}});
+    }
+    roomCh.unsubscribe(); roomCh=null;
+  }
   myRoom=null; peers={}; isHost=false; gameState='menu';
   roundNum=1; myWins=0; roundEndActive=false;
   var hr=document.getElementById('hudRound'); if(hr) hr.style.display='none';
