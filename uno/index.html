@@ -24,6 +24,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#080816;color:#fff;f
 .btn:active{transform:scale(.95);opacity:.85}
 .bcyan{background:linear-gradient(135deg,#006680,#00c4d4);color:#000;box-shadow:0 4px 20px rgba(0,196,212,.35),inset 0 1px 0 rgba(255,255,255,.2)}
 .bgreen{background:linear-gradient(135deg,#1a7a0a,#2ecc40);color:#000;box-shadow:0 4px 20px rgba(46,204,64,.35),inset 0 1px 0 rgba(255,255,255,.2)}
+.bgold{background:linear-gradient(135deg,#7a4a00,#ffb300);color:#000;box-shadow:0 4px 20px rgba(255,179,0,.35),inset 0 1px 0 rgba(255,255,255,.2)}
 .bghost{background:rgba(255,255,255,.07);color:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.12)}
 .berr{color:#ff1744;font-size:12px;text-align:center;min-height:14px;letter-spacing:1px}
 .pcard{background:rgba(10,10,30,.9);border:1px solid rgba(0,212,255,.25);border-radius:16px;padding:13px 18px;width:min(340px,93vw);display:flex;align-items:center;gap:12px;box-shadow:0 4px 24px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.05)}
@@ -68,7 +69,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#080816;color:#fff;f
 @keyframes oppulse{0%,100%{box-shadow:0 0 8px rgba(255,214,0,.2)}50%{box-shadow:0 0 18px rgba(255,214,0,.4)}}
 .opp-circle{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Russo One',sans-serif;font-size:13px;color:#000;font-weight:900;border:2px solid rgba(255,255,255,.2);flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .opp-name{font-family:'Russo One',sans-serif;font-size:9px;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:64px;text-align:center}
-.opp-cards{display:flex;gap:-4px;align-items:center;justify-content:center}
 .opp-count{font-family:'Russo One',sans-serif;font-size:21px;color:#fff;line-height:1}
 .opp-uno{color:#ff1744;font-size:9px;letter-spacing:2px;font-weight:900;animation:unopop .5s ease infinite alternate}
 @keyframes unopop{from{opacity:.5}to{opacity:1;text-shadow:0 0 8px #ff1744}}
@@ -124,15 +124,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#080816;color:#fff;f
 .uc-yellow{background:linear-gradient(145deg,#b86000,#e09020);border-color:rgba(255,200,60,.3)}
 .uc-wild{background:conic-gradient(#d42030 0 25%,#e09020 25% 50%,#1e6e22 50% 75%,#1555b0 75% 100%);border-color:rgba(255,255,255,.35)}
 .uc-wild::before{background:rgba(0,0,0,.15);border-color:rgba(255,255,255,.2)}
-
-/* ── DRAW PILE LOCKED ── */
 .draw-pile-locked{pointer-events:none!important;opacity:.35!important}
 
 /* ── BOT THINKING ── */
 #botThinking{position:fixed;top:92px;left:50%;transform:translateX(-50%);z-index:60;background:rgba(10,10,30,.95);border:1px solid rgba(255,150,0,.35);border-radius:22px;padding:6px 18px;font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:2px;color:rgba(255,150,0,.85);display:none;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.4)}
 
-/* ── PASS BUTTON ── */
-#passBtn{position:fixed;bottom:16px;right:16px;z-index:80;display:none;font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:1.5px;padding:12px 20px;border:none;border-radius:12px;cursor:pointer;background:rgba(255,255,255,.1);color:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,.18);touch-action:manipulation;transition:background .15s}
+/* ── PASS / UNO BUTTONS ── */
+#passBtn{position:fixed;bottom:16px;right:16px;z-index:80;display:none;font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:1.5px;padding:12px 20px;border:none;border-radius:12px;cursor:pointer;background:rgba(255,255,255,.1);color:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,.18);touch-action:manipulation}
 #passBtn:active{opacity:.7}
 #unoBtnWrap{position:fixed;bottom:115px;right:16px;z-index:80;display:none}
 #unoBtn{font-family:'Russo One',sans-serif;font-size:21px;letter-spacing:4px;padding:13px 20px;border:none;border-radius:14px;cursor:pointer;background:linear-gradient(135deg,#8a0014,#ff1744);color:#fff;box-shadow:0 0 28px rgba(255,23,68,.5);animation:unopulse .85s ease-in-out infinite;touch-action:manipulation}
@@ -152,17 +150,36 @@ html,body{width:100%;height:100%;overflow:hidden;background:#080816;color:#fff;f
 .cp-yellow{background:linear-gradient(145deg,#b86000,#e09020);box-shadow:0 0 22px rgba(224,144,32,.4)}
 
 /* ── WINNER ── */
-.winner-box{background:rgba(10,10,30,.98);border:1px solid rgba(0,212,255,.4);border-radius:22px;padding:36px 30px;width:min(340px,92vw);display:flex;flex-direction:column;align-items:center;gap:18px;box-shadow:0 12px 50px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.06)}
+.winner-box{background:rgba(10,10,30,.98);border:1px solid rgba(0,212,255,.4);border-radius:22px;padding:36px 30px;width:min(340px,92vw);display:flex;flex-direction:column;align-items:center;gap:16px;box-shadow:0 12px 50px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.06)}
 .winner-title{font-family:'Russo One',sans-serif;font-size:28px;color:#ffd600;letter-spacing:5px;text-align:center;text-shadow:0 0 20px rgba(255,214,0,.4)}
 .winner-name{font-family:'Russo One',sans-serif;font-size:36px;color:#00d4ff;text-align:center;filter:drop-shadow(0 0 16px #00d4ff)}
 .winner-sub{font-size:12px;color:rgba(255,255,255,.38);letter-spacing:2px;text-align:center}
 
+/* ── LEADERBOARD ── */
+#sLeaderboard::before{background:radial-gradient(ellipse at 50% 0%,rgba(255,179,0,.08) 0%,transparent 60%)}
+.lb-box{background:rgba(10,10,30,.97);border:1px solid rgba(255,179,0,.3);border-radius:22px;padding:22px 18px;width:min(440px,96vw);max-height:90vh;display:flex;flex-direction:column;gap:12px;box-shadow:0 12px 50px rgba(0,0,0,.6)}
+.lb-title{font-family:'Russo One',sans-serif;font-size:22px;letter-spacing:5px;color:#ffb300;text-align:center;text-shadow:0 0 20px rgba(255,179,0,.35)}
+.lb-header{display:grid;grid-template-columns:44px 1fr 52px 52px;gap:6px;padding:6px 10px;font-family:'Russo One',sans-serif;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.3);border-bottom:1px solid rgba(255,255,255,.08)}
+.lb-content{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:5px;min-height:80px;max-height:calc(90vh - 220px);scrollbar-width:none}
+.lb-content::-webkit-scrollbar{display:none}
+.lb-row{display:grid;grid-template-columns:44px 1fr 52px 52px;gap:6px;padding:9px 10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);align-items:center;transition:background .15s}
+.lb-row:nth-child(1){background:rgba(255,179,0,.1);border-color:rgba(255,179,0,.25)}
+.lb-row:nth-child(2){background:rgba(180,180,180,.08);border-color:rgba(180,180,180,.2)}
+.lb-row:nth-child(3){background:rgba(180,80,20,.1);border-color:rgba(200,100,40,.2)}
+.lb-rank{font-family:'Russo One',sans-serif;font-size:18px;text-align:center}
+.lb-name{font-family:'Russo One',sans-serif;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
+.lb-wins{font-family:'Russo One',sans-serif;font-size:15px;color:#2ecc40;text-align:center}
+.lb-wr{font-family:'Russo One',sans-serif;font-size:12px;color:rgba(255,255,255,.45);text-align:center}
+.lb-me .lb-name{color:#00d4ff}
+.lb-loading,.lb-empty,.lb-error{text-align:center;font-size:13px;color:rgba(255,255,255,.3);letter-spacing:2px;padding:24px;font-family:'Russo One',sans-serif}
+.lb-error{color:rgba(255,80,80,.6)}
+
+/* ── WAITING LABEL ── */
+.not-my-turn-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:25;font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:3px;color:rgba(255,255,255,.4);pointer-events:none;white-space:nowrap}
+
 /* ── TOAST ── */
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(10,10,30,.98);border:1px solid rgba(0,212,255,.35);border-radius:12px;padding:10px 22px;font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:2px;color:#00d4ff;white-space:nowrap;pointer-events:none;animation:toastin .3s ease;max-width:90vw;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.4)}
 @keyframes toastin{from{opacity:0;top:8px}to{opacity:1;top:20px}}
-
-/* ── WAITING OVERLAY TEXT ── */
-.not-my-turn-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:25;font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:3px;color:rgba(255,255,255,.4);pointer-events:none;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -180,7 +197,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#080816;color:#fff;f
     </div>
   </div>
 
-  <!-- Solo -->
   <button class="btn bgreen" id="soloBtn">🤖 SOLO vs BOTS</button>
   <div class="solo-box" id="soloBox">
     <div class="solo-label">ANZAHL BOTS</div>
@@ -192,7 +208,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#080816;color:#fff;f
     <button class="btn bgreen" id="startSoloBtn" style="width:min(220px,80vw);padding:12px;font-size:14px">▶ SPIELEN</button>
   </div>
 
-  <!-- Multiplayer -->
   <button class="btn bcyan" id="multiBtn">⚔️ MULTIPLAYER</button>
   <div class="multibtns" id="multibtns">
     <button class="btn bcyan" id="createBtn" style="font-size:13px;padding:12px">+ RAUM ERSTELLEN</button>
@@ -202,6 +217,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#080816;color:#fff;f
       <button class="btn bcyan" id="joinBtn" style="width:auto;padding:12px 20px;font-size:13px">JOIN</button>
     </div>
   </div>
+
+  <button class="btn bgold" id="lbMenuBtn">🏆 BESTENLISTE</button>
 
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center">
     <input class="nameinp" id="nameInp" maxlength="16" placeholder="NAME ÄNDERN..." autocomplete="off" spellcheck="false"/>
@@ -258,8 +275,27 @@ html,body{width:100%;height:100%;overflow:hidden;background:#080816;color:#fff;f
     <div class="winner-title">GEWONNEN!</div>
     <div class="winner-name" id="winnerNameEl">---</div>
     <div class="winner-sub" id="winnerSubEl"></div>
-    <button class="btn bgreen" id="playAgainBtn" style="display:none;margin-top:6px">↺ NOCHMAL</button>
+    <button class="btn bgreen" id="playAgainBtn" style="display:none;margin-top:4px">↺ NOCHMAL</button>
+    <button class="btn bgold" id="wLbBtn">🏆 BESTENLISTE</button>
     <button class="btn bghost" id="wLeaveBtn">← ZUM MENÜ</button>
+  </div>
+</div>
+
+<!-- ══ LEADERBOARD ════════════════════════════════════════════════ -->
+<div id="sLeaderboard" class="screen off">
+  <div class="lb-box">
+    <div class="lb-title">🏆 BESTENLISTE</div>
+    <div class="lb-header">
+      <span style="text-align:center">#</span>
+      <span>SPIELER</span>
+      <span style="text-align:center">SIEGE</span>
+      <span style="text-align:center">WIN%</span>
+    </div>
+    <div id="lbContent" class="lb-content">
+      <div class="lb-loading">Laden…</div>
+    </div>
+    <button class="btn bcyan" id="lbRefreshBtn" style="font-size:13px;padding:11px">↻ AKTUALISIEREN</button>
+    <button class="btn bghost" id="lbBackBtn" style="font-size:13px;padding:11px">← ZURÜCK</button>
   </div>
 </div>
 
@@ -304,21 +340,16 @@ var myRoom = null;
 var roomCh = null;
 var gs     = null;
 
-// Host-only deck/discard
 var hDeck    = [];
 var hDiscard = [];
-
-// Lobby registry {id: {id,name,ci}}
-var lobby = {};
-
-// Card pending colour selection
-var pendingCard = null;
-
-// Solo / bot state
-var isSolo       = false;
-var botIds       = [];
-var selBots      = 1;
-var botTimer     = null;
+var lobby    = {};
+var pendingCard   = null;
+var isSolo        = false;
+var botIds        = [];
+var selBots       = 1;
+var botTimer      = null;
+var scoreSubmitted = false;
+var lbPrevScreen  = 'sMenu';
 
 // ════════════════════════════════════════════════════════
 // CARD UTILITIES
@@ -368,6 +399,7 @@ function hostInitGame(){
   var ids = Object.keys(lobby);
   if(ids.length<2){ showToast('Mindestens 2 Spieler!'); return; }
   _uid=0; hDeck=shuffle(buildDeck()); hDiscard=[];
+  scoreSubmitted=false;
   var hands={};
   ids.forEach(function(pid){ hands[pid]=[]; for(var i=0;i<7;i++) hands[pid].push(hDeck.pop()); });
   var top=hDeck.pop();
@@ -457,7 +489,6 @@ function hostPassTurn(pid){
   gs.drewUid=null; gs.lastAction=pn+' passt'; hostAdvance(1); afterStateChange();
 }
 
-// Central "after any state change" — broadcasts + triggers bot
 function afterStateChange(){
   if(roomCh) roomCh.send({type:'broadcast',event:'state',payload:{s:gs}});
   updateGameUI();
@@ -475,8 +506,7 @@ function isBotTurn(){
 function scheduleBotTurn(){
   clearTimeout(botTimer);
   document.getElementById('botThinking').style.display='block';
-  var delay = 700 + Math.random()*900;
-  botTimer = setTimeout(doBotTurn, delay);
+  botTimer = setTimeout(doBotTurn, 700 + Math.random()*900);
 }
 
 function doBotTurn(){
@@ -485,39 +515,27 @@ function doBotTurn(){
   var cur=hCur();
   if(!cur||botIds.indexOf(cur.id)===-1) return;
   var hand=gs.hands[cur.id]||[];
-
-  // Handle drawn card first
   if(gs.drewUid){
     var drew=hand.find(function(c){return c.u===gs.drewUid;});
     if(drew && canPlay(drew,gs.topCard,gs.curColor)){
-      var col = drew.c==='wild' ? botPickColor(hand) : null;
-      hostPlayCard(cur.id, drew.u, col);
-    } else {
-      hostPassTurn(cur.id);
-    }
+      hostPlayCard(cur.id, drew.u, drew.c==='wild'?botPickColor(hand):null);
+    } else { hostPassTurn(cur.id); }
     return;
   }
-
-  // Must draw stacked?
   if(gs.pendingDraws>0){
     var counter=hand.find(function(c){return c.v==='draw2'||c.v==='wild4';});
     if(counter && canPlay(counter,gs.topCard,gs.curColor)){
       hostPlayCard(cur.id,counter.u, counter.c==='wild'?botPickColor(hand):null);
-    } else {
-      hostDrawCard(cur.id);
-    }
+    } else { hostDrawCard(cur.id); }
     return;
   }
-
-  // Choose best playable card
   var playable=hand.filter(function(c){return canPlay(c,gs.topCard,gs.curColor);});
   if(playable.length===0){ hostDrawCard(cur.id); return; }
-
   var card=botPickCard(playable, hand);
   hostPlayCard(cur.id, card.u, card.c==='wild'?botPickColor(hand):null);
 }
 
-function botPickCard(playable, fullHand){
+function botPickCard(playable){
   var prio=['draw2','skip','reverse','wild4'];
   for(var i=0;i<prio.length;i++){
     var f=playable.find(function(c){return c.v===prio[i];});
@@ -537,6 +555,69 @@ function botPickColor(hand){
 }
 
 // ════════════════════════════════════════════════════════
+// LEADERBOARD
+// ════════════════════════════════════════════════════════
+async function submitScore(playerName, won){
+  if(!sb || !playerName || playerName.startsWith('BOT')) return;
+  try {
+    var res = await sb.from('leaderboard').select('wins,games').eq('player_name',playerName).maybeSingle();
+    var existing = res.data;
+    if(existing){
+      await sb.from('leaderboard').update({
+        wins: existing.wins + (won?1:0),
+        games: existing.games + 1,
+        last_seen: new Date().toISOString()
+      }).eq('player_name', playerName);
+    } else {
+      await sb.from('leaderboard').insert({
+        player_name: playerName,
+        wins: won?1:0,
+        games: 1,
+        last_seen: new Date().toISOString()
+      });
+    }
+  } catch(e){ console.log('Score submit error:', e); }
+}
+
+async function loadLeaderboard(){
+  var el=document.getElementById('lbContent');
+  el.innerHTML='<div class="lb-loading">Laden…</div>';
+  if(!sb){ el.innerHTML='<div class="lb-error">Keine Verbindung</div>'; return; }
+  try {
+    var res = await sb.from('leaderboard').select('player_name,wins,games').order('wins',{ascending:false}).limit(25);
+    if(res.error) throw res.error;
+    renderLeaderboard(res.data||[]);
+  } catch(e){
+    el.innerHTML='<div class="lb-error">Tabelle nicht gefunden.<br><span style="font-size:10px;opacity:.6">Supabase-Tabelle einrichten nötig.</span></div>';
+  }
+}
+
+function renderLeaderboard(data){
+  var el=document.getElementById('lbContent');
+  if(!data||data.length===0){ el.innerHTML='<div class="lb-empty">Noch keine Einträge — spiel los!</div>'; return; }
+  var medals=['🥇','🥈','🥉'];
+  var html='';
+  data.forEach(function(row,i){
+    var rank=i+1;
+    var wr=row.games>0?Math.round(row.wins/row.games*100):0;
+    var isMe=row.player_name===myName;
+    html+='<div class="lb-row'+(isMe?' lb-me':'')+'">'
+      +'<div class="lb-rank">'+(rank<=3?medals[rank-1]:rank)+'</div>'
+      +'<div class="lb-name">'+(row.player_name||'?')+(isMe?' ◀':'')+'</div>'
+      +'<div class="lb-wins">'+row.wins+'</div>'
+      +'<div class="lb-wr">'+wr+'%</div>'
+      +'</div>';
+  });
+  el.innerHTML=html;
+}
+
+function showLeaderboard(prevScreen){
+  lbPrevScreen = prevScreen || 'sMenu';
+  showScreen('sLeaderboard');
+  loadLeaderboard();
+}
+
+// ════════════════════════════════════════════════════════
 // SOLO MODE
 // ════════════════════════════════════════════════════════
 function setBots(n){
@@ -548,7 +629,7 @@ function setBots(n){
 
 function startSolo(){
   if(!validateName()) return;
-  isSolo=true; isHost=true; roomCh=null;
+  isSolo=true; isHost=true; roomCh=null; scoreSubmitted=false;
   myId=myName+'_YOU';
   lobby={}; botIds=[];
   var ci=0;
@@ -568,7 +649,7 @@ function startSolo(){
 function createRoom(){
   if(!validateName()) return;
   isSolo=false; myRoom=rndCode(); myId=myName+'_'+Date.now(); isHost=true;
-  lobby={}; botIds=[];
+  lobby={}; botIds=[]; scoreSubmitted=false;
   lobby[myId]={id:myId,name:myName,ci:0};
   showScreen('sLobby');
   document.getElementById('codeVal').textContent=myRoom;
@@ -581,7 +662,7 @@ function joinRoom(){
   var code=(document.getElementById('joinInput').value||'').trim().toUpperCase();
   if(code.length!==4){ setErr('Bitte 4-stelligen Code eingeben!'); return; }
   isSolo=false; myRoom=code; myId=myName+'_'+Date.now(); isHost=false;
-  lobby={}; botIds=[];
+  lobby={}; botIds=[]; scoreSubmitted=false;
   lobby[myId]={id:myId,name:myName,ci:0};
   showScreen('sLobby');
   document.getElementById('codeVal').textContent=myRoom;
@@ -595,12 +676,7 @@ function joinChannel(){
     .on('broadcast',{event:'join'},function(m){
       var p=m.payload;
       if(p.id===myId) return;
-      if(!lobby[p.id]){
-        lobby[p.id]=p;
-        announce();
-      } else {
-        lobby[p.id].name=p.name;
-      }
+      if(!lobby[p.id]){ lobby[p.id]=p; announce(); } else { lobby[p.id].name=p.name; }
       updateLobbyUI();
     })
     .on('broadcast',{event:'leave'},function(m){
@@ -640,7 +716,7 @@ function leaveRoom(){
   clearTimeout(botTimer);
   document.getElementById('botThinking').style.display='none';
   if(roomCh){ roomCh.send({type:'broadcast',event:'leave',payload:{id:myId,name:myName}}); roomCh.unsubscribe(); roomCh=null; }
-  gs=null; myRoom=null; isHost=false; lobby={}; pendingCard=null; isSolo=false; botIds=[];
+  gs=null; myRoom=null; isHost=false; lobby={}; pendingCard=null; isSolo=false; botIds=[]; scoreSubmitted=false;
   showScreen('sMenu');
 }
 
@@ -687,7 +763,7 @@ function shoutUno(){ showToast('UNO! 🃏'); }
 // UI
 // ════════════════════════════════════════════════════════
 function showScreen(id){
-  ['sMenu','sLobby','sGame','sWinner'].forEach(function(s){
+  ['sMenu','sLobby','sGame','sWinner','sLeaderboard'].forEach(function(s){
     document.getElementById(s).classList.toggle('off',s!==id);
   });
 }
@@ -719,9 +795,17 @@ function buildCardEl(card, playable, large){
 
 function updateGameUI(){
   if(!gs) return;
+
   if(gs.phase==='finished'){
     clearTimeout(botTimer);
     document.getElementById('botThinking').style.display='none';
+
+    // Submit score once per game for the human player
+    if(!scoreSubmitted){
+      scoreSubmitted=true;
+      submitScore(myName, gs.winner===myId);
+    }
+
     showScreen('sWinner');
     var w=gs.players.find(function(p){return p.id===gs.winner;});
     document.getElementById('winnerNameEl').textContent=w?w.name:'???';
@@ -747,13 +831,12 @@ function updateGameUI(){
   document.getElementById('deckCountLbl').textContent=(gs.deckCount||0)+' Karten';
   document.getElementById('lastActionLbl').textContent=gs.lastAction||'';
 
-  // Draw pile — locked when not my turn
+  // Draw pile locking
   var dp=document.getElementById('drawPileEl');
-  var canDraw=isMyTurn&&!gs.drewUid;
   if(isMyTurn&&!isBotTurn()){
     dp.classList.remove('draw-pile-locked');
     dp.style.opacity='1';
-    dp.style.cursor=canDraw?'pointer':'default';
+    dp.style.cursor=(gs.drewUid?'default':'pointer');
   } else {
     dp.classList.add('draw-pile-locked');
   }
@@ -801,16 +884,14 @@ function updateGameUI(){
   } else {
     handArea.classList.add('not-my-turn');
     handArea.classList.remove('my-turn');
-    var botTurnNow=cur&&botIds.indexOf(cur.id)!==-1;
     waitingLabel.style.display='block';
-    waitingLabel.textContent=botTurnNow?'BOT DENKT NACH…':'WARTEN…';
+    waitingLabel.textContent=(cur&&botIds.indexOf(cur.id)!==-1)?'BOT DENKT NACH…':'WARTEN…';
   }
 
   // Turn badge
   var tb=document.getElementById('turnBadge');
   var botTurn=cur&&botIds.indexOf(cur.id)!==-1;
-  tb.textContent = isMyTurn ? (gs.pendingDraws>0?'ZIEHE '+gs.pendingDraws+'!':'DEIN ZUG!')
-                            : ((cur?cur.name:'?')+' ist dran');
+  tb.textContent=isMyTurn?(gs.pendingDraws>0?'ZIEHE '+gs.pendingDraws+'!':'DEIN ZUG!'):((cur?cur.name:'?')+' ist dran');
   tb.className='turn-badge '+(isMyTurn?'turn-me':botTurn?'turn-bot':'turn-other');
   document.getElementById('myLabel').textContent=myName+' ('+myHand.length+')';
 
@@ -881,9 +962,16 @@ window.addEventListener('load',function(){
   document.getElementById('wLeaveBtn').addEventListener('click',leaveRoom);
   document.getElementById('playAgainBtn').addEventListener('click',function(){
     if(!isHost) return;
+    scoreSubmitted=false;
     hostInitGame(); showScreen('sGame');
     roomCh&&roomCh.send({type:'broadcast',event:'state',payload:{s:gs}});
   });
+
+  // Leaderboard buttons
+  document.getElementById('lbMenuBtn').addEventListener('click',function(){ showLeaderboard('sMenu'); });
+  document.getElementById('wLbBtn').addEventListener('click',function(){ showLeaderboard('sWinner'); });
+  document.getElementById('lbBackBtn').addEventListener('click',function(){ showScreen(lbPrevScreen); });
+  document.getElementById('lbRefreshBtn').addEventListener('click',loadLeaderboard);
 });
 </script>
 </body>
