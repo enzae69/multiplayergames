@@ -147,6 +147,17 @@
   .jacky-sub{font-family:'Russo One',sans-serif;font-size:18px;color:rgba(255,255,255,.5);letter-spacing:6px}
   .jacky-close{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:2px;padding:12px 28px;border:2px solid rgba(255,255,255,.2);border-radius:12px;background:transparent;color:rgba(255,255,255,.5);cursor:pointer;margin-top:10px;touch-action:manipulation}
 
+  /* ── NAV TABS ── */
+  .nav-tabs{display:flex;gap:12px;width:min(480px,95vw);margin-bottom:20px}
+  .nav-tab{flex:1;font-family:'Russo One',sans-serif;font-size:18px;letter-spacing:2px;padding:18px;border-radius:16px;border:2px solid;cursor:pointer;transition:all .2s;touch-action:manipulation;background:transparent}
+  .nav-tab:active{transform:scale(.97)}
+  .nav-tab.spiele-tab{border-color:rgba(0,245,255,.3);color:rgba(0,245,255,.55)}
+  .nav-tab.spiele-tab.active{background:rgba(0,245,255,.12);border-color:#00f5ff;color:#00f5ff;box-shadow:0 0 24px rgba(0,245,255,.2)}
+  .nav-tab.shop-tab{border-color:rgba(255,214,0,.3);color:rgba(255,214,0,.55)}
+  .nav-tab.shop-tab.active{background:rgba(255,214,0,.12);border-color:#ffd700;color:#ffd700;box-shadow:0 0 24px rgba(255,214,0,.2)}
+  .jacky-line{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:4px;text-align:center;background:linear-gradient(90deg,#ff006e,#ff6d00,#ffd600,#00e676,#00d4ff,#bf00ff,#ff006e);background-size:300% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:rainbow 3s linear infinite;margin-bottom:16px;cursor:pointer;width:min(480px,95vw)}
+  .inline-shop{width:min(480px,95vw);display:flex;flex-direction:column;gap:10px;padding-bottom:20px}
+
   /* ── NAME MODAL ── */
   #nameModal{z-index:500}
   .name-inp{background:rgba(15,15,42,1);border:2px solid rgba(0,245,255,.3);color:#00f5ff;font-family:'Russo One',sans-serif;font-size:22px;padding:14px 18px;border-radius:10px;outline:none;width:100%;text-align:center;letter-spacing:5px;text-transform:uppercase}
@@ -247,43 +258,43 @@
     <button class="edit-btn" onclick="openNameModal()">✏️</button>
   </div>
 
-  <div class="games-label">SPIELE</div>
-  <div class="games-grid">
-    <a class="game-card laser" href="laser-tracer/index.html?v=3">
-      <div class="game-badge badge-live">LIVE</div>
-      <div class="game-icon" style="color:#00f5ff">⚡</div>
-      <div class="game-name">LASER TRACER</div>
-      <div class="game-desc">Weiche Lasern aus, überlebe am längsten</div>
-      <div class="game-players">Multiplayer • Solo</div>
-    </a>
-    <a class="game-card uno" href="uno/index.html">
-      <div class="game-badge badge-live">LIVE</div>
-      <div class="game-icon" style="color:#e32636">🃏</div>
-      <div class="game-name">UNO</div>
-      <div class="game-desc">Klassisches Kartenspiel, spiele Karten aus</div>
-      <div class="game-players">Multiplayer • 2–10</div>
-    </a>
-    <div class="game-card shop" onclick="openShop()">
-      <div class="game-badge" style="background:rgba(255,214,0,.15);color:#ffd700;border:1px solid rgba(255,214,0,.3)">NEU</div>
-      <div class="game-icon" style="color:#ffd700">🛒</div>
-      <div class="game-name">SHOP</div>
-      <div class="game-desc">Kaufe Karten Skins mit Coins</div>
-      <div class="game-players">🪙 Coins ausgeben</div>
+  <div class="jacky-line" onclick="openJacky()">✦ JACKY PHAM IST COOL ✦</div>
+
+  <div class="nav-tabs">
+    <button class="nav-tab spiele-tab active" id="tabSpiele" onclick="showTab('spiele')">🎮 SPIELE</button>
+    <button class="nav-tab shop-tab" id="tabShop" onclick="showTab('shop')">🛒 SHOP</button>
+  </div>
+
+  <div id="contentSpiele">
+    <div class="games-grid">
+      <a class="game-card laser" href="laser-tracer/index.html?v=4">
+        <div class="game-badge badge-live">LIVE</div>
+        <div class="game-icon" style="color:#00f5ff">⚡</div>
+        <div class="game-name">LASER TRACER</div>
+        <div class="game-desc">Weiche Lasern aus, überlebe am längsten</div>
+        <div class="game-players">Multiplayer • Solo</div>
+      </a>
+      <a class="game-card uno" href="uno/index.html">
+        <div class="game-badge badge-live">LIVE</div>
+        <div class="game-icon" style="color:#e32636">🃏</div>
+        <div class="game-name">UNO</div>
+        <div class="game-desc">Klassisches Kartenspiel, spiele Karten aus</div>
+        <div class="game-players">Multiplayer • 2–10</div>
+      </a>
+      <div class="game-card auslaender soon" style="grid-column:span 2">
+        <div class="game-badge badge-soon">BALD</div>
+        <div class="game-icon" style="color:#ffd700">🌍</div>
+        <div class="game-name">WHO IS THE AUSLÄNDER?</div>
+        <div class="game-desc">Finde den Ausländer unter euch</div>
+        <div class="game-players">Multiplayer</div>
+      </div>
     </div>
-    <div class="game-card jacky" onclick="openJacky()">
-      <div class="game-badge badge-hot">🔥</div>
-      <div class="game-icon" style="color:#ff006e">👑</div>
-      <div class="game-name">JACKY PHAM IST COOL</div>
-      <div class="game-desc">Eine wichtige Botschaft</div>
-      <div class="game-players">Facts only 💯</div>
-    </div>
-    <div class="game-card auslaender soon" style="grid-column:span 2">
-      <div class="game-badge badge-soon">BALD</div>
-      <div class="game-icon" style="color:#ffd700">🌍</div>
-      <div class="game-name">WHO IS THE AUSLÄNDER?</div>
-      <div class="game-desc">Finde den Ausländer unter euch</div>
-      <div class="game-players">Multiplayer</div>
-    </div>
+  </div>
+
+  <div id="contentShop" style="display:none" class="inline-shop">
+    <div class="shop-coins-row">🪙 <span id="inlineShopCoins">0</span> Coins verfügbar</div>
+    <div class="shop-err" id="inlineShopErr"></div>
+    <div class="skin-grid" id="inlineSkinGrid"></div>
   </div>
 </div>
 
@@ -607,6 +618,77 @@ function showToastPortal(msg){
   t.textContent=msg;
   document.body.appendChild(t);
   setTimeout(function(){t.remove();},3000);
+}
+
+// ── TAB NAVIGATION & INLINE SHOP ─────────────────────────────────────────
+function showTab(tab) {
+  var spiele = document.getElementById('contentSpiele');
+  var shop   = document.getElementById('contentShop');
+  var ts     = document.getElementById('tabSpiele');
+  var tc     = document.getElementById('tabShop');
+  if (tab === 'spiele') {
+    spiele.style.display = '';
+    shop.style.display   = 'none';
+    ts.classList.add('active');
+    tc.classList.remove('active');
+  } else {
+    spiele.style.display = 'none';
+    shop.style.display   = '';
+    ts.classList.remove('active');
+    tc.classList.add('active');
+    renderInlineShop();
+  }
+}
+
+function renderInlineShop() {
+  document.getElementById('inlineShopCoins').textContent = getCoins();
+  document.getElementById('inlineShopErr').textContent   = '';
+  var owned  = getOwnedSkins();
+  var active = getActiveSkin();
+  var grid   = document.getElementById('inlineSkinGrid');
+  grid.innerHTML = '';
+  SKINS.forEach(function(skin){
+    var isOwned  = owned.indexOf(skin.id) !== -1;
+    var isActive = active === skin.id;
+    var card = document.createElement('div');
+    card.className = 'skin-card'+(isOwned?' owned':'')+(isActive?' active-skin':'');
+    var prevClass  = skin.rgb ? 'skin-preview rgb-prev' : 'skin-preview';
+    var statusHtml;
+    if(isActive)         statusHtml = '<div class="skin-status active-s">AKTIV</div>';
+    else if(isOwned)     statusHtml = '<div class="skin-status owned-s">AUSRÜSTEN</div>';
+    else if(!skin.price) statusHtml = '<div class="skin-status free">KOSTENLOS</div>';
+    else                 statusHtml = '<div class="skin-status buy-s">'+skin.price+' 🪙</div>';
+    card.innerHTML =
+      '<div class="'+prevClass+'" style="background:'+skin.bg+'"><span style="font-size:8px;opacity:.3">UNO</span></div>'
+      +'<div class="skin-name">'+skin.name+'</div>'
+      +statusHtml;
+    card.addEventListener('click', function(){ onInlineSkinClick(skin); });
+    grid.appendChild(card);
+  });
+}
+
+async function onInlineSkinClick(skin) {
+  var owned   = getOwnedSkins();
+  var isOwned = owned.indexOf(skin.id) !== -1;
+  document.getElementById('inlineShopErr').textContent = '';
+  if (isOwned || skin.price === 0) {
+    localStorage.setItem('activeSkin', skin.id);
+    renderInlineShop();
+    showToastPortal('Skin aktiviert: '+skin.name);
+    return;
+  }
+  var coins = getCoins();
+  if (coins < skin.price) {
+    document.getElementById('inlineShopErr').textContent = 'Zu wenig Coins! ('+coins+'/'+skin.price+' 🪙)';
+    return;
+  }
+  await spendCoins(skin.price);
+  owned.push(skin.id);
+  saveOwnedSkins(owned);
+  localStorage.setItem('activeSkin', skin.id);
+  document.getElementById('inlineShopCoins').textContent = getCoins();
+  renderInlineShop();
+  showToastPortal('🎉 '+skin.name+' gekauft & aktiviert!');
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────
