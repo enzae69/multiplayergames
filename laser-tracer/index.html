@@ -168,6 +168,13 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
     <input id="adminAnnounceInp" type="text" placeholder="Nachricht..." onkeydown="if(event.key==='Enter')adminSendAnnounce()" style="background:rgba(255,0,110,.1);border:1px solid rgba(255,0,110,.4);color:#fff;border-radius:7px;font-size:11px;padding:5px 8px;font-family:'Russo One',sans-serif;outline:none;width:100%;box-sizing:border-box" />
     <button onclick="adminSendAnnounce()" style="background:rgba(255,0,110,.15);border:1px solid rgba(255,0,110,.5);color:#ff006e;border-radius:8px;font-size:12px;padding:6px 10px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;touch-action:manipulation">📢 ANNOUNCE</button>
   </div>
+  <div style="border-top:1px solid rgba(255,0,110,.3);margin-top:2px;padding-top:6px;display:flex;flex-direction:column;gap:4px">
+    <div style="font-size:8px;letter-spacing:2px;color:rgba(255,215,0,.7)">🪙 COINS</div>
+    <input id="ltAdminCoinUser" type="text" placeholder="USERNAME" autocomplete="off" style="background:rgba(255,0,110,.1);border:1px solid rgba(255,0,110,.4);color:#fff;border-radius:7px;font-size:11px;padding:5px 8px;font-family:'Russo One',sans-serif;outline:none;width:100%;box-sizing:border-box"/>
+    <input id="ltAdminCoinAmt" type="number" placeholder="BETRAG" min="0" style="background:rgba(255,0,110,.1);border:1px solid rgba(255,0,110,.4);color:#fff;border-radius:7px;font-size:11px;padding:5px 8px;font-family:'Russo One',sans-serif;outline:none;width:100%;box-sizing:border-box"/>
+    <button onclick="ltAdminSetCoins()" style="background:rgba(255,215,0,.15);border:1px solid rgba(255,215,0,.5);color:#ffd700;border-radius:8px;font-size:12px;padding:6px 10px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;touch-action:manipulation">SETZEN</button>
+    <div id="ltAdminCoinMsg" style="font-size:9px;min-height:12px;text-align:center;letter-spacing:1px"></div>
+  </div>
 </div>
 
 <!-- RESULT -->
@@ -1341,6 +1348,21 @@ function adminSendAnnounce() {
   if (globalCh) {
     globalCh.send({type:'broadcast', event:'adminAnnounce', payload:{text:text}});
   }
+}
+
+async function ltAdminSetCoins() {
+  if (!isAdminUser) return;
+  var username = (document.getElementById('ltAdminCoinUser').value || '').trim().toUpperCase();
+  var amount   = parseInt(document.getElementById('ltAdminCoinAmt').value);
+  var msgEl    = document.getElementById('ltAdminCoinMsg');
+  msgEl.style.color = '#ffd700'; msgEl.textContent = '';
+  if (!username) { msgEl.style.color='#ff4444'; msgEl.textContent='Username?'; return; }
+  if (isNaN(amount) || amount < 0) { msgEl.style.color='#ff4444'; msgEl.textContent='Betrag?'; return; }
+  if (!sb) { msgEl.style.color='#ff4444'; msgEl.textContent='Keine DB'; return; }
+  msgEl.textContent = '...';
+  var upd = await sb.from('players').update({coins: amount}).eq('username', username);
+  if (upd.error) { msgEl.style.color='#ff4444'; msgEl.textContent='Nicht gefunden'; return; }
+  msgEl.textContent = '✓ '+username+' = '+amount+' 🪙';
 }
 
 function checkStalePeers() {
