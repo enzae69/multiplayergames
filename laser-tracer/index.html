@@ -498,96 +498,10 @@ function updateCam() {
   buildCamMatrix();
 }
 
-// ── SKY ───────────────────────────────────────────────────────────────────
-function drawSky(t) {
-  // Very dark background
-  ctx.fillStyle = '#000008';
-  ctx.fillRect(0, 0, W, H);
-
-  ctx.save();
-  var pulse = 0.88 + 0.12 * Math.sin(t * 0.55);
-
-  // Draw a glowing polygon outline using layered strokes (no shadowBlur for iOS)
-  function glowPoly(pts, r, g, b, alpha) {
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    ctx.beginPath();
-    ctx.moveTo(pts[0][0], pts[0][1]);
-    for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
-    ctx.closePath();
-    // Wide halo
-    ctx.globalAlpha = 0.06 * alpha * pulse;
-    ctx.strokeStyle = 'rgb('+r+','+g+','+b+')';
-    ctx.lineWidth = 28; ctx.stroke();
-    // Mid glow
-    ctx.globalAlpha = 0.18 * alpha * pulse;
-    ctx.lineWidth = 10; ctx.stroke();
-    // Bright core
-    ctx.globalAlpha = 0.92 * alpha * pulse;
-    ctx.lineWidth = 2.2; ctx.stroke();
-    ctx.globalAlpha = 1;
-  }
-
-  // Bright dot at a corner
-  function dot(x, y, r, g, b) {
-    ctx.globalAlpha = 0.9 * pulse;
-    ctx.fillStyle = 'rgb('+r+','+g+','+b+')';
-    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2); ctx.fill();
-    ctx.globalAlpha = 1;
-  }
-
-  var cx = W * 0.5, cy = H * 0.34;
-  var pw = W * 0.42, ph = H * 0.32; // half-width and height of each panel
-
-  // LEFT angular panel (trapezoid leaning left — like in image)
-  var L = [
-    [cx - pw*1.65, cy - ph*0.55],  // far top-left
-    [cx - pw*0.06, cy - ph*0.82],  // top centre
-    [cx - pw*0.06, cy + ph*0.18],  // bottom centre
-    [cx - pw*1.65, cy + ph*0.45],  // far bottom-left
-  ];
-  // RIGHT angular panel (mirror)
-  var R2 = [
-    [cx + pw*0.06, cy - ph*0.82],  // top centre
-    [cx + pw*1.65, cy - ph*0.55],  // far top-right
-    [cx + pw*1.65, cy + ph*0.45],  // far bottom-right
-    [cx + pw*0.06, cy + ph*0.18],  // bottom centre
-  ];
-
-  // Dark panel fill so they look like physical panels
-  ctx.globalAlpha = 0.22;
-  ctx.fillStyle = '#060618';
-  ctx.beginPath();
-  ctx.moveTo(L[0][0],L[0][1]); L.forEach(function(p){ctx.lineTo(p[0],p[1]);}); ctx.closePath(); ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(R2[0][0],R2[0][1]); R2.forEach(function(p){ctx.lineTo(p[0],p[1]);}); ctx.closePath(); ctx.fill();
-  ctx.globalAlpha = 1;
-
-  // Glowing edges — white/light-blue like LED strips
-  glowPoly(L,  210, 235, 255, 1.0);
-  glowPoly(R2, 210, 235, 255, 1.0);
-
-  // Inner diagonal accent lines inside each panel
-  function glowLine(x1,y1,x2,y2, r,g,b, alpha) {
-    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
-    ctx.globalAlpha = 0.05 * alpha * pulse; ctx.lineWidth=18; ctx.strokeStyle='rgb('+r+','+g+','+b+')'; ctx.stroke();
-    ctx.globalAlpha = 0.14 * alpha * pulse; ctx.lineWidth=7; ctx.stroke();
-    ctx.globalAlpha = 0.75 * alpha * pulse; ctx.lineWidth=1.4; ctx.stroke();
-    ctx.globalAlpha = 1;
-  }
-  // Centre seam connecting both panels
-  glowLine(cx-pw*0.06, cy-ph*0.82,  cx+pw*0.06, cy-ph*0.82,  220,240,255, 0.9); // top join
-  glowLine(cx-pw*0.06, cy+ph*0.18,  cx+pw*0.06, cy+ph*0.18,  220,240,255, 0.7); // bottom join
-
-  // Bright dots at all corners
-  var allPts = L.concat(R2);
-  allPts.forEach(function(p){ dot(p[0],p[1], 230,245,255); });
-
-  ctx.restore();
-}
-
 // ── RENDER ────────────────────────────────────────────────────────────────
 function render(t) {
-  drawSky(t);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
   drawFloor();
   drawWall();
   drawLasers(t);
