@@ -1048,6 +1048,7 @@ function toggleMulti() {
 function createRoom() {
   if (!sb) { document.getElementById('menuErr').textContent = 'Warte kurz...'; return; }
   var code = Math.random().toString(36).substr(2,4).toUpperCase();
+  peers = {}; myWins = 0; roundNum = 1;
   myRoom=code; myId=progress.name+'_'+Date.now(); isHost=true;
   totalRounds=5; setRounds(5);
   document.getElementById('codeVal').textContent = code;
@@ -1061,8 +1062,10 @@ function joinRoom() {
   if (!sb) { document.getElementById('menuErr').textContent = 'Warte kurz...'; return; }
   var code = (document.getElementById('joinInput').value||'').trim().toUpperCase();
   if (code.length < 3) return;
+  peers = {}; myWins = 0; roundNum = 1;
   myRoom=code; myId=progress.name+'_'+Date.now(); isHost=false;
   document.getElementById('codeVal').textContent = code;
+  document.getElementById('plistHost').innerHTML = '';
   document.getElementById('roundPicker').style.display = 'none';
   document.getElementById('roundInfo').style.display = 'block';
   document.getElementById('roundInfo').textContent = 'Warte auf Host...';
