@@ -131,12 +131,20 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
     </div>
     <div style="background:rgba(5,5,16,0.7);border:1px solid rgba(0,245,255,0.2);border-radius:20px;padding:5px 12px;font-size:10px;color:rgba(0,245,255,0.4);letter-spacing:1px;pointer-events:none">🎥 Rechts = Kamera</div>
   </div>
-  <!-- Shown only when eliminated in multi -->
-  <div id="elimBanner" style="display:none;flex-direction:column;align-items:center;gap:10px;pointer-events:auto;margin-top:32px">
-    <div style="background:rgba(255,0,110,0.88);padding:10px 28px;border-radius:12px;font-family:'Russo One',sans-serif;font-size:22px;color:#fff;letter-spacing:4px">ELIMINATED</div>
-    <div style="color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:2px">Du schaust zu...</div>
+  <!-- Leave button when eliminated -->
+  <div id="elimBanner" style="display:none;flex-direction:column;align-items:center;pointer-events:auto;margin-top:20px">
     <button class="btn bghost" id="elimLeaveBtn" style="width:auto;padding:10px 22px;font-size:13px;pointer-events:auto">← VERLASSEN</button>
   </div>
+</div>
+
+<!-- SPECTATE BAR (fixed, outside all screens) -->
+<div id="spectateBar" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:200;background:rgba(5,5,16,.95);border:2px solid rgba(0,245,255,.4);border-radius:16px;padding:10px 8px;display:none;align-items:center;gap:12px;white-space:nowrap;box-shadow:0 0 20px rgba(0,245,255,.18);font-family:'Russo One',sans-serif">
+  <button id="specPrev" onclick="switchSpectate(-1)" style="background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.35);color:#00f5ff;border-radius:10px;font-size:18px;padding:7px 16px;cursor:pointer;touch-action:manipulation">◀</button>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:1px;min-width:90px">
+    <div style="font-size:9px;color:rgba(255,255,255,.35);letter-spacing:3px">BEOBACHTET</div>
+    <div id="specName" style="font-size:16px;color:#00f5ff;letter-spacing:2px">-</div>
+  </div>
+  <button id="specNext" onclick="switchSpectate(1)" style="background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.35);color:#00f5ff;border-radius:10px;font-size:18px;padding:7px 16px;cursor:pointer;touch-action:manipulation">▶</button>
 </div>
 
 <!-- RESULT -->
@@ -241,6 +249,8 @@ var ownedAbilities  = {unsterblich:0, kick:0, speed:0, nolaser:0};
 var equippedAbility = 'unsterblich';
 var activeAbility   = null; // {type, endTime (performance.now ms)}
 var lastStaleCheckTS = 0;  // for watchdog: marks disconnected peers dead
+var watchX = 0, watchY = 0, watchZ = 10; // camera follows this point (self or spectated peer)
+var spectatingId = null;   // peer ID being spectated when dead
 
 // ── SEEDED RNG (mulberry32) ────────────────────────────────────────────────
 function mulberry32(seed) {
@@ -394,8 +404,7 @@ function sweepPos(elapsed, r, speed) {
 
 // ── LOOKAT CAMERA MATRIX ───────────────────────────────────────────────────
 function buildCamMatrix() {
-  // Camera looks toward (myX, myY+CAM_TARGET_H, myZ)
-  var tx = myX - camX, ty = (myY + CAM_TARGET_H) - camY, tz = myZ - camZ;
+  var tx = watchX - camX, ty = (watchY + CAM_TARGET_H) - camY, tz = watchZ - camZ;
   var tl = Math.sqrt(tx*tx + ty*ty + tz*tz);
   if (tl < 0.01) return;
   _fx = tx/tl; _fy = ty/tl; _fz = tz/tl;
@@ -422,11 +431,18 @@ function proj(wx, wy, wz) {
 
 // ── CAMERA ────────────────────────────────────────────────────────────────
 function updateCam() {
-  // Spherical orbit — fixed radius, no zoom on pitch change
+  // Resolve what the camera follows: spectated peer when dead, otherwise self
+  if (myDead && spectatingId && peers[spectatingId] && typeof peers[spectatingId].x === 'number') {
+    watchX = peers[spectatingId].x;
+    watchY = peers[spectatingId].y || 0;
+    watchZ = peers[spectatingId].z;
+  } else {
+    watchX = myX; watchY = myY; watchZ = myZ;
+  }
   var hDist = Math.cos(camPitch) * CAM_DIST;
-  camX = myX - Math.sin(camYaw) * hDist;
-  camZ = myZ - Math.cos(camYaw) * hDist;
-  camY = myY + 1.0 + Math.sin(camPitch) * CAM_DIST;
+  camX = watchX - Math.sin(camYaw) * hDist;
+  camZ = watchZ - Math.cos(camYaw) * hDist;
+  camY = watchY + 1.0 + Math.sin(camPitch) * CAM_DIST;
   buildCamMatrix();
 }
 
@@ -437,19 +453,19 @@ function render(t) {
   drawFloor();
   drawWall();
   drawLasers(t);
-  // Other players (behind me — draw first)
+  // Other players — skip dead, highlight spectated peer
   for (var id in peers) {
     if (id !== myId) {
       var p = peers[id];
-      if (p.isDead) ctx.globalAlpha = 0.35;
-      drawChar(p.x||0, p.y||0, p.z||0, p.color||'#ff006e', p.name||'?', false, p.wp||0, (p.y||0)>0.1);
-      ctx.globalAlpha = 1;
+      if (p.isDead) continue; // dead players are off the field
+      var isWatching = (myDead && id === spectatingId);
+      drawChar(p.x||0, p.y||0, p.z||0, p.color||'#ff006e', p.name||'?', isWatching, p.wp||0, (p.y||0)>0.1);
     }
   }
-  // Draw self (semi-transparent when dead so you can still see the game)
-  if (myDead) ctx.globalAlpha = 0.30;
-  drawChar(myX, myY, myZ, '#00f5ff', progress.name, true, myWalkPhase, myY>0.1);
-  ctx.globalAlpha = 1;
+  // Draw self only when alive
+  if (!myDead) {
+    drawChar(myX, myY, myZ, '#00f5ff', progress.name, true, myWalkPhase, myY>0.1);
+  }
 }
 
 // ── FLOOR (checkered tiles) ────────────────────────────────────────────────
@@ -898,8 +914,13 @@ function loop(ts) {
           // Immediately send final position so survivor still sees us
           syncPos(); lastSyncTime = ts;
           if (roomCh) roomCh.send({type:'broadcast',event:'dead',payload:{id:myId}});
+          // Hide in-game action buttons (dead players can't jump/use abilities)
+          var jbEl=document.getElementById('jumpBtn'); if(jbEl) jbEl.style.display='none';
+          var abEl=document.getElementById('abilityBtn'); if(abEl) abEl.style.display='none';
+          // Show leave button and start spectating
           var eb = document.getElementById('elimBanner');
           if (eb) eb.style.display = 'flex';
+          beginSpectating();
           if (isHost) checkRoundWin(); // non-hosts wait for roundEnd event from host
         }
       }
@@ -923,7 +944,9 @@ function startSolo() {
   camY = myY + 1.0 + Math.sin(camPitch)*CAM_DIST;
   buildCamMatrix();
   soloWave=1; soloAlive=true; nextWaveSec=10; myDead=false;
-  activeAbility = null;
+  activeAbility=null; spectatingId=null;
+  watchX=myX; watchY=myY; watchZ=myZ;
+  var sb=document.getElementById('spectateBar'); if(sb) sb.style.display='none';
   soloStart = performance.now();
   buildLasers(2);
   gameState='solo';
@@ -1032,6 +1055,8 @@ function joinChannel() {
     })
     .on('broadcast',{event:'dead'},function(m){
       if (peers[m.payload.id]) peers[m.payload.id].isDead = true;
+      // If we're spectating the player who just died, switch to next alive
+      if (myDead && spectatingId === m.payload.id) switchSpectate(1);
       // Only the host is authoritative for round-end to avoid race conditions with 3+ players
       if (isHost) checkRoundWin();
     })
@@ -1123,7 +1148,9 @@ function beginMulti(laserSeed) {
   camYaw=Math.PI; camPitch=0.54; buildCamMatrix();
   soloWave=1; soloAlive=true; nextWaveSec=10;
   soloStart=performance.now(); soloTime=0; soloGrace=2.5;
-  myDead=false; activeAbility=null;
+  myDead=false; activeAbility=null; spectatingId=null;
+  watchX=myX; watchY=myY; watchZ=myZ;
+  var sb=document.getElementById('spectateBar'); if(sb) sb.style.display='none';
   // Use seeded RNG so every client builds identical laser parameters
   rng = laserSeed !== undefined ? mulberry32(laserSeed) : Math.random;
   var eb=document.getElementById('elimBanner'); if(eb) eb.style.display='none';
@@ -1132,6 +1159,41 @@ function beginMulti(laserSeed) {
   buildLasers(2); gameState='multi';
   showScreen('sGame');
 }
+// ── SPECTATOR ─────────────────────────────────────────────────────────────
+function getAlivePeerIds() {
+  return Object.keys(peers).filter(function(id){ return !peers[id].isDead; });
+}
+function beginSpectating() {
+  var alive = getAlivePeerIds();
+  spectatingId = alive.length > 0 ? alive[0] : null;
+  updateSpectateBar();
+}
+function switchSpectate(dir) {
+  var alive = getAlivePeerIds();
+  if (alive.length === 0) { spectatingId = null; updateSpectateBar(); return; }
+  var idx = alive.indexOf(spectatingId);
+  if (idx === -1) idx = 0;
+  else idx = (idx + dir + alive.length) % alive.length;
+  spectatingId = alive[idx];
+  updateSpectateBar();
+}
+function updateSpectateBar() {
+  var bar  = document.getElementById('spectateBar');
+  var nm   = document.getElementById('specName');
+  var prev = document.getElementById('specPrev');
+  var next = document.getElementById('specNext');
+  if (!bar || !myDead) { if (bar) bar.style.display = 'none'; return; }
+  var alive = getAlivePeerIds();
+  if (alive.length === 0 || !spectatingId || !peers[spectatingId]) {
+    bar.style.display = 'none'; return;
+  }
+  bar.style.display = 'flex';
+  if (nm) nm.textContent = peers[spectatingId].name || '?';
+  var showArrows = alive.length > 1;
+  if (prev) prev.style.visibility = showArrows ? 'visible' : 'hidden';
+  if (next) next.style.visibility = showArrows ? 'visible' : 'hidden';
+}
+
 function checkStalePeers() {
   if (!isHost || gameState !== 'multi') return;
   var now = Date.now();
@@ -1172,6 +1234,8 @@ function checkRoundWin() {
 }
 function showRoundEnd(winnerName, scores) {
   gameState = 'roundEnd';
+  spectatingId = null;
+  var sb=document.getElementById('spectateBar'); if(sb) sb.style.display='none';
   var reR = document.getElementById('reRound');
   var reW = document.getElementById('reWinner');
   var reS = document.getElementById('reScores');
@@ -1228,6 +1292,8 @@ function syncPos() {
   }});
 }
 function leaveRoom() {
+  spectatingId = null;
+  var sb=document.getElementById('spectateBar'); if(sb) sb.style.display='none';
   if (roomCh) {
     if ((gameState === 'multi' || gameState === 'roundEnd') && !myDead && soloAlive) {
       // Leaving while alive — notify host so round can progress
