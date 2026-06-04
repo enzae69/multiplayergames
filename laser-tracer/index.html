@@ -498,10 +498,91 @@ function updateCam() {
   buildCamMatrix();
 }
 
+// ── SKY ───────────────────────────────────────────────────────────────────
+function drawSky(t) {
+  // Very dark gradient base
+  var bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#000004');
+  bg.addColorStop(0.6, '#020210');
+  bg.addColorStop(1, '#050518');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.save();
+  var pulse  = 0.82 + 0.18 * Math.sin(t * 0.55);
+  var pulse2 = 0.82 + 0.18 * Math.sin(t * 0.4 + 1.8);
+
+  // Center the LED structure in the upper canvas
+  var ox = W * 0.5;
+  var oy = H * 0.21;
+  var s  = Math.min(W * 0.46, H * 0.38);
+
+  function gLine(x1,y1,x2,y2,col,w,blur){
+    ctx.shadowBlur = blur; ctx.shadowColor = col;
+    ctx.strokeStyle = col; ctx.lineWidth = w;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  }
+
+  // Main angular hexagonal LED frame (like in image)
+  // Six outer vertices of a slightly irregular angular shape
+  var hex = [
+    [ox - s*0.72, oy + s*0.08],   // 0 left
+    [ox - s*0.38, oy - s*0.62],   // 1 top-left
+    [ox + s*0.38, oy - s*0.62],   // 2 top-right
+    [ox + s*0.72, oy + s*0.08],   // 3 right
+    [ox + s*0.36, oy + s*0.52],   // 4 bottom-right
+    [ox - s*0.36, oy + s*0.52],   // 5 bottom-left
+  ];
+
+  var edgeCol = 'rgba(210,235,255,' + (0.72*pulse) + ')';
+  var edgeW   = 2.2;
+  var edgeBlur = 22 * pulse;
+
+  // Outer frame edges
+  for (var i = 0; i < hex.length; i++) {
+    var p = hex[i], q = hex[(i+1)%hex.length];
+    gLine(p[0],p[1],q[0],q[1], edgeCol, edgeW, edgeBlur);
+  }
+
+  // Inner cross struts (like internal LED skeleton)
+  var strutCol = 'rgba(160,210,255,' + (0.38*pulse2) + ')';
+  gLine(hex[0][0],hex[0][1], hex[3][0],hex[3][1], strutCol, 1.2, 12*pulse2);
+  gLine(hex[1][0],hex[1][1], hex[4][0],hex[4][1], strutCol, 1.2, 12*pulse2);
+  gLine(hex[2][0],hex[2][1], hex[5][0],hex[5][1], strutCol, 1.2, 12*pulse2);
+
+  // Bright hotspots at corners (where LED strips bend)
+  ctx.shadowBlur = 0;
+  hex.forEach(function(p, i) {
+    var r = (i % 2 === 0) ? 3.5 : 2.8;
+    var a = (i % 2 === 0) ? 0.9 * pulse : 0.7 * pulse2;
+    ctx.fillStyle = 'rgba(230,245,255,' + a + ')';
+    ctx.shadowBlur = 18 * pulse; ctx.shadowColor = '#aaddff';
+    ctx.beginPath(); ctx.arc(p[0], p[1], r, 0, Math.PI*2); ctx.fill();
+  });
+
+  // Second smaller inner frame (detail, like the inner structure in the image)
+  var s2 = s * 0.48;
+  var inner = [
+    [ox - s2*0.68, oy + s2*0.08],
+    [ox - s2*0.34, oy - s2*0.6],
+    [ox + s2*0.34, oy - s2*0.6],
+    [ox + s2*0.68, oy + s2*0.08],
+    [ox + s2*0.34, oy + s2*0.52],
+    [ox - s2*0.34, oy + s2*0.52],
+  ];
+  var inCol = 'rgba(180,220,255,' + (0.28*pulse2) + ')';
+  for (var j = 0; j < inner.length; j++) {
+    var a2 = inner[j], b2 = inner[(j+1)%inner.length];
+    gLine(a2[0],a2[1],b2[0],b2[1], inCol, 1.0, 8*pulse2);
+  }
+
+  ctx.shadowBlur = 0;
+  ctx.restore();
+}
+
 // ── RENDER ────────────────────────────────────────────────────────────────
 function render(t) {
-  ctx.fillStyle = '#08101e';
-  ctx.fillRect(0, 0, W, H);
+  drawSky(t);
   drawFloor();
   drawWall();
   drawLasers(t);
