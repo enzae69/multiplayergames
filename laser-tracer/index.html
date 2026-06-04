@@ -702,7 +702,7 @@ function loop(ts) {
           if (roomCh) roomCh.send({type:'broadcast',event:'dead',payload:{id:myId}});
           var eb = document.getElementById('elimBanner');
           if (eb) eb.style.display = 'flex';
-          checkRoundWin();
+          if (isHost) checkRoundWin(); // non-hosts wait for roundEnd event from host
         }
       }
     }
@@ -804,15 +804,15 @@ function joinChannel() {
       if (m.payload.id !== myId) {
         var list = document.getElementById('plistHost');
         if (!peers[m.payload.id]) {
-          // Brand-new peer: add to lobby list; position will arrive via pos events
+          // Brand-new peer: add to lobby list; re-announce only for new peers
+          // (re-announcing for known peers creates an infinite storm with 3+ players)
           if (list) list.innerHTML += '<div class="pslot filled">'+m.payload.name+'</div>';
-          peers[m.payload.id] = {id:m.payload.id, name:m.payload.name};
+          peers[m.payload.id] = {id:m.payload.id, name:m.payload.name, wins:0};
+          if (roomCh) roomCh.send({type:'broadcast',event:'join',payload:{id:myId,name:progress.name}});
         } else {
-          // Already known: only refresh name — never wipe position data
+          // Already known: only refresh name — never wipe position or wins data
           peers[m.payload.id].name = m.payload.name;
         }
-        // Re-announce ourselves so the new joiner can see us
-        if (roomCh) roomCh.send({type:'broadcast',event:'join',payload:{id:myId,name:progress.name}});
       }
     })
     .on('broadcast',{event:'pos'},function(m){
@@ -831,12 +831,33 @@ function joinChannel() {
     })
     .on('broadcast',{event:'dead'},function(m){
       if (peers[m.payload.id]) peers[m.payload.id].isDead = true;
-      checkRoundWin();
+      // Only the host is authoritative for round-end to avoid race conditions with 3+ players
+      if (isHost) checkRoundWin();
+    })
+    .on('broadcast',{event:'roundEnd'},function(m){
+      if (isHost) return; // host already called showRoundEnd locally
+      roundEndActive = true;
+      // Sync authoritative win counts from host
+      if (m.payload.wins) {
+        Object.keys(m.payload.wins).forEach(function(id){
+          if (id === myId) { myWins = m.payload.wins[id] || 0; }
+          else if (peers[id]) { peers[id].wins = m.payload.wins[id] || 0; }
+        });
+      }
+      showRoundEnd(m.payload.winnerName, m.payload.scores);
     })
     .on('broadcast',{event:'start'},function(m){
       if (!isHost) {
         if (m.payload && m.payload.rounds) totalRounds = m.payload.rounds;
         if (m.payload && m.payload.round)  roundNum = m.payload.round;
+        // Sync full player roster so all clients know all players before game starts
+        if (m.payload && m.payload.players) {
+          m.payload.players.forEach(function(p){
+            if (p.id !== myId && !peers[p.id]) {
+              peers[p.id] = {id:p.id, name:p.name, wins:p.wins||0};
+            }
+          });
+        }
         var ri = document.getElementById('roundInfo');
         if (ri) ri.textContent = totalRounds + ' Runden';
         beginMulti();
@@ -859,7 +880,11 @@ function startMulti() {
   if (!isHost) return;
   roundNum = 1; myWins = 0;
   Object.keys(peers).forEach(function(id){ peers[id].wins = 0; });
-  if (roomCh) roomCh.send({type:'broadcast',event:'start',payload:{rounds:totalRounds}});
+  // Include full player roster so all clients know all players from the start
+  var plist = [{id:myId,name:progress.name,wins:0}].concat(
+    Object.keys(peers).map(function(id){ return {id:id,name:peers[id].name,wins:0}; })
+  );
+  if (roomCh) roomCh.send({type:'broadcast',event:'start',payload:{rounds:totalRounds,players:plist}});
   beginMulti();
 }
 function beginMulti() {
@@ -877,21 +902,32 @@ function beginMulti() {
   showScreen('sGame');
 }
 function checkRoundWin() {
-  if (gameState !== 'multi' || roundEndActive) return;
+  // Only the host runs this — sole authority for round-end (fixes 3+ player race conditions)
+  if (!isHost || gameState !== 'multi' || roundEndActive) return;
   var alivePeers = Object.keys(peers).filter(function(id){ return !peers[id].isDead; });
   var aliveCount = (!myDead ? 1 : 0) + alivePeers.length;
   if (aliveCount > 1) return;
   roundEndActive = true;
   var winnerName = null;
+  var winsMap = {};
   if (!myDead) {
     winnerName = progress.name; myWins++;
   } else if (alivePeers.length === 1) {
     winnerName = peers[alivePeers[0]].name;
     peers[alivePeers[0]].wins = (peers[alivePeers[0]].wins||0) + 1;
   }
-  showRoundEnd(winnerName);
+  winsMap[myId] = myWins;
+  var scores = [{name:progress.name, wins:myWins}];
+  Object.keys(peers).forEach(function(id){
+    winsMap[id] = peers[id].wins||0;
+    scores.push({name:peers[id].name, wins:peers[id].wins||0});
+  });
+  scores.sort(function(a,b){ return b.wins-a.wins; });
+  // Broadcast authoritative round-end to all non-host players
+  if (roomCh) roomCh.send({type:'broadcast',event:'roundEnd',payload:{winnerName:winnerName,scores:scores,wins:winsMap}});
+  showRoundEnd(winnerName, scores);
 }
-function showRoundEnd(winnerName) {
+function showRoundEnd(winnerName, scores) {
   gameState = 'roundEnd';
   var reR = document.getElementById('reRound');
   var reW = document.getElementById('reWinner');
@@ -899,9 +935,11 @@ function showRoundEnd(winnerName) {
   var reC = document.getElementById('reCountdown');
   if (reR) reR.textContent = 'RUNDE ' + roundNum + ' / ' + totalRounds;
   if (reW) reW.textContent = winnerName ? winnerName + ' GEWINNT!' : 'UNENTSCHIEDEN';
-  var scores = [{name:progress.name, wins:myWins}];
-  Object.keys(peers).forEach(function(id){ scores.push({name:peers[id].name, wins:peers[id].wins||0}); });
-  scores.sort(function(a,b){ return b.wins-a.wins; });
+  if (!scores) {
+    scores = [{name:progress.name, wins:myWins}];
+    Object.keys(peers).forEach(function(id){ scores.push({name:peers[id].name, wins:peers[id].wins||0}); });
+    scores.sort(function(a,b){ return b.wins-a.wins; });
+  }
   if (reS) reS.innerHTML = scores.map(function(s){ return s.name+': '+s.wins+' Pkt'; }).join('<br>');
   showScreen('sRoundEnd');
   var isLast = roundNum >= totalRounds;
@@ -923,7 +961,10 @@ function showRoundEnd(winnerName) {
 }
 function startMultiRound() {
   if (!isHost) return;
-  if (roomCh) roomCh.send({type:'broadcast',event:'start',payload:{rounds:totalRounds, round:roundNum}});
+  var plist = [{id:myId,name:progress.name,wins:myWins}].concat(
+    Object.keys(peers).map(function(id){ return {id:id,name:peers[id].name,wins:peers[id].wins||0}; })
+  );
+  if (roomCh) roomCh.send({type:'broadcast',event:'start',payload:{rounds:totalRounds,round:roundNum,players:plist}});
   beginMulti();
 }
 function showFinalResult(scores) {
