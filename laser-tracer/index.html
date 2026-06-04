@@ -1065,7 +1065,7 @@ function joinRoom() {
   peers = {}; myWins = 0; roundNum = 1;
   myRoom=code; myId=progress.name+'_'+Date.now(); isHost=false;
   document.getElementById('codeVal').textContent = code;
-  document.getElementById('plistHost').innerHTML = '';
+  document.getElementById('plistHost').innerHTML = '<div class="pslot filled">'+progress.name+' (DU)</div>';
   document.getElementById('roundPicker').style.display = 'none';
   document.getElementById('roundInfo').style.display = 'block';
   document.getElementById('roundInfo').textContent = 'Warte auf Host...';
