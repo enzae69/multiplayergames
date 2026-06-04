@@ -553,6 +553,7 @@ function joinRoom(){
   if(code.length!==4){ setErr('Bitte 4-stelligen Code eingeben!'); return; }
   isSolo=false; myRoom=code; myId=myName+'_'+Date.now(); isHost=false;
   lobby={}; botIds=[];
+  lobby[myId]={id:myId,name:myName,ci:0}; // add self so lobby shows us immediately
   showScreen('sLobby');
   document.getElementById('codeVal').textContent=myRoom;
   document.getElementById('startBtn').style.display='none';
@@ -564,8 +565,14 @@ function joinChannel(){
   roomCh=sb.channel('uno_'+myRoom)
     .on('broadcast',{event:'join'},function(m){
       var p=m.payload;
-      if(!lobby[p.id]) lobby[p.id]=p;
-      announce(); updateLobbyUI();
+      if(p.id===myId) return;
+      if(!lobby[p.id]){
+        lobby[p.id]=p;
+        announce();
+      } else {
+        lobby[p.id].name=p.name;
+      }
+      updateLobbyUI();
     })
     .on('broadcast',{event:'leave'},function(m){
       delete lobby[m.payload.id]; updateLobbyUI();
