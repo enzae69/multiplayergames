@@ -661,10 +661,12 @@ function updateLasers(dt) {
 
 // ── PEER INTERPOLATION ────────────────────────────────────────────────────
 function lerpPeers(dt) {
-  var f = Math.min(1, dt * 18);  // lerp factor ~18x per sec catchup
+  var f = Math.min(1, dt * 25);
   for (var id in peers) {
     var p = peers[id];
-    if (p.tx === undefined) { p.tx=p.x||0; p.ty=p.y||0; p.tz=p.z||0; }
+    // Guard: if position is missing/NaN (peer known only from join, no pos yet), skip
+    if (typeof p.tx !== 'number') continue;
+    if (typeof p.x !== 'number' || isNaN(p.x)) { p.x=p.tx; p.y=p.ty; p.z=p.tz; }
     p.x = p.x + (p.tx - p.x) * f;
     p.y = p.y + (p.ty - p.y) * f;
     p.z = p.z + (p.tz - p.z) * f;
@@ -801,10 +803,14 @@ function joinChannel() {
     .on('broadcast',{event:'join'},function(m){
       if (m.payload.id !== myId) {
         var list = document.getElementById('plistHost');
-        if (list && !peers[m.payload.id]) {
-          list.innerHTML += '<div class="pslot filled">'+m.payload.name+'</div>';
+        if (!peers[m.payload.id]) {
+          // Brand-new peer: add to lobby list; position will arrive via pos events
+          if (list) list.innerHTML += '<div class="pslot filled">'+m.payload.name+'</div>';
+          peers[m.payload.id] = {id:m.payload.id, name:m.payload.name};
+        } else {
+          // Already known: only refresh name — never wipe position data
+          peers[m.payload.id].name = m.payload.name;
         }
-        peers[m.payload.id] = m.payload;
         // Re-announce ourselves so the new joiner can see us
         if (roomCh) roomCh.send({type:'broadcast',event:'join',payload:{id:myId,name:progress.name}});
       }
@@ -814,7 +820,8 @@ function joinChannel() {
       var d = m.payload;
       var p = peers[d.id];
       if (p) {
-        // Store as lerp target; x/y/z are the smoothed render positions
+        // First pos update for a join-only peer: snap render pos to avoid lerp from origin
+        if (typeof p.x !== 'number' || isNaN(p.x)) { p.x=d.x; p.y=d.y; p.z=d.z; }
         p.tx=d.x; p.ty=d.y; p.tz=d.z;
         p.wp=d.wp; p.color=d.color; p.name=d.name;
       } else {
