@@ -284,16 +284,18 @@ function renderAbilityShop() {
   if (coinsEl) coinsEl.textContent = progress.coins;
   grid.innerHTML = '';
   ABILITIES.forEach(function(ab) {
-    var owned = ownedAbilities[ab.type] || 0;
+    var owned = !!ownedAbilities[ab.type];
     var isEq  = equippedAbility === ab.type;
     var card  = document.createElement('div');
     card.className = 'ab-card' + (isEq ? ' ab-eq' : '');
+    var bottomHtml = owned
+      ? '<div style="font-size:9px;letter-spacing:1px;color:#39ff14;background:rgba(57,255,20,.1);border-radius:6px;padding:2px 8px">' + (isEq ? '✓ AUSGERÜSTET' : '✓ BESESSEN') + '</div>'
+      : '<div class="ab-cost">' + ab.cost + ' 🪙 KAUFEN</div>';
     card.innerHTML =
       '<div class="ab-icon">' + ab.icon + '</div>'
       + '<div class="ab-name">' + ab.name + '</div>'
       + '<div class="ab-desc">' + ab.desc + '</div>'
-      + '<div class="ab-count">×' + owned + '</div>'
-      + '<div class="ab-cost">' + ab.cost + ' 🪙</div>';
+      + bottomHtml;
     card.addEventListener('click', function() { buyAbility(ab.type, ab.cost); });
     grid.appendChild(card);
   });
@@ -301,29 +303,32 @@ function renderAbilityShop() {
 function buyAbility(type, cost) {
   var errEl = document.getElementById('abErr');
   if (errEl) errEl.textContent = '';
+  if (ownedAbilities[type]) {
+    // Already owned — just equip it
+    equippedAbility = type;
+    saveAbilities(); renderAbilityShop(); updateAbilityBtn(); return;
+  }
   if (progress.coins < cost) {
     if (errEl) errEl.textContent = 'Zu wenig Coins! (' + progress.coins + '/' + cost + ')';
     return;
   }
   progress.coins -= cost;
-  ownedAbilities[type]++;
+  ownedAbilities[type] = 1;
   equippedAbility = type;
-  saveLocal(); saveAbilities(); renderProfile(); renderAbilityShop();
+  saveLocal(); saveAbilities(); renderProfile(); renderAbilityShop(); updateAbilityBtn();
 }
 function useAbility() {
   if (!soloAlive) return;
   var type = equippedAbility;
-  if (!ownedAbilities[type] || ownedAbilities[type] <= 0) {
+  if (!ownedAbilities[type]) {
     var order = ['unsterblich','speed','nolaser','kick'];
     type = null;
     for (var i = 0; i < order.length; i++) {
-      if (ownedAbilities[order[i]] > 0) { type = order[i]; break; }
+      if (ownedAbilities[order[i]]) { type = order[i]; break; }
     }
     if (!type) return;
   }
   if (type !== 'kick' && activeAbility) return; // non-kick abilities don't stack
-  ownedAbilities[type]--;
-  saveAbilities();
   if (type === 'kick') {
     doKick();
     updateAbilityBtn();
@@ -373,23 +378,22 @@ function updateAbilityBtn() {
     return;
   }
   var type  = equippedAbility;
-  var owned = ownedAbilities[type] || 0;
+  var owned = !!ownedAbilities[type];
   if (!owned) {
     var order = ['unsterblich','speed','nolaser','kick'];
     for (var i = 0; i < order.length; i++) {
-      if (ownedAbilities[order[i]] > 0) { type = order[i]; owned = ownedAbilities[type]; break; }
+      if (ownedAbilities[order[i]]) { type = order[i]; owned = true; break; }
     }
   }
   var ab = null;
   for (var k = 0; k < ABILITIES.length; k++) { if (ABILITIES[k].type === type) { ab = ABILITIES[k]; break; } }
   if (iconEl)  iconEl.textContent  = ab ? ab.icon : '🔮';
   if (nameEl)  nameEl.textContent  = ab ? ab.name : 'ABILITY';
-  if (countEl) countEl.textContent = '×' + owned;
-  var hasSome = owned > 0;
-  btn.style.borderColor  = hasSome ? '#bf00ff' : 'rgba(191,0,255,.3)';
-  btn.style.color        = hasSome ? '#bf00ff' : 'rgba(191,0,255,.3)';
-  btn.style.background   = hasSome ? 'rgba(191,0,255,.18)' : 'rgba(191,0,255,.06)';
-  btn.style.boxShadow    = hasSome ? '0 0 28px rgba(191,0,255,.4)' : 'none';
+  if (countEl) countEl.textContent = owned ? '∞' : '---';
+  btn.style.borderColor  = owned ? '#bf00ff' : 'rgba(191,0,255,.3)';
+  btn.style.color        = owned ? '#bf00ff' : 'rgba(191,0,255,.3)';
+  btn.style.background   = owned ? 'rgba(191,0,255,.18)' : 'rgba(191,0,255,.06)';
+  btn.style.boxShadow    = owned ? '0 0 28px rgba(191,0,255,.4)' : 'none';
 }
 
 // Triangle-wave for sweep lasers: bounces between -r and +r deterministically
