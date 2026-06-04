@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>IMPOSTER</title>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Exo+2:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:#050510;color:#fff;font-family:'Exo 2',sans-serif;min-height:100vh;overflow-x:hidden;overflow-y:auto}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(168,85,247,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(168,85,247,.04) 1px,transparent 1px);background-size:40px 40px;animation:grid 20s linear infinite;pointer-events:none;z-index:0}
+@keyframes grid{0%{background-position:0 0}100%{background-position:40px 40px}}
+
+/* ── SCREENS ── */
+.screen{display:none;flex-direction:column;align-items:center;min-height:100vh;padding:24px 16px 40px;position:relative;z-index:1}
+.screen.active{display:flex}
+
+/* ── LOGO ── */
+.imp-logo{font-family:'Russo One',sans-serif;font-size:clamp(52px,17vw,96px);color:#fff;background:linear-gradient(135deg,#6d00c4,#a855f7);padding:4px 28px 10px;border-radius:16px;letter-spacing:10px;text-indent:10px;box-shadow:0 8px 0 #3d006e,0 14px 40px rgba(168,85,247,.5),inset 0 2px 0 rgba(255,255,255,.2);border:3px solid rgba(255,255,255,.7);transform:rotate(-1.5deg);text-shadow:2px 2px 6px rgba(0,0,0,.4);line-height:1.1;flex-shrink:0}
+.imp-sub{font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:5px;color:rgba(255,255,255,.35);text-transform:uppercase;margin-top:12px;margin-bottom:32px}
+
+/* ── INPUTS & BUTTONS ── */
+.inp{background:rgba(12,12,36,1);border:2px solid rgba(168,85,247,.35);color:#fff;font-family:'Russo One',sans-serif;font-size:20px;padding:14px 18px;border-radius:12px;outline:none;width:100%;text-align:center;letter-spacing:3px;text-transform:uppercase;transition:border-color .2s;max-width:360px}
+.inp:focus{border-color:#a855f7;box-shadow:0 0 0 3px rgba(168,85,247,.15)}
+.inp::placeholder{color:rgba(255,255,255,.2);font-weight:400;letter-spacing:1px;text-transform:none}
+.btn{font-family:'Russo One',sans-serif;font-size:16px;letter-spacing:2px;padding:15px 28px;border:none;border-radius:12px;cursor:pointer;touch-action:manipulation;transition:transform .12s,opacity .15s;text-transform:uppercase;width:100%;max-width:360px}
+.btn:active{transform:scale(.95)}
+.btn-primary{background:linear-gradient(135deg,#6d00c4,#a855f7);color:#fff;box-shadow:0 4px 20px rgba(168,85,247,.4)}
+.btn-secondary{background:rgba(255,255,255,.07);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.15)}
+.btn-danger{background:linear-gradient(135deg,#7a0000,#D72027);color:#fff;box-shadow:0 4px 20px rgba(215,32,39,.35)}
+.btn-green{background:linear-gradient(135deg,#006830,#1B9B3D);color:#fff;box-shadow:0 4px 20px rgba(27,155,61,.35)}
+.btn:disabled{opacity:.35;cursor:default;pointer-events:none}
+.err{color:#ff4466;font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:1px;min-height:18px;text-align:center}
+
+/* ── MENU ── */
+#sMenu{justify-content:center;gap:14px}
+.menu-form{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:360px}
+.or-divider{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:4px;color:rgba(255,255,255,.2);margin:4px 0}
+.join-row{display:flex;gap:8px;width:100%;max-width:360px}
+.join-row .inp{font-size:24px;letter-spacing:8px;text-align:center}
+.join-row .btn{width:auto;flex-shrink:0;padding:15px 20px}
+
+/* ── LOBBY ── */
+#sLobby{justify-content:flex-start;gap:16px;padding-top:32px}
+.room-code-box{display:flex;flex-direction:column;align-items:center;background:rgba(168,85,247,.08);border:2px solid rgba(168,85,247,.3);border-radius:18px;padding:18px 32px;gap:4px}
+.room-code-label{font-family:'Russo One',sans-serif;font-size:10px;letter-spacing:5px;color:rgba(168,85,247,.6)}
+.room-code-val{font-family:'Russo One',sans-serif;font-size:48px;letter-spacing:12px;color:#a855f7;text-shadow:0 0 20px rgba(168,85,247,.6)}
+.room-code-hint{font-size:11px;color:rgba(255,255,255,.25);letter-spacing:1px}
+.players-label{font-family:'Russo One',sans-serif;font-size:10px;letter-spacing:4px;color:rgba(255,255,255,.3);align-self:flex-start;width:100%;max-width:400px}
+.players-list{display:flex;flex-direction:column;gap:8px;width:100%;max-width:400px}
+.player-row{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 14px}
+.player-row.me{border-color:rgba(168,85,247,.4);background:rgba(168,85,247,.08)}
+.player-row.host-row{border-color:rgba(255,214,0,.3);background:rgba(255,214,0,.05)}
+.player-avatar{font-size:22px;width:34px;text-align:center;flex-shrink:0}
+.player-name-row{font-family:'Russo One',sans-serif;font-size:14px;flex:1}
+.player-tag{font-family:'Russo One',sans-serif;font-size:9px;letter-spacing:2px;padding:2px 8px;border-radius:6px;flex-shrink:0}
+.tag-host{background:rgba(255,214,0,.15);color:#ffd700;border:1px solid rgba(255,214,0,.3)}
+.tag-you{background:rgba(168,85,247,.15);color:#c084fc;border:1px solid rgba(168,85,247,.3)}
+.lobby-hint{font-size:12px;color:rgba(255,255,255,.25);text-align:center;letter-spacing:1px;font-style:italic}
+.lobby-wait{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:3px;color:rgba(168,85,247,.5);text-align:center;animation:pulse-text 2s ease-in-out infinite}
+@keyframes pulse-text{0%,100%{opacity:.5}50%{opacity:1}}
+.back-btn{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.25);background:none;border:none;cursor:pointer;padding:8px;align-self:flex-start}
+
+/* ── REVEAL ── */
+#sReveal{justify-content:center;gap:0}
+.reveal-card{width:min(320px,90vw);background:rgba(10,10,30,.9);border:3px solid rgba(168,85,247,.4);border-radius:24px;padding:40px 24px;display:flex;flex-direction:column;align-items:center;gap:20px;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(168,85,247,.2)}
+.reveal-cover{position:absolute;inset:0;background:linear-gradient(135deg,#1a0040,#0a0020);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;border-radius:22px;transition:opacity .4s}
+.reveal-cover.hidden{opacity:0;pointer-events:none}
+.reveal-cover-icon{font-size:52px;animation:tap-bounce .8s ease-in-out infinite}
+@keyframes tap-bounce{0%,100%{transform:scale(1) translateY(0)}50%{transform:scale(1.1) translateY(-6px)}}
+.reveal-cover-text{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:4px;color:rgba(255,255,255,.4)}
+.reveal-category{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:4px;color:rgba(168,85,247,.6);text-transform:uppercase}
+.reveal-role{font-family:'Russo One',sans-serif;font-size:18px;letter-spacing:2px;text-align:center}
+.reveal-role.imp{color:#ff4466;text-shadow:0 0 20px rgba(255,68,102,.5)}
+.reveal-role.player{color:#1B9B3D;text-shadow:0 0 20px rgba(27,155,61,.3)}
+.reveal-word{font-family:'Russo One',sans-serif;font-size:clamp(34px,12vw,56px);color:#fff;text-shadow:0 0 30px rgba(168,85,247,.6);text-align:center;letter-spacing:2px}
+.reveal-word.imp-word{color:#ff4466;font-size:28px;letter-spacing:3px;opacity:.7}
+.reveal-warning{font-size:12px;color:rgba(255,255,255,.3);text-align:center;letter-spacing:.5px;line-height:1.5}
+.ready-count{font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:3px;color:rgba(168,85,247,.5);text-align:center}
+
+/* ── CLUES ── */
+#sClues{gap:16px;padding-top:28px}
+.phase-header{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:5px;color:rgba(255,255,255,.3);text-align:center;text-transform:uppercase}
+.phase-title{font-family:'Russo One',sans-serif;font-size:clamp(22px,7vw,32px);color:#a855f7;text-align:center;letter-spacing:2px;text-shadow:0 0 20px rgba(168,85,247,.4)}
+.my-word-reminder{background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);border-radius:12px;padding:10px 18px;display:flex;align-items:center;gap:10px;width:100%;max-width:400px}
+.mwr-label{font-size:11px;color:rgba(255,255,255,.3);letter-spacing:2px;white-space:nowrap}
+.mwr-word{font-family:'Russo One',sans-serif;font-size:18px;color:#a855f7;letter-spacing:2px}
+.clue-status-list{display:flex;flex-direction:column;gap:6px;width:100%;max-width:400px}
+.clue-status-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);border-radius:10px;padding:8px 12px}
+.cs-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:background .3s}
+.cs-dot.done{background:#1B9B3D;box-shadow:0 0 8px rgba(27,155,61,.6)}
+.cs-dot.wait{background:rgba(255,255,255,.2);animation:blink .8s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:.2}50%{opacity:1}}
+.cs-name{font-family:'Russo One',sans-serif;font-size:13px;flex:1}
+.cs-status{font-size:11px;color:rgba(255,255,255,.3);letter-spacing:1px}
+.clue-input-area{width:100%;max-width:400px;display:flex;flex-direction:column;gap:10px}
+.clue-inp{background:rgba(12,12,36,1);border:2px solid rgba(168,85,247,.35);color:#fff;font-family:'Exo 2',sans-serif;font-size:18px;font-weight:700;padding:14px 18px;border-radius:12px;outline:none;width:100%;letter-spacing:1px;transition:border-color .2s}
+.clue-inp:focus{border-color:#a855f7;box-shadow:0 0 0 3px rgba(168,85,247,.12)}
+.clue-inp::placeholder{color:rgba(255,255,255,.2);font-weight:400}
+.clue-sent-msg{font-family:'Russo One',sans-serif;font-size:14px;letter-spacing:2px;color:#1B9B3D;text-align:center;animation:pulse-text 2s ease-in-out infinite}
+
+/* ── VOTE ── */
+#sVote{gap:14px;padding-top:28px}
+.vote-phase-hint{font-size:13px;color:rgba(255,255,255,.4);text-align:center;letter-spacing:.5px;line-height:1.5;max-width:340px}
+.clue-cards{display:flex;flex-direction:column;gap:10px;width:100%;max-width:400px}
+.clue-card{background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.08);border-radius:14px;padding:14px 16px;cursor:pointer;transition:border-color .15s,background .15s,transform .1s;touch-action:manipulation}
+.clue-card:active{transform:scale(.97)}
+.clue-card.selected{border-color:#a855f7;background:rgba(168,85,247,.12);box-shadow:0 0 20px rgba(168,85,247,.2)}
+.clue-card.voted{pointer-events:none}
+.clue-card-name{font-family:'Russo One',sans-serif;font-size:13px;color:rgba(255,255,255,.5);letter-spacing:1px;margin-bottom:6px}
+.clue-card-name .me-tag{font-size:9px;color:#a855f7;letter-spacing:2px;margin-left:6px}
+.clue-card-text{font-family:'Russo One',sans-serif;font-size:20px;color:#fff;letter-spacing:1px}
+.vote-count-info{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:3px;color:rgba(168,85,247,.5);text-align:center}
+.you-voted-msg{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:2px;color:#a855f7;text-align:center;animation:pulse-text 2s ease-in-out infinite}
+
+/* ── RESULTS ── */
+#sResults{justify-content:flex-start;gap:16px;padding-top:32px}
+.result-banner{width:100%;max-width:400px;border-radius:20px;padding:28px 20px;display:flex;flex-direction:column;align-items:center;gap:12px;position:relative;overflow:hidden}
+.result-banner.players-win{background:linear-gradient(135deg,#003a1a,#006830);border:2px solid rgba(27,155,61,.5);box-shadow:0 0 40px rgba(27,155,61,.2)}
+.result-banner.imposter-win{background:linear-gradient(135deg,#3a0010,#7a0020);border:2px solid rgba(215,32,39,.5);box-shadow:0 0 40px rgba(215,32,39,.2)}
+.result-icon{font-size:60px}
+.result-title{font-family:'Russo One',sans-serif;font-size:clamp(22px,7vw,32px);text-align:center;letter-spacing:2px}
+.result-sub{font-size:14px;color:rgba(255,255,255,.6);text-align:center;letter-spacing:.5px;line-height:1.5}
+.imposter-reveal{width:100%;max-width:400px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);border-radius:16px;padding:16px 20px;display:flex;flex-direction:column;gap:8px}
+.ir-label{font-family:'Russo One',sans-serif;font-size:10px;letter-spacing:4px;color:rgba(168,85,247,.5)}
+.ir-name{font-family:'Russo One',sans-serif;font-size:22px;color:#c084fc}
+.word-reveal{width:100%;max-width:400px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px 20px;display:flex;flex-direction:column;gap:6px}
+.wr-label{font-family:'Russo One',sans-serif;font-size:10px;letter-spacing:4px;color:rgba(255,255,255,.3)}
+.wr-word{font-family:'Russo One',sans-serif;font-size:26px;color:#fff}
+.scores-box{width:100%;max-width:400px;display:flex;flex-direction:column;gap:6px}
+.score-row{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border-radius:10px;padding:9px 14px}
+.score-row.imposter-row{border:1px solid rgba(168,85,247,.3);background:rgba(168,85,247,.07)}
+.score-name{font-family:'Russo One',sans-serif;font-size:14px;flex:1}
+.score-pts{font-family:'Russo One',sans-serif;font-size:18px;color:#a855f7}
+.score-pts.gained{color:#1B9B3D}
+.result-btn-row{display:flex;gap:10px;width:100%;max-width:400px}
+.result-btn-row .btn{flex:1}
+
+/* ── TOAST ── */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:rgba(168,85,247,.9);color:#fff;font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:2px;padding:12px 24px;border-radius:12px;z-index:999;transition:transform .3s;white-space:nowrap;box-shadow:0 4px 20px rgba(168,85,247,.4)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ── LOADING OVERLAY ── */
+#loading{position:fixed;inset:0;background:rgba(5,5,16,.9);z-index:900;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;display:none}
+#loading.show{display:flex}
+.spinner{width:40px;height:40px;border:3px solid rgba(168,85,247,.2);border-top-color:#a855f7;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:3px;color:rgba(168,85,247,.6)}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">VERBINDE...</div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<!-- ── MENU ── -->
+<div class="screen active" id="sMenu">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;width:100%">
+    <div class="imp-logo">IMPOSTER</div>
+    <div class="imp-sub">Wer ist der Verräter?</div>
+    <div class="menu-form">
+      <input class="inp" id="nameInp" placeholder="Dein Name" maxlength="14" autocomplete="off" spellcheck="false">
+      <button class="btn btn-primary" onclick="createRoom()">🏠 Raum erstellen</button>
+      <div class="or-divider">— ODER BEITRETEN —</div>
+      <div class="join-row">
+        <input class="inp" id="codeInp" placeholder="CODE" maxlength="4" autocomplete="off" spellcheck="false" style="text-align:center">
+        <button class="btn btn-secondary" onclick="joinRoom()" style="width:auto;padding:15px 20px;font-size:14px">REIN</button>
+      </div>
+      <div class="err" id="menuErr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── LOBBY ── -->
+<div class="screen" id="sLobby">
+  <button class="back-btn" onclick="leaveRoom()">← VERLASSEN</button>
+  <div class="room-code-box">
+    <div class="room-code-label">RAUM-CODE</div>
+    <div class="room-code-val" id="lobbyCode">????</div>
+    <div class="room-code-hint">Teile diesen Code mit Freunden</div>
+  </div>
+  <div class="players-label">SPIELER</div>
+  <div class="players-list" id="lobbyPlayers"></div>
+  <div class="lobby-hint" id="lobbyHint">Mindestens 3 Spieler zum Starten</div>
+  <div style="height:8px"></div>
+  <button class="btn btn-primary" id="startBtn" onclick="hostStartGame()" disabled style="max-width:400px">🎮 SPIEL STARTEN</button>
+  <div class="lobby-wait" id="lobbyWait" style="display:none">Warte auf den Host...</div>
+</div>
+
+<!-- ── REVEAL ── -->
+<div class="screen" id="sReveal">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;width:100%">
+    <div class="phase-header">RUNDE BEGINNT</div>
+    <div class="reveal-card" id="revealCard">
+      <div class="reveal-cover" id="revealCover" onclick="revealRole()">
+        <div class="reveal-cover-icon">👆</div>
+        <div class="reveal-cover-text">TIPPE ZUM ENTHÜLLEN</div>
+      </div>
+      <div class="reveal-category" id="revealCategory">KATEGORIE</div>
+      <div class="reveal-role" id="revealRole">DEINE ROLLE</div>
+      <div class="reveal-word" id="revealWord">???</div>
+      <div class="reveal-warning" id="revealWarning">Gib keine Hinweise auf dein Wort!</div>
+    </div>
+    <div class="ready-count" id="revealReadyCount"></div>
+    <button class="btn btn-primary" id="revealReadyBtn" onclick="sendReady()" style="max-width:300px;display:none">✓ BEREIT</button>
+  </div>
+</div>
+
+<!-- ── CLUES ── -->
+<div class="screen" id="sClues">
+  <div class="phase-header">PHASE 1</div>
+  <div class="phase-title">HINWEIS GEBEN</div>
+  <div class="my-word-reminder" id="clueWordReminder">
+    <div class="mwr-label">DEIN WORT</div>
+    <div class="mwr-word" id="clueMyWord">—</div>
+  </div>
+  <div style="font-size:12px;color:rgba(255,255,255,.3);text-align:center;max-width:340px;letter-spacing:.5px;line-height:1.5">
+    Gib einen kurzen Hinweis auf das Wort. Sei nicht zu offensichtlich — der Imposter darf nicht erraten!
+  </div>
+  <div class="players-label" style="max-width:400px">STATUS</div>
+  <div class="clue-status-list" id="clueStatusList"></div>
+  <div class="clue-input-area" id="clueInputArea">
+    <input class="clue-inp" id="clueInp" placeholder="Dein Hinweis..." maxlength="30" autocomplete="off">
+    <button class="btn btn-primary" id="clueSendBtn" onclick="sendClue()">SENDEN →</button>
+    <div class="err" id="clueErr"></div>
+  </div>
+  <div class="clue-sent-msg" id="clueSentMsg" style="display:none">✓ Hinweis gesendet — warte auf andere...</div>
+</div>
+
+<!-- ── VOTE ── -->
+<div class="screen" id="sVote">
+  <div class="phase-header">PHASE 2</div>
+  <div class="phase-title">ABSTIMMEN</div>
+  <div class="vote-phase-hint">Wer ist der Imposter? Tippe auf die Person, die du verdächtigst.</div>
+  <div class="vote-count-info" id="voteCountInfo">0 / 0 haben abgestimmt</div>
+  <div class="clue-cards" id="clueCards"></div>
+  <button class="btn btn-danger" id="voteConfirmBtn" onclick="confirmVote()" style="max-width:400px;display:none">🗳️ ABSTIMMEN</button>
+  <div class="you-voted-msg" id="youVotedMsg" style="display:none">✓ Du hast abgestimmt — warte auf andere...</div>
+  <div class="err" id="voteErr"></div>
+</div>
+
+<!-- ── RESULTS ── -->
+<div class="screen" id="sResults">
+  <div class="result-banner" id="resultBanner">
+    <div class="result-icon" id="resultIcon">🎉</div>
+    <div class="result-title" id="resultTitle">SPIELER GEWINNEN!</div>
+    <div class="result-sub" id="resultSub">Der Imposter wurde entlarvt!</div>
+  </div>
+  <div class="imposter-reveal" id="imposterReveal">
+    <div class="ir-label">🕵️ DER IMPOSTER WAR</div>
+    <div class="ir-name" id="imposterName">—</div>
+  </div>
+  <div class="word-reveal">
+    <div class="wr-label">DAS GEHEIMWORT WAR</div>
+    <div class="wr-word" id="resultWord">—</div>
+  </div>
+  <div class="players-label" style="max-width:400px">PUNKTE</div>
+  <div class="scores-box" id="scoresBox"></div>
+  <div class="result-btn-row">
+    <button class="btn btn-secondary" onclick="leaveRoom()">✕ VERLASSEN</button>
+    <button class="btn btn-primary" id="playAgainBtn" onclick="hostPlayAgain()" style="display:none">↻ NOCHMAL</button>
+    <div class="lobby-wait" id="waitPlayAgain" style="display:none;flex:1;text-align:center">Warte auf Host...</div>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+const SUPABASE_URL = 'https://ozvyymrqibpyqccgszlz.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_30WmZF8d8h_rUSrTGtBwnQ_Kn9gquwL';
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const WORDS = {
+  '🦁 Tiere': ['Elefant','Giraffe','Pinguin','Krokodil','Chamäleon','Qualle','Ameisenbär','Flamingo','Axolotl','Schnabeltier'],
+  '🍕 Essen': ['Sushi','Pizza','Hamburger','Döner','Spaghetti','Croissant','Ramen','Tacos','Churros','Fondue'],
+  '⚽ Sport': ['Surfen','Bogenschießen','Curling','Fechten','Skispringen','Polo','Tauchen','Klettern','Breakdance','Biathlon'],
+  '🌍 Orte': ['Antarktis','Venedig','Pyramiden','Las Vegas','Tokio','Dubai','Sahara','Athen','Bali','Machu Picchu'],
+  '💼 Berufe': ['Astronaut','Bestatter','Clown','Dirigent','Pilot','Richter','Vulkanologe','Florist','Barista','Zirkusdirektor'],
+  '🎬 Filme': ['Titanic','Avatar','Matrix','Inception','Interstellar','Joker','Jaws','Bambi','Shrek','Ghostbusters'],
+  '🎮 Games': ['Minecraft','Fortnite','Among Us','Mario','Zelda','Pokémon','Tetris','GTA','FIFA','Roblox'],
+};
+
+const AVATARS = ['🐱','🐶','🦊','🐸','🐧','🦋','🐺','🦁','🐼','🐨','🦄','🐉'];
+
+let myId = crypto.randomUUID();
+let myName = '';
+let myAvatar = '';
+let roomCode = '';
+let isHost = false;
+let gs = null;
+let ch = null;
+let heartbeatTimer = null;
+let selectedVote = null;
+let hasVoted = false;
+let clueSent = false;
+let revealed = false;
+let readySent = false;
+
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function randCode(){ return Math.random().toString(36).slice(2,6).toUpperCase(); }
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function setLoading(v){ document.getElementById('loading').classList.toggle('show',v); }
+
+function showToast(msg, dur=2500){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(t._tm);
+  t._tm=setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+function setMenuErr(msg){ document.getElementById('menuErr').textContent=msg; }
+
+// ── CREATE ROOM ──
+window.createRoom = function(){
+  var name = document.getElementById('nameInp').value.trim().toUpperCase();
+  if(!name){ setMenuErr('Name eingeben!'); return; }
+  if(name.length<2){ setMenuErr('Name zu kurz!'); return; }
+  myName = name;
+  myAvatar = pick(AVATARS);
+  roomCode = randCode();
+  isHost = true;
+  connectChannel();
+};
+
+// ── JOIN ROOM ──
+window.joinRoom = function(){
+  var name = document.getElementById('nameInp').value.trim().toUpperCase();
+  var code = document.getElementById('codeInp').value.trim().toUpperCase();
+  if(!name){ setMenuErr('Name eingeben!'); return; }
+  if(!code||code.length<4){ setMenuErr('Code eingeben!'); return; }
+  myName = name;
+  myAvatar = pick(AVATARS);
+  roomCode = code;
+  isHost = false;
+  connectChannel();
+};
+
+function connectChannel(){
+  setLoading(true);
+  ch = sb.channel('imposter_'+roomCode, { config:{ broadcast:{self:false} } });
+
+  ch.on('broadcast',{event:'state'}, m=>{
+    if(isHost) return;
+    var prev = gs;
+    gs = m.payload.s;
+    updateUI(prev);
+  });
+
+  ch.on('broadcast',{event:'join'}, m=>{
+    if(!isHost) return;
+    var p = m.payload;
+    if(gs && !gs.players.find(x=>x.id===p.id)){
+      gs.players.push({id:p.id, name:p.name, avatar:p.avatar, score:0});
+      broadcastState();
+    }
+  });
+
+  ch.on('broadcast',{event:'ready'}, m=>{
+    if(!isHost) return;
+    var {playerId} = m.payload;
+    if(gs && gs.phase==='reveal'){
+      if(!gs.readyPlayers) gs.readyPlayers=[];
+      if(!gs.readyPlayers.includes(playerId)) gs.readyPlayers.push(playerId);
+      if(gs.readyPlayers.length >= gs.players.length){
+        gs.phase='clues';
+        gs.readyPlayers=[];
+      }
+      broadcastState();
+    }
+  });
+
+  ch.on('broadcast',{event:'clue'}, m=>{
+    if(!isHost) return;
+    var {playerId, playerName, text} = m.payload;
+    if(gs && gs.phase==='clues' && !gs.clues.find(c=>c.playerId===playerId)){
+      gs.clues.push({playerId, playerName, text});
+      if(gs.clues.length >= gs.players.length){
+        gs.phase='voting';
+      }
+      broadcastState();
+    }
+  });
+
+  ch.on('broadcast',{event:'vote'}, m=>{
+    if(!isHost) return;
+    var {voterId, targetId} = m.payload;
+    if(gs && gs.phase==='voting' && !gs.votes.find(v=>v.voterId===voterId)){
+      gs.votes.push({voterId, targetId});
+      if(gs.votes.length >= gs.players.length) calcResults();
+      else broadcastState();
+    }
+  });
+
+  ch.subscribe(status=>{
+    if(status==='SUBSCRIBED'){
+      setLoading(false);
+      if(isHost){
+        gs = {
+          phase:'lobby',
+          players:[{id:myId, name:myName, avatar:myAvatar, score:0}],
+          hostId:myId,
+          imposterIds:[],
+          word:'', category:'',
+          clues:[], votes:[],
+          readyPlayers:[],
+          results:null,
+        };
+        updateUI(null);
+      } else {
+        setTimeout(()=>{
+          ch.send({type:'broadcast',event:'join',payload:{id:myId,name:myName,avatar:myAvatar}});
+        }, 300);
+        showScreen('sLobby');
+        document.getElementById('lobbyCode').textContent = roomCode;
+        document.getElementById('startBtn').style.display='none';
+        document.getElementById('lobbyWait').style.display='block';
+        document.getElementById('lobbyPlayers').innerHTML='<div class="lobby-wait">Verbinde...</div>';
+      }
+      startHeartbeat();
+    }
+  });
+}
+
+function broadcastState(){
+  if(!ch||!isHost) return;
+  ch.send({type:'broadcast',event:'state',payload:{s:gs}});
+}
+
+function startHeartbeat(){
+  clearInterval(heartbeatTimer);
+  if(!isHost) return;
+  heartbeatTimer = setInterval(()=>{
+    if(gs) broadcastState();
+  }, 4000);
+}
+
+// ── HOST: START GAME ──
+window.hostStartGame = function(){
+  if(!isHost||!gs) return;
+  if(gs.players.length < 2){ showToast('Mindestens 2 Spieler!'); return; }
+  startRound();
+};
+
+function startRound(){
+  var cats = Object.keys(WORDS);
+  var cat = pick(cats);
+  var word = pick(WORDS[cat]);
+  var imposter = pick(gs.players);
+  gs.imposterIds = [imposter.id];
+  gs.word = word;
+  gs.category = cat;
+  gs.phase = 'reveal';
+  gs.clues = [];
+  gs.votes = [];
+  gs.readyPlayers = [];
+  gs.results = null;
+  clueSent = false;
+  revealed = false;
+  readySent = false;
+  hasVoted = false;
+  selectedVote = null;
+  broadcastState();
+  updateUI(null);
+}
+
+// ── HOST: PLAY AGAIN ──
+window.hostPlayAgain = function(){
+  if(!isHost||!gs) return;
+  startRound();
+};
+
+// ── LEAVE ROOM ──
+window.leaveRoom = function(){
+  clearInterval(heartbeatTimer);
+  if(ch){ ch.unsubscribe(); ch=null; }
+  gs=null; roomCode=''; isHost=false;
+  clueSent=false; revealed=false; readySent=false; hasVoted=false; selectedVote=null;
+  showScreen('sMenu');
+};
+
+// ── REVEAL ROLE ──
+window.revealRole = function(){
+  if(revealed) return;
+  revealed = true;
+  document.getElementById('revealCover').classList.add('hidden');
+  setTimeout(()=>{
+    document.getElementById('revealReadyBtn').style.display='block';
+  }, 1200);
+};
+
+// ── SEND READY ──
+window.sendReady = function(){
+  if(readySent) return;
+  readySent = true;
+  if(isHost){
+    if(!gs.readyPlayers) gs.readyPlayers=[];
+    if(!gs.readyPlayers.includes(myId)) gs.readyPlayers.push(myId);
+    if(gs.readyPlayers.length >= gs.players.length){
+      gs.phase='clues'; gs.readyPlayers=[];
+    }
+    broadcastState();
+    updateUI(null);
+  } else {
+    ch.send({type:'broadcast',event:'ready',payload:{playerId:myId}});
+    document.getElementById('revealReadyBtn').disabled=true;
+    document.getElementById('revealReadyBtn').textContent='⏳ WARTE...';
+  }
+};
+
+// ── SEND CLUE ──
+window.sendClue = function(){
+  if(clueSent) return;
+  var text = document.getElementById('clueInp').value.trim();
+  if(!text){ document.getElementById('clueErr').textContent='Hinweis eingeben!'; return; }
+  if(text.length<1){ return; }
+  clueSent = true;
+  document.getElementById('clueErr').textContent='';
+  if(isHost){
+    var existing = gs.clues.find(c=>c.playerId===myId);
+    if(!existing){
+      gs.clues.push({playerId:myId, playerName:myName, text});
+      if(gs.clues.length >= gs.players.length) gs.phase='voting';
+      broadcastState();
+    }
+    updateUI(null);
+  } else {
+    ch.send({type:'broadcast',event:'clue',payload:{playerId:myId,playerName:myName,text}});
+  }
+  document.getElementById('clueInputArea').style.display='none';
+  document.getElementById('clueSentMsg').style.display='block';
+};
+
+// ── VOTE ──
+var selectedVoteId = null;
+window.selectVote = function(targetId){
+  if(hasVoted) return;
+  selectedVoteId = targetId;
+  document.querySelectorAll('.clue-card').forEach(c=>{
+    c.classList.toggle('selected', c.dataset.pid===targetId);
+  });
+  document.getElementById('voteConfirmBtn').style.display='block';
+  document.getElementById('voteErr').textContent='';
+};
+
+window.confirmVote = function(){
+  if(hasVoted||!selectedVoteId) return;
+  hasVoted = true;
+  if(isHost){
+    if(!gs.votes.find(v=>v.voterId===myId)){
+      gs.votes.push({voterId:myId, targetId:selectedVoteId});
+      if(gs.votes.length >= gs.players.length) calcResults();
+      else broadcastState();
+    }
+    updateUI(null);
+  } else {
+    ch.send({type:'broadcast',event:'vote',payload:{voterId:myId,targetId:selectedVoteId}});
+  }
+  document.getElementById('voteConfirmBtn').style.display='none';
+  document.getElementById('youVotedMsg').style.display='block';
+};
+
+// ── CALCULATE RESULTS (host only) ──
+function calcResults(){
+  var tally = {};
+  gs.votes.forEach(v=>{ tally[v.targetId]=(tally[v.targetId]||0)+1; });
+  var maxV=0, accusedId=null;
+  Object.entries(tally).forEach(([id,cnt])=>{ if(cnt>maxV){maxV=cnt;accusedId=id;} });
+  var accused = gs.players.find(p=>p.id===accusedId);
+  var isImp = gs.imposterIds.includes(accusedId);
+  var winner = isImp ? 'players' : 'imposter';
+  gs.results = {accusedId, accusedName:accused?.name||'?', isImposter:isImp, winner};
+  if(winner==='players'){
+    gs.players.forEach(p=>{ if(!gs.imposterIds.includes(p.id)) p.score=(p.score||0)+1; });
+  } else {
+    gs.players.forEach(p=>{ if(gs.imposterIds.includes(p.id)) p.score=(p.score||0)+2; });
+  }
+  gs.phase='results';
+  broadcastState();
+  updateUI(null);
+}
+
+// ── UI UPDATE ──
+function updateUI(prev){
+  if(!gs) return;
+  switch(gs.phase){
+    case 'lobby': renderLobby(); break;
+    case 'reveal': renderReveal(); break;
+    case 'clues': renderClues(); break;
+    case 'voting': renderVoting(); break;
+    case 'results': renderResults(); break;
+  }
+}
+
+// LOBBY
+function renderLobby(){
+  showScreen('sLobby');
+  document.getElementById('lobbyCode').textContent = roomCode;
+  var list = document.getElementById('lobbyPlayers');
+  list.innerHTML='';
+  (gs.players||[]).forEach(p=>{
+    var row=document.createElement('div');
+    row.className='player-row'+(p.id===myId?' me':'')+(p.id===gs.hostId?' host-row':'');
+    row.innerHTML=
+      '<div class="player-avatar">'+p.avatar+'</div>'+
+      '<div class="player-name-row">'+esc(p.name)+'</div>'+
+      (p.id===gs.hostId?'<div class="player-tag tag-host">HOST</div>':'')+
+      (p.id===myId?'<div class="player-tag tag-you">DU</div>':'');
+    list.appendChild(row);
+  });
+  var count = (gs.players||[]).length;
+  if(isHost){
+    var startBtn=document.getElementById('startBtn');
+    startBtn.style.display='block';
+    startBtn.disabled=(count<2);
+    document.getElementById('lobbyWait').style.display='none';
+    document.getElementById('lobbyHint').textContent=count<2?'Mindestens 2 Spieler zum Starten':'';
+  } else {
+    document.getElementById('startBtn').style.display='none';
+    document.getElementById('lobbyWait').style.display='block';
+    document.getElementById('lobbyHint').style.display='none';
+  }
+}
+
+// REVEAL
+function renderReveal(){
+  showScreen('sReveal');
+  if(!gs) return;
+  var amImp = gs.imposterIds.includes(myId);
+  var roleEl=document.getElementById('revealRole');
+  var wordEl=document.getElementById('revealWord');
+  var catEl=document.getElementById('revealCategory');
+  var warnEl=document.getElementById('revealWarning');
+  if(amImp){
+    roleEl.textContent='🔴 DU BIST DER IMPOSTER!';
+    roleEl.className='reveal-role imp';
+    wordEl.textContent='❓ Kein Wort — fak es!';
+    wordEl.className='reveal-word imp-word';
+    warnEl.textContent='Finde das Wort heraus, ohne aufzufallen!';
+    catEl.textContent=gs.category;
+  } else {
+    roleEl.textContent='🟢 DU BIST EIN SPIELER';
+    roleEl.className='reveal-role player';
+    wordEl.textContent=gs.word;
+    wordEl.className='reveal-word';
+    catEl.textContent=gs.category;
+    warnEl.textContent='Gib Hinweise — verrat das Wort nicht!';
+  }
+  var ready=(gs.readyPlayers||[]).length;
+  var total=(gs.players||[]).length;
+  document.getElementById('revealReadyCount').textContent=ready+' / '+total+' bereit';
+}
+
+// CLUES
+function renderClues(){
+  showScreen('sClues');
+  if(!gs) return;
+  var amImp = gs.imposterIds.includes(myId);
+  var rem=document.getElementById('clueMyWord');
+  var remBox=document.getElementById('clueWordReminder');
+  if(amImp){
+    rem.textContent='???';
+    rem.style.color='#ff4466';
+    remBox.style.borderColor='rgba(255,68,102,.3)';
+  } else {
+    rem.textContent=gs.word;
+    rem.style.color='#a855f7';
+    remBox.style.borderColor='rgba(168,85,247,.25)';
+  }
+  var statusList=document.getElementById('clueStatusList');
+  statusList.innerHTML='';
+  (gs.players||[]).forEach(p=>{
+    var hasSent=gs.clues.some(c=>c.playerId===p.id);
+    var row=document.createElement('div');
+    row.className='clue-status-row';
+    row.innerHTML=
+      '<div class="cs-dot '+(hasSent?'done':'wait')+'"></div>'+
+      '<div class="cs-name">'+(p.id===myId?'Du':esc(p.name))+'</div>'+
+      '<div class="cs-status">'+(hasSent?'✓ Gesendet':'...warte')+'</div>';
+    statusList.appendChild(row);
+  });
+  var mySent=gs.clues.some(c=>c.playerId===myId)||clueSent;
+  document.getElementById('clueInputArea').style.display=mySent?'none':'flex';
+  document.getElementById('clueSentMsg').style.display=mySent?'block':'none';
+}
+
+// VOTING
+function renderVoting(){
+  showScreen('sVote');
+  if(!gs) return;
+  var voted=(gs.votes||[]).length;
+  var total=(gs.players||[]).length;
+  document.getElementById('voteCountInfo').textContent=voted+' / '+total+' haben abgestimmt';
+  var cards=document.getElementById('clueCards');
+  cards.innerHTML='';
+  gs.clues.forEach(c=>{
+    var isSelf=c.playerId===myId;
+    var card=document.createElement('div');
+    card.className='clue-card'+(isSelf?' dim':'')+(hasVoted?' voted':'');
+    card.dataset.pid=c.playerId;
+    card.innerHTML=
+      '<div class="clue-card-name">'+esc(isSelf?'Du':c.playerName)+(isSelf?'<span class="me-tag">DU</span>':'')+'</div>'+
+      '<div class="clue-card-text">"'+esc(c.text)+'"</div>';
+    if(!isSelf&&!hasVoted) card.addEventListener('click',()=>window.selectVote(c.playerId));
+    cards.appendChild(card);
+  });
+  document.getElementById('youVotedMsg').style.display=hasVoted?'block':'none';
+  if(hasVoted) document.getElementById('voteConfirmBtn').style.display='none';
+}
+
+// RESULTS
+function renderResults(){
+  showScreen('sResults');
+  if(!gs||!gs.results) return;
+  var r=gs.results;
+  var banner=document.getElementById('resultBanner');
+  banner.className='result-banner '+(r.winner==='players'?'players-win':'imposter-win');
+  document.getElementById('resultIcon').textContent=r.winner==='players'?'🎉':'🕵️';
+  document.getElementById('resultTitle').textContent=r.winner==='players'?'SPIELER GEWINNEN!':'IMPOSTER GEWINNT!';
+  document.getElementById('resultSub').textContent=r.winner==='players'?
+    (r.accusedName+' wurde entlarvt!'):
+    (r.accusedName+' wurde fälschlicherweise beschuldigt!');
+  var imposter=gs.players.find(p=>gs.imposterIds.includes(p.id));
+  document.getElementById('imposterName').textContent=imposter?imposter.avatar+' '+imposter.name:'?';
+  document.getElementById('resultWord').textContent=gs.word+' ('+gs.category+')';
+  var scoresBox=document.getElementById('scoresBox');
+  scoresBox.innerHTML='';
+  var sorted=[...gs.players].sort((a,b)=>(b.score||0)-(a.score||0));
+  sorted.forEach((p,i)=>{
+    var isImp=gs.imposterIds.includes(p.id);
+    var row=document.createElement('div');
+    row.className='score-row'+(isImp?' imposter-row':'');
+    row.innerHTML=
+      '<div class="player-avatar">'+p.avatar+'</div>'+
+      '<div class="score-name">'+esc(p.id===myId?'Du':p.name)+(isImp?' 🕵️':'')+'</div>'+
+      '<div class="score-pts">'+p.score+'</div>';
+    scoresBox.appendChild(row);
+  });
+  if(isHost){
+    document.getElementById('playAgainBtn').style.display='block';
+    document.getElementById('waitPlayAgain').style.display='none';
+  } else {
+    document.getElementById('playAgainBtn').style.display='none';
+    document.getElementById('waitPlayAgain').style.display='block';
+  }
+}
+
+function esc(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+// Keyboard shortcuts
+document.getElementById('nameInp').addEventListener('keydown',e=>{ if(e.key==='Enter') window.createRoom(); });
+document.getElementById('codeInp').addEventListener('keydown',e=>{ if(e.key==='Enter') window.joinRoom(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'){ var ci=document.getElementById('clueInp'); if(document.activeElement===ci) window.sendClue(); }});
+document.getElementById('codeInp').addEventListener('input',e=>{ e.target.value=e.target.value.toUpperCase(); });
+document.getElementById('nameInp').addEventListener('input',e=>{ e.target.value=e.target.value.toUpperCase(); });
+</script>
+</body>
+</html>
