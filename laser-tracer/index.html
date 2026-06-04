@@ -252,6 +252,7 @@ var myWalkPhase = 0, myIsMoving = false;
 var myDead = false, lastSyncTime = 0;
 var sb = null, myRoom = null, myId = null, peers = {}, isHost = false;
 var roomCh = null;
+var globalCh = null;
 var totalRounds = 5, roundNum = 1, myWins = 0, roundEndActive = false;
 var rng = Math.random; // overridden in multiplayer with seeded RNG
 
@@ -1285,8 +1286,13 @@ function adminSendAnnounce() {
   if (!text) return;
   if (inp) inp.value = '';
   showAnnouncement(text);
+  // Broadcast to players in the same room
   if (gameState === 'multi' && roomCh) {
     roomCh.send({type:'broadcast', event:'adminAnnounce', payload:{text:text}});
+  }
+  // Broadcast globally to everyone on the portal/other pages
+  if (globalCh) {
+    globalCh.send({type:'broadcast', event:'adminAnnounce', payload:{text:text}});
   }
 }
 
@@ -1588,7 +1594,14 @@ window.addEventListener('DOMContentLoaded', function() {
 
   setTimeout(function(){
     try {
-      if (typeof supabase !== 'undefined') sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+      if (typeof supabase !== 'undefined') {
+        sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+        globalCh = sb.channel('portal-global')
+          .on('broadcast', {event:'adminAnnounce'}, function(m) {
+            if (m.payload && m.payload.text) showAnnouncement(m.payload.text);
+          })
+          .subscribe();
+      }
     } catch(e) {}
   }, 300);
 });
