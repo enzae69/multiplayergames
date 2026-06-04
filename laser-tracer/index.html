@@ -147,6 +147,14 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
   <button id="specNext" onclick="switchSpectate(1)" style="background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.35);color:#00f5ff;border-radius:10px;font-size:18px;padding:7px 16px;cursor:pointer;touch-action:manipulation">▶</button>
 </div>
 
+<!-- ADMIN PANEL (fixed bottom-left, only visible to admin) -->
+<div id="adminPanel" style="position:fixed;bottom:24px;left:16px;z-index:300;display:none;flex-direction:column;gap:6px;background:rgba(5,5,16,.97);border:2px solid rgba(255,0,110,.6);border-radius:14px;padding:12px 10px;box-shadow:0 0 24px rgba(255,0,110,.25);font-family:'Russo One',sans-serif">
+  <div style="font-size:9px;letter-spacing:3px;color:rgba(255,0,110,.8);text-align:center;margin-bottom:2px">⚡ ADMIN</div>
+  <button onclick="adminSpawnLaser()" style="background:rgba(255,0,110,.15);border:1px solid rgba(255,0,110,.5);color:#ff006e;border-radius:8px;font-size:12px;padding:6px 10px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;touch-action:manipulation">➕ LASER</button>
+  <button onclick="adminToggleInvincible()" id="adminInvBtn" style="background:rgba(255,0,110,.15);border:1px solid rgba(255,0,110,.5);color:#ff006e;border-radius:8px;font-size:12px;padding:6px 10px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;touch-action:manipulation">🛡️ INVINCIBLE</button>
+  <button onclick="adminKillAll()" style="background:rgba(255,0,110,.15);border:1px solid rgba(255,0,110,.5);color:#ff006e;border-radius:8px;font-size:12px;padding:6px 10px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;touch-action:manipulation">💀 KILL ALL</button>
+</div>
+
 <!-- RESULT -->
 <div id="sResult" class="screen solid off">
   <div class="rsbox">
@@ -251,6 +259,8 @@ var activeAbility   = null; // {type, endTime (performance.now ms)}
 var lastStaleCheckTS = 0;  // for watchdog: marks disconnected peers dead
 var watchX = 0, watchY = 0, watchZ = 10; // camera follows this point (self or spectated peer)
 var spectatingId = null;   // peer ID being spectated when dead
+var isAdminUser    = false;
+var adminInvincible = false;
 
 // ── SEEDED RNG (mulberry32) ────────────────────────────────────────────────
 function mulberry32(seed) {
@@ -807,6 +817,7 @@ function updatePlayer(dt) {
 function doJump() { if (myY <= 0.05) myVY = JUMP_V; }
 
 function checkHit() {
+  if (adminInvincible) return false;
   if (activeAbility && (activeAbility.type === 'unsterblich' || activeAbility.type === 'nolaser')) return false;
   if (myY > 1.3) return false;
   for (var i = 0; i < lasers.length; i++) {
@@ -1119,6 +1130,13 @@ function joinChannel() {
       if (d > ARENA_R - 0.8) { myX = myX/d*(ARENA_R-0.8); myZ = myZ/d*(ARENA_R-0.8); }
       myVY = JUMP_V * 0.6; // small upward bounce
     })
+    .on('broadcast',{event:'adminKill'},function(m){
+      if (m.payload.sender === myId) return;
+      if (myDead) return;
+      myDead = true;
+      if (roomCh) roomCh.send({type:'broadcast', event:'dead', payload:{id:myId}});
+      beginSpectating();
+    })
     .subscribe();
   setTimeout(function(){
     if (roomCh) roomCh.send({type:'broadcast',event:'join',payload:{id:myId,name:progress.name}});
@@ -1196,6 +1214,46 @@ function updateSpectateBar() {
   var showArrows = alive.length > 1;
   if (prev) prev.style.visibility = showArrows ? 'visible' : 'hidden';
   if (next) next.style.visibility = showArrows ? 'visible' : 'hidden';
+}
+
+// ── ADMIN ─────────────────────────────────────────────────────────────────
+async function checkAdminStatus() {
+  var u = (localStorage.getItem('authUser') || '').toUpperCase();
+  if (u !== 'ENZAE') return;
+  var h = localStorage.getItem('authHash') || '';
+  var enc = new TextEncoder().encode('sinhnhat');
+  var buf = await crypto.subtle.digest('SHA-256', enc);
+  var hex = Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+  if (hex === h) {
+    isAdminUser = true;
+    var ap = document.getElementById('adminPanel');
+    if (ap) ap.style.display = 'flex';
+  }
+}
+function adminSpawnLaser() {
+  if (!isAdminUser) return;
+  if (gameState !== 'solo' && gameState !== 'multi') return;
+  addLaser();
+}
+function adminToggleInvincible() {
+  if (!isAdminUser) return;
+  adminInvincible = !adminInvincible;
+  var btn = document.getElementById('adminInvBtn');
+  if (btn) {
+    btn.style.background  = adminInvincible ? 'rgba(255,0,110,.6)'  : 'rgba(255,0,110,.15)';
+    btn.style.color        = adminInvincible ? '#fff'               : '#ff006e';
+  }
+}
+function adminKillAll() {
+  if (!isAdminUser) return;
+  if (gameState === 'multi' && roomCh) {
+    roomCh.send({type:'broadcast', event:'adminKill', payload:{sender:myId}});
+    Object.keys(peers).forEach(function(id){ peers[id].isDead = true; });
+    if (isHost) checkRoundWin();
+  } else if (gameState === 'solo') {
+    myDead = true;
+    showScreen('sResult');
+  }
 }
 
 function checkStalePeers() {
@@ -1476,6 +1534,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
   loadLocal(); renderProfile();
   loadAbilities(); renderAbilityShop(); updateAbilityBtn();
+  checkAdminStatus();
 
   canvas = document.getElementById('c');
   ctx = canvas.getContext('2d');
