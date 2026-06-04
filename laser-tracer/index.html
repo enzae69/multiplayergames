@@ -1229,18 +1229,12 @@ function updateSpectateBar() {
 }
 
 // ── ADMIN ─────────────────────────────────────────────────────────────────
-async function checkAdminStatus() {
+function checkAdminStatus() {
   var u = (localStorage.getItem('authUser') || '').toUpperCase();
   if (u !== 'ENZAE') return;
-  var h = localStorage.getItem('authHash') || '';
-  var enc = new TextEncoder().encode('sinhnhat');
-  var buf = await crypto.subtle.digest('SHA-256', enc);
-  var hex = Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
-  if (hex === h) {
-    isAdminUser = true;
-    var ap = document.getElementById('adminPanel');
-    if (ap) ap.style.display = 'flex';
-  }
+  isAdminUser = true;
+  var ap = document.getElementById('adminPanel');
+  if (ap) ap.style.display = 'flex';
 }
 function adminSpawnLaser() {
   if (!isAdminUser) return;
