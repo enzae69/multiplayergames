@@ -10,6 +10,7 @@
   body{background:#050510;color:#fff;font-family:'Exo 2',sans-serif;min-height:100vh;overflow-x:hidden}
   body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,245,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.04) 1px,transparent 1px);background-size:40px 40px;animation:grid 20s linear infinite;pointer-events:none;z-index:0}
   @keyframes grid{0%{background-position:0 0}100%{background-position:40px 40px}}
+
   .wrap{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:32px 16px 48px}
   .portal-title{font-family:'Russo One',sans-serif;font-size:clamp(32px,9vw,72px);background:linear-gradient(90deg,#00f5ff,#ff006e,#ffff00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:3px;text-align:center;filter:drop-shadow(0 0 30px #00f5ff);animation:pulse 3s ease-in-out infinite}
   @keyframes pulse{0%,100%{filter:drop-shadow(0 0 20px #00f5ff)}50%{filter:drop-shadow(0 0 50px #ff006e)}}
@@ -46,8 +47,99 @@
   .badge-soon{background:rgba(255,140,0,0.15);color:#ff8c00;border:1px solid rgba(255,140,0,0.3)}
   .game-players{font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:1px}
 
+  /* ── LEADERBOARD PANEL ── */
+  #lbToggle{
+    position:fixed;top:14px;right:14px;z-index:300;
+    font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:1px;
+    padding:9px 14px;border:none;border-radius:12px;cursor:pointer;
+    background:linear-gradient(135deg,#7a4a00,#ffb300);color:#000;
+    box-shadow:0 4px 18px rgba(255,179,0,.4);
+    touch-action:manipulation;transition:transform .15s,box-shadow .15s;
+    display:flex;align-items:center;gap:6px;white-space:nowrap;
+  }
+  #lbToggle:active{transform:scale(.93)}
+  #lbToggle .lb-count{font-size:10px;background:rgba(0,0,0,.25);border-radius:8px;padding:1px 6px;letter-spacing:0}
+
+  #lbPanel{
+    position:fixed;top:0;right:0;z-index:290;
+    width:min(300px,96vw);height:100vh;
+    background:rgba(8,6,20,.97);
+    border-left:1px solid rgba(255,179,0,.25);
+    display:flex;flex-direction:column;
+    transform:translateX(100%);
+    transition:transform .3s cubic-bezier(.4,0,.2,1);
+    box-shadow:-8px 0 40px rgba(0,0,0,.6);
+  }
+  #lbPanel.open{transform:translateX(0)}
+
+  .lb-panel-head{
+    padding:14px 14px 10px;
+    border-bottom:1px solid rgba(255,255,255,.07);
+    flex-shrink:0;
+    background:rgba(255,179,0,.05);
+  }
+  .lb-panel-title{
+    font-family:'Russo One',sans-serif;font-size:16px;letter-spacing:3px;
+    color:#ffb300;display:flex;align-items:center;gap:8px;
+  }
+  .lb-panel-sub{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:2px;margin-top:3px}
+  .lb-panel-actions{display:flex;gap:7px;margin-top:10px}
+  .lb-btn{
+    font-family:'Russo One',sans-serif;font-size:10px;letter-spacing:1px;
+    padding:6px 12px;border:1px solid rgba(255,255,255,.12);border-radius:8px;
+    background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);cursor:pointer;
+    transition:background .15s;touch-action:manipulation;
+  }
+  .lb-btn:active{background:rgba(255,255,255,.12)}
+  .lb-btn.close-btn{margin-left:auto;color:rgba(255,255,255,.4)}
+
+  .lb-col-head{
+    display:grid;grid-template-columns:38px 1fr 44px 44px;
+    padding:6px 12px;
+    font-family:'Russo One',sans-serif;font-size:9px;letter-spacing:2px;
+    color:rgba(255,255,255,.25);
+    border-bottom:1px solid rgba(255,255,255,.05);
+    flex-shrink:0;
+  }
+  .lb-col-head span:nth-child(3),
+  .lb-col-head span:nth-child(4){text-align:center}
+
+  .lb-list{
+    flex:1;overflow-y:auto;padding:6px 8px 16px;
+    scrollbar-width:thin;scrollbar-color:rgba(255,179,0,.3) transparent;
+  }
+  .lb-list::-webkit-scrollbar{width:4px}
+  .lb-list::-webkit-scrollbar-track{background:transparent}
+  .lb-list::-webkit-scrollbar-thumb{background:rgba(255,179,0,.3);border-radius:4px}
+
+  .lb-item{
+    display:grid;grid-template-columns:38px 1fr 44px 44px;
+    align-items:center;padding:7px 4px;
+    border-radius:8px;margin-bottom:3px;
+    transition:background .1s;
+    border:1px solid transparent;
+  }
+  .lb-item:hover{background:rgba(255,255,255,.04)}
+  .lb-item.top1{background:rgba(255,179,0,.1);border-color:rgba(255,179,0,.2)}
+  .lb-item.top2{background:rgba(180,180,180,.07);border-color:rgba(180,180,180,.15)}
+  .lb-item.top3{background:rgba(180,80,20,.1);border-color:rgba(200,100,40,.15)}
+  .lb-item.is-me{border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.05)}
+
+  .lb-rank{font-family:'Russo One',sans-serif;font-size:15px;text-align:center;line-height:1}
+  .lb-name{font-family:'Russo One',sans-serif;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
+  .lb-name.is-me{color:#00d4ff}
+  .lb-wins{font-family:'Russo One',sans-serif;font-size:13px;color:#2ecc40;text-align:center}
+  .lb-wr{font-family:'Russo One',sans-serif;font-size:11px;color:rgba(255,255,255,.38);text-align:center}
+
+  .lb-state{text-align:center;padding:32px 16px;font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.25)}
+  .lb-state.err{color:rgba(255,80,80,.5)}
+
+  /* backdrop when panel open on mobile */
+  #lbBackdrop{position:fixed;inset:0;z-index:280;background:rgba(0,0,0,.5);display:none;backdrop-filter:blur(2px)}
+  #lbBackdrop.show{display:block}
+
   /* name modal */
-  .modal-overlay{position:fixed;inset:0;background:rgba(5,5,16,0.97);z-index:200;display:flex;align-items:center;justify-content:center}
+  .modal-overlay{position:fixed;inset:0;background:rgba(5,5,16,0.97);z-index:400;display:flex;align-items:center;justify-content:center}
   .modal-overlay.off{display:none}
   .modal-box{background:rgba(10,10,31,0.99);border:2px solid rgba(0,245,255,0.4);border-radius:20px;padding:36px 28px;width:min(400px,92vw);display:flex;flex-direction:column;gap:20px;align-items:center}
   .modal-title{font-family:'Russo One',sans-serif;font-size:26px;color:#00f5ff;letter-spacing:3px;text-align:center}
@@ -61,7 +153,33 @@
 </head>
 <body>
 
-<!-- Name modal -->
+<!-- ── LEADERBOARD TOGGLE BUTTON ── -->
+<button id="lbToggle" onclick="toggleLb()">
+  🏆 TOP <span class="lb-count" id="lbCountBadge">200</span>
+</button>
+
+<!-- ── LEADERBOARD BACKDROP ── -->
+<div id="lbBackdrop" onclick="closeLb()"></div>
+
+<!-- ── LEADERBOARD PANEL ── -->
+<div id="lbPanel">
+  <div class="lb-panel-head">
+    <div class="lb-panel-title">🏆 BESTENLISTE</div>
+    <div class="lb-panel-sub">GLOBALE TOP 200 — UNO</div>
+    <div class="lb-panel-actions">
+      <button class="lb-btn" onclick="loadLb()">↻ REFRESH</button>
+      <button class="lb-btn close-btn" onclick="closeLb()">✕ SCHLIESSEN</button>
+    </div>
+  </div>
+  <div class="lb-col-head">
+    <span>#</span><span>SPIELER</span><span>SIEGE</span><span>WIN%</span>
+  </div>
+  <div class="lb-list" id="lbList">
+    <div class="lb-state">Laden…</div>
+  </div>
+</div>
+
+<!-- ── NAME MODAL ── -->
 <div id="nameModal" class="modal-overlay off">
   <div class="modal-box">
     <div class="modal-title">SPIELERNAME</div>
@@ -113,7 +231,9 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
+// ── PROFILE ──────────────────────────────────────────
 function avatarSVG(color, size){
   var cid='g'+color.replace('#','');
   return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 60 60">'
@@ -125,19 +245,19 @@ function avatarSVG(color, size){
 }
 
 function showProfile(){
-  var name = localStorage.getItem('playerName') || 'Player';
+  var name  = localStorage.getItem('playerName') || 'Player';
   var level = parseInt(localStorage.getItem('playerLevel') || '1') || 1;
-  var xp = parseInt(localStorage.getItem('playerXp') || '0') || 0;
+  var xp    = parseInt(localStorage.getItem('playerXp')    || '0') || 0;
   var coins = parseInt(localStorage.getItem('playerCoins') || '0') || 0;
   document.getElementById('pAvatar').innerHTML = avatarSVG('#00f5ff', 44);
-  document.getElementById('pName').textContent = name;
-  document.getElementById('pLvl').textContent = level;
-  document.getElementById('pXp').textContent = xp;
+  document.getElementById('pName').textContent  = name;
+  document.getElementById('pLvl').textContent   = level;
+  document.getElementById('pXp').textContent    = xp;
   document.getElementById('pCoins').textContent = coins;
 }
 
 function saveName(){
-  var inp = document.getElementById('nameInput');
+  var inp  = document.getElementById('nameInput');
   var name = inp.value.trim().toUpperCase();
   if(!name || name.length < 1){
     document.getElementById('nameErr').textContent = 'Bitte gib einen Namen ein!';
@@ -163,7 +283,88 @@ document.getElementById('nameInput').addEventListener('keydown', function(e){
   if(e.key === 'Enter') saveName();
 });
 
-// Boot — no login required
+// ── LEADERBOARD ──────────────────────────────────────
+var SUPA_URL = 'https://ozvyymrqibpyqccgszlz.supabase.co';
+var SUPA_KEY = 'sb_publishable_30WmZF8d8h_rUSrTGtBwnQ_Kn9gquwL';
+var sb = null;
+var lbOpen = false;
+
+if(typeof supabase !== 'undefined'){
+  sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+}
+
+function toggleLb(){
+  if(lbOpen){ closeLb(); } else { openLb(); }
+}
+
+function openLb(){
+  lbOpen = true;
+  document.getElementById('lbPanel').classList.add('open');
+  document.getElementById('lbBackdrop').classList.add('show');
+  loadLb();
+}
+
+function closeLb(){
+  lbOpen = false;
+  document.getElementById('lbPanel').classList.remove('open');
+  document.getElementById('lbBackdrop').classList.remove('show');
+}
+
+async function loadLb(){
+  var list = document.getElementById('lbList');
+  list.innerHTML = '<div class="lb-state">Laden…</div>';
+  if(!sb){
+    list.innerHTML = '<div class="lb-state err">Keine Verbindung</div>';
+    return;
+  }
+  try {
+    var res = await sb.from('leaderboard')
+      .select('player_name,wins,games')
+      .order('wins', {ascending: false})
+      .limit(200);
+    if(res.error) throw res.error;
+    renderLb(res.data || []);
+  } catch(e) {
+    list.innerHTML = '<div class="lb-state err">Tabelle nicht gefunden.<br><span style="font-size:9px;opacity:.6">uno/leaderboard.sql in Supabase ausführen</span></div>';
+  }
+}
+
+function renderLb(data){
+  var list  = document.getElementById('lbList');
+  var myName = (localStorage.getItem('playerName') || '').toUpperCase();
+  var medals = ['🥇','🥈','🥉'];
+
+  document.getElementById('lbCountBadge').textContent = data.length || 200;
+
+  if(!data.length){
+    list.innerHTML = '<div class="lb-state">Noch keine Einträge<br>— spiel eine Runde UNO!</div>';
+    return;
+  }
+
+  var html = '';
+  data.forEach(function(row, i){
+    var rank = i + 1;
+    var wr   = row.games > 0 ? Math.round(row.wins / row.games * 100) : 0;
+    var name = (row.player_name || '?').toUpperCase();
+    var isMe = name === myName;
+    var cls  = 'lb-item' + (rank===1?' top1':rank===2?' top2':rank===3?' top3':'') + (isMe?' is-me':'');
+    html += '<div class="'+cls+'">'
+          + '<div class="lb-rank">' + (rank<=3 ? medals[rank-1] : rank) + '</div>'
+          + '<div class="lb-name'+(isMe?' is-me':'')+'">' + name + (isMe?' ◀':'') + '</div>'
+          + '<div class="lb-wins">' + row.wins + '</div>'
+          + '<div class="lb-wr">'   + wr + '%</div>'
+          + '</div>';
+  });
+  list.innerHTML = html;
+
+  // Scroll to own entry if visible
+  if(myName){
+    var items = list.querySelectorAll('.lb-item.is-me');
+    if(items.length) items[0].scrollIntoView({block:'center',behavior:'smooth'});
+  }
+}
+
+// ── BOOT ─────────────────────────────────────────────
 var existingName = localStorage.getItem('playerName');
 if(!existingName){
   document.getElementById('nameModal').classList.remove('off');
