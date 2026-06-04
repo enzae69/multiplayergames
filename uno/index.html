@@ -142,7 +142,17 @@ html,body{width:100%;height:100%;overflow:hidden;background:#07070f;color:#fff;f
 /* CARD */
 .ucard{width:64px;height:96px;border-radius:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;border:2.5px solid rgba(255,255,255,.18);box-shadow:0 5px 16px rgba(0,0,0,.65);cursor:default;transition:transform .18s,box-shadow .18s;flex-shrink:0;font-family:'Russo One',sans-serif;overflow:hidden}
 .ucard.large{width:86px;height:130px;border-radius:13px}
-.ucard-back{background:linear-gradient(145deg,#160042,#320095);border-color:rgba(160,100,255,.18)}
+.ucard-back{background:linear-gradient(145deg,#10003a,#220060);border-color:rgba(255,255,255,.12)}
+/* ── SKINS ── */
+[data-skin="ocean"]   .ucard-back{background:linear-gradient(145deg,#003a6a,#0077cc)}
+[data-skin="forest"]  .ucard-back{background:linear-gradient(145deg,#003a10,#007a22)}
+[data-skin="sunset"]  .ucard-back{background:linear-gradient(145deg,#6a1a00,#cc5500)}
+[data-skin="purple"]  .ucard-back{background:linear-gradient(145deg,#2a003a,#7700cc)}
+[data-skin="gold"]    .ucard-back{background:linear-gradient(145deg,#3a2a00,#cc9900)}
+[data-skin="pink"]    .ucard-back{background:linear-gradient(145deg,#3a0018,#cc0055)}
+[data-skin="dark"]    .ucard-back{background:linear-gradient(145deg,#050505,#111111)}
+[data-skin="rainbow"] .ucard-back{background:linear-gradient(145deg,#ff0000,#ff7700,#ffff00,#00ff00,#0000ff,#8b00ff);animation:rbgspin 2s linear infinite}
+@keyframes rbgspin{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
 .ucard-back::before{content:'';position:absolute;width:48px;height:72px;border-radius:8px;border:2px solid rgba(255,255,255,.1);background:radial-gradient(ellipse at center,rgba(120,0,255,.25) 0%,transparent 70%)}
 .ucard-back::after{content:'UNO';position:absolute;color:rgba(255,255,255,.04);font-size:14px;letter-spacing:4px;transform:rotate(-32deg)}
 .ucard.large.ucard-back::before{width:64px;height:98px}
@@ -1031,7 +1041,13 @@ function showLeaderboard(prevScreen){
 }
 
 // ════ BOOT ════
+function applySkin(){
+  var skin=localStorage.getItem('activeSkin')||'default';
+  document.body.setAttribute('data-skin',skin);
+}
+
 window.addEventListener('load',function(){
+  applySkin();
   var stored=localStorage.getItem('playerName');
   if(stored){ myName=stored; document.getElementById('pName').textContent=myName; document.getElementById('nameInp').value=myName; }
   if(typeof supabase!=='undefined') sb=supabase.createClient(SUPA_URL,SUPA_KEY);
