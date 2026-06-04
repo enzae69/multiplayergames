@@ -7,132 +7,162 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Russo+One&family=Exo+2:wght@400;700;900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{width:100%;height:100%;overflow:hidden;background:#050510;color:#fff;font-family:'Exo 2',sans-serif;user-select:none;-webkit-user-select:none}
+html,body{width:100%;height:100%;overflow:hidden;background:#080816;color:#fff;font-family:'Exo 2',sans-serif;user-select:none;-webkit-user-select:none}
 
 /* ── SCREENS ── */
-.screen{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px 16px 28px;overflow-y:auto;background:#050510}
+.screen{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px 16px 28px;overflow-y:auto}
 .screen.off{display:none!important}
+.screen::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,180,255,.07) 0%,transparent 65%),radial-gradient(ellipse at 80% 100%,rgba(255,0,100,.05) 0%,transparent 60%);pointer-events:none;z-index:0}
+.screen>*{position:relative;z-index:1}
 
 /* ── SHARED UI ── */
-.gtitle{font-family:'Russo One',sans-serif;font-size:clamp(58px,16vw,110px);background:linear-gradient(90deg,#e32636 20%,#ffc107 40%,#1565c0 60%,#2e7d32 80%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:4px;text-align:center;filter:drop-shadow(0 0 22px #e32636)}
-.gsub{color:rgba(255,255,255,.4);letter-spacing:6px;font-size:11px;text-transform:uppercase;margin-top:-8px}
-.sep{width:60px;height:2px;background:linear-gradient(90deg,transparent,#00f5ff,transparent)}
-.btn{font-family:'Russo One',sans-serif;font-size:15px;letter-spacing:1.5px;padding:14px 28px;border:none;border-radius:10px;cursor:pointer;transition:transform .15s,opacity .15s;text-transform:uppercase;touch-action:manipulation;width:min(300px,90vw);display:block;text-align:center;text-decoration:none}
-.btn:active{transform:scale(.96);opacity:.85}
-.bcyan{background:linear-gradient(135deg,#007a8a,#00c4d4);color:#050510;box-shadow:0 0 18px rgba(0,245,255,.4)}
-.bgreen{background:linear-gradient(135deg,#1a8a1a,#39ff14);color:#050510;box-shadow:0 0 18px rgba(57,255,20,.4)}
-.bghost{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.12)}
-.berr{color:#ff006e;font-size:12px;text-align:center;min-height:14px;letter-spacing:1px}
-.pcard{background:rgba(10,10,31,.95);border:2px solid rgba(0,245,255,.3);border-radius:14px;padding:12px 16px;width:min(340px,93vw);display:flex;align-items:center;gap:11px}
-.pname{font-weight:900;font-size:15px;color:#00f5ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nameinp{background:rgba(15,15,42,1);border:2px solid rgba(0,245,255,.3);color:#00f5ff;font-family:'Russo One',sans-serif;font-size:18px;padding:10px 14px;border-radius:8px;outline:none;width:min(280px,85vw);text-align:center;letter-spacing:3px;text-transform:uppercase}
-.jinp{background:rgba(15,15,42,1);border:2px solid rgba(0,245,255,.3);color:#00f5ff;font-family:'Russo One',sans-serif;font-size:20px;padding:10px 14px;border-radius:8px;outline:none;width:130px;text-align:center;letter-spacing:4px;text-transform:uppercase}
+.gtitle{font-family:'Russo One',sans-serif;font-size:clamp(64px,17vw,120px);background:linear-gradient(135deg,#ff1744 15%,#ff9100 35%,#ffd600 55%,#00e676 70%,#2979ff 85%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:6px;text-align:center;filter:drop-shadow(0 0 30px rgba(255,23,68,.5));animation:titleglow 3s ease-in-out infinite alternate}
+@keyframes titleglow{from{filter:drop-shadow(0 0 20px rgba(255,23,68,.4))}to{filter:drop-shadow(0 0 40px rgba(255,145,0,.6))}}
+.gsub{color:rgba(255,255,255,.35);letter-spacing:8px;font-size:11px;text-transform:uppercase;margin-top:-10px}
+.sep{width:80px;height:2px;background:linear-gradient(90deg,transparent,#00d4ff,transparent);margin:2px 0}
+.btn{font-family:'Russo One',sans-serif;font-size:15px;letter-spacing:1.5px;padding:14px 28px;border:none;border-radius:12px;cursor:pointer;transition:transform .15s,opacity .15s,box-shadow .15s;text-transform:uppercase;touch-action:manipulation;width:min(300px,90vw);display:block;text-align:center;text-decoration:none}
+.btn:active{transform:scale(.95);opacity:.85}
+.bcyan{background:linear-gradient(135deg,#006680,#00c4d4);color:#000;box-shadow:0 4px 20px rgba(0,196,212,.35),inset 0 1px 0 rgba(255,255,255,.2)}
+.bgreen{background:linear-gradient(135deg,#1a7a0a,#2ecc40);color:#000;box-shadow:0 4px 20px rgba(46,204,64,.35),inset 0 1px 0 rgba(255,255,255,.2)}
+.bghost{background:rgba(255,255,255,.07);color:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.12)}
+.berr{color:#ff1744;font-size:12px;text-align:center;min-height:14px;letter-spacing:1px}
+.pcard{background:rgba(10,10,30,.9);border:1px solid rgba(0,212,255,.25);border-radius:16px;padding:13px 18px;width:min(340px,93vw);display:flex;align-items:center;gap:12px;box-shadow:0 4px 24px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.05)}
+.pname{font-weight:900;font-size:15px;color:#00d4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nameinp{background:rgba(12,12,36,1);border:2px solid rgba(0,212,255,.3);color:#00d4ff;font-family:'Russo One',sans-serif;font-size:18px;padding:10px 14px;border-radius:10px;outline:none;width:min(280px,85vw);text-align:center;letter-spacing:3px;text-transform:uppercase;transition:border-color .2s}
+.nameinp:focus{border-color:#00d4ff;box-shadow:0 0 0 3px rgba(0,212,255,.15)}
+.jinp{background:rgba(12,12,36,1);border:2px solid rgba(0,212,255,.3);color:#00d4ff;font-family:'Russo One',sans-serif;font-size:20px;padding:10px 14px;border-radius:10px;outline:none;width:130px;text-align:center;letter-spacing:4px;text-transform:uppercase;transition:border-color .2s}
+.jinp:focus{border-color:#00d4ff}
 .multibtns{display:none;flex-direction:column;gap:9px;align-items:center;width:100%}
 .multibtns.show{display:flex}
 .joinrow{display:none;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
 .joinrow.show{display:flex}
 
 /* ── SOLO BOT SELECTOR ── */
-.solo-box{background:rgba(10,10,31,.95);border:2px solid rgba(57,255,20,.3);border-radius:14px;padding:16px 20px;width:min(300px,90vw);display:none;flex-direction:column;align-items:center;gap:12px}
+.solo-box{background:rgba(10,10,30,.9);border:1px solid rgba(46,204,64,.3);border-radius:16px;padding:18px 22px;width:min(300px,90vw);display:none;flex-direction:column;align-items:center;gap:13px}
 .solo-box.show{display:flex}
-.solo-label{font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:3px;color:rgba(255,255,255,.5)}
-.bot-row{display:flex;gap:10px}
-.bot-btn{font-family:'Russo One',sans-serif;font-size:18px;width:54px;height:54px;border-radius:10px;border:2px solid rgba(57,255,20,.25);background:rgba(15,15,42,1);color:rgba(255,255,255,.5);cursor:pointer;transition:all .15s;touch-action:manipulation}
-.bot-btn.sel{background:rgba(57,255,20,.15);border-color:#39ff14;color:#39ff14;box-shadow:0 0 12px rgba(57,255,20,.3)}
-.bot-btn:active{transform:scale(.92)}
+.solo-label{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:4px;color:rgba(255,255,255,.4)}
+.bot-row{display:flex;gap:12px}
+.bot-btn{font-family:'Russo One',sans-serif;font-size:20px;width:58px;height:58px;border-radius:12px;border:2px solid rgba(46,204,64,.2);background:rgba(12,12,36,1);color:rgba(255,255,255,.4);cursor:pointer;transition:all .15s;touch-action:manipulation}
+.bot-btn.sel{background:rgba(46,204,64,.12);border-color:#2ecc40;color:#2ecc40;box-shadow:0 0 16px rgba(46,204,64,.25)}
+.bot-btn:active{transform:scale(.9)}
 
 /* ── LOBBY ── */
-.lbox{background:rgba(10,10,31,.95);border:2px solid rgba(0,245,255,.3);border-radius:18px;padding:20px;width:min(420px,95vw)}
-.ltitle{font-family:'Russo One',sans-serif;font-size:18px;color:#00f5ff;text-align:center;letter-spacing:3px;margin-bottom:12px}
-.codebig{font-family:'Russo One',sans-serif;font-size:36px;color:#ffff00;letter-spacing:8px;text-align:center;padding:10px;background:rgba(15,15,42,1);border:2px dashed rgba(255,255,0,.5);border-radius:10px;margin-bottom:6px;cursor:pointer}
-.plist{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;min-height:40px}
-.pslot{background:rgba(15,15,42,1);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:9px 12px;font-size:13px;display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.5)}
-.pslot.filled{border-color:rgba(0,245,255,.35);color:#fff}
-.pslot-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.3)}
+.lbox{background:rgba(10,10,30,.95);border:1px solid rgba(0,212,255,.3);border-radius:20px;padding:22px;width:min(420px,95vw);box-shadow:0 8px 40px rgba(0,0,0,.5)}
+.ltitle{font-family:'Russo One',sans-serif;font-size:18px;color:#00d4ff;text-align:center;letter-spacing:4px;margin-bottom:14px}
+.codebig{font-family:'Russo One',sans-serif;font-size:40px;color:#ffd600;letter-spacing:10px;text-align:center;padding:12px;background:rgba(12,12,36,1);border:2px dashed rgba(255,214,0,.4);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:border-color .2s}
+.codebig:active{border-color:#ffd600}
+.plist{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;min-height:40px}
+.pslot{background:rgba(12,12,36,.8);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 14px;font-size:13px;display:flex;align-items:center;gap:9px;color:rgba(255,255,255,.4)}
+.pslot.filled{border-color:rgba(0,212,255,.3);color:#fff}
+.pslot-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
 
 /* ── GAME SCREEN ── */
-#sGame{padding:0;justify-content:flex-start;overflow:hidden;gap:0}
-.opponents-bar{display:flex;gap:6px;padding:8px 10px 6px;overflow-x:auto;min-height:78px;align-items:center;background:rgba(0,0,0,.35);width:100%;flex-shrink:0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#sGame{padding:0;justify-content:flex-start;overflow:hidden;gap:0;background:#080816}
+#sGame::before{display:none}
+
+/* ── OPPONENTS BAR ── */
+.opponents-bar{display:flex;gap:8px;padding:8px 10px 6px;overflow-x:auto;min-height:82px;align-items:center;background:rgba(0,0,0,.5);width:100%;flex-shrink:0;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-bottom:1px solid rgba(255,255,255,.06)}
 .opponents-bar::-webkit-scrollbar{display:none}
-.opp{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:62px;padding:5px 4px;border-radius:10px;border:2px solid transparent;transition:border-color .25s,background .25s;flex-shrink:0}
-.opp.active{border-color:rgba(255,220,0,.7);background:rgba(255,220,0,.08);animation:oppulse 1s ease-in-out infinite}
-@keyframes oppulse{0%,100%{box-shadow:0 0 0 0 rgba(255,220,0,.3)}50%{box-shadow:0 0 10px 3px rgba(255,220,0,.25)}}
-.opp-circle{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Russo One',sans-serif;font-size:13px;color:#050510;font-weight:900;border:2px solid rgba(255,255,255,.25);flex-shrink:0}
-.opp-name{font-family:'Russo One',sans-serif;font-size:9px;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:62px;text-align:center;margin-top:1px}
-.opp-count{font-family:'Russo One',sans-serif;font-size:19px;color:#fff;line-height:1}
-.opp-uno{color:#ff006e;font-size:9px;letter-spacing:2px;font-weight:900;animation:unopop .5s ease infinite alternate}
-@keyframes unopop{from{opacity:.6}to{opacity:1}}
-.opp-bot{font-size:8px;color:rgba(57,255,20,.6);letter-spacing:1px}
+.opp{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:64px;padding:6px 5px;border-radius:12px;border:2px solid transparent;transition:border-color .25s,background .25s,box-shadow .25s;flex-shrink:0}
+.opp.active{border-color:rgba(255,214,0,.8);background:rgba(255,214,0,.07);box-shadow:0 0 14px rgba(255,214,0,.2);animation:oppulse 1.2s ease-in-out infinite}
+@keyframes oppulse{0%,100%{box-shadow:0 0 8px rgba(255,214,0,.2)}50%{box-shadow:0 0 18px rgba(255,214,0,.4)}}
+.opp-circle{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Russo One',sans-serif;font-size:13px;color:#000;font-weight:900;border:2px solid rgba(255,255,255,.2);flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.opp-name{font-family:'Russo One',sans-serif;font-size:9px;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:64px;text-align:center}
+.opp-cards{display:flex;gap:-4px;align-items:center;justify-content:center}
+.opp-count{font-family:'Russo One',sans-serif;font-size:21px;color:#fff;line-height:1}
+.opp-uno{color:#ff1744;font-size:9px;letter-spacing:2px;font-weight:900;animation:unopop .5s ease infinite alternate}
+@keyframes unopop{from{opacity:.5}to{opacity:1;text-shadow:0 0 8px #ff1744}}
+.opp-bot{font-size:8px;color:rgba(46,204,64,.7);letter-spacing:1px}
 
-.table-area{flex:1;display:flex;align-items:center;justify-content:center;gap:16px;padding:8px 12px;overflow:hidden;min-height:0}
-.discard-pile{display:flex;align-items:center;justify-content:center}
-.draw-wrap{display:flex;flex-direction:column;align-items:center;gap:5px}
-.deck-count-lbl{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:2px;text-align:center}
-.info-col{display:flex;flex-direction:column;align-items:center;gap:8px}
-.color-ring{width:34px;height:34px;border-radius:50%;border:3px solid rgba(255,255,255,.5);transition:background .3s,box-shadow .3s;flex-shrink:0}
-.dir-badge{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:3px 10px;font-size:14px;color:rgba(255,255,255,.6);letter-spacing:2px}
-.last-action{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:1px;text-align:center;max-width:80px;line-height:1.4}
+/* ── TABLE AREA ── */
+.table-area{flex:1;display:flex;align-items:center;justify-content:center;gap:18px;padding:10px 14px;overflow:hidden;min-height:0;position:relative;background:radial-gradient(ellipse at center,rgba(0,40,20,.6) 0%,transparent 70%)}
+.table-area::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(0,80,30,.15) 30%,transparent 70%);pointer-events:none}
+.discard-pile{display:flex;align-items:center;justify-content:center;position:relative;z-index:1}
+.discard-pile::before{content:'';position:absolute;width:82px;height:122px;border-radius:13px;border:1px dashed rgba(255,255,255,.08);background:rgba(255,255,255,.02)}
+.draw-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;z-index:1}
+.deck-count-lbl{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:2px;text-align:center}
+.info-col{display:flex;flex-direction:column;align-items:center;gap:10px;position:relative;z-index:1}
+.color-ring{width:36px;height:36px;border-radius:50%;border:3px solid rgba(255,255,255,.4);transition:background .3s,box-shadow .35s;flex-shrink:0}
+.dir-badge{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 12px;font-size:15px;color:rgba(255,255,255,.5);letter-spacing:2px}
+.last-action{font-size:10px;color:rgba(255,255,255,.28);letter-spacing:1px;text-align:center;max-width:86px;line-height:1.5}
 
-.hand-area{background:rgba(0,0,0,.45);padding:7px 10px 10px;border-top:1px solid rgba(255,255,255,.08);flex-shrink:0;width:100%}
-.hand-top{display:flex;justify-content:space-between;align-items:center;padding-bottom:5px}
-.my-label{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:2px;color:#00f5ff}
-.turn-badge{font-family:'Russo One',sans-serif;font-size:10px;padding:4px 10px;border-radius:12px;letter-spacing:1px;transition:all .3s}
-.turn-me{background:rgba(57,255,20,.15);color:#39ff14;border:1px solid rgba(57,255,20,.4);animation:mepulse 1s ease-in-out infinite}
-@keyframes mepulse{0%,100%{box-shadow:0 0 0 0 rgba(57,255,20,.3)}50%{box-shadow:0 0 8px 2px rgba(57,255,20,.2)}}
-.turn-other{background:rgba(255,255,255,.05);color:rgba(255,255,255,.35);border:1px solid rgba(255,255,255,.08)}
-.turn-bot{background:rgba(255,140,0,.1);color:rgba(255,140,0,.7);border:1px solid rgba(255,140,0,.2)}
-.hand-scroll{display:flex;gap:7px;overflow-x:auto;padding:3px 3px 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+/* ── HAND AREA ── */
+.hand-area{background:rgba(0,0,0,.55);padding:8px 10px 12px;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0;width:100%;position:relative;transition:opacity .25s}
+.hand-area.not-my-turn::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:20;pointer-events:all;cursor:not-allowed}
+.hand-area.not-my-turn .hand-scroll{opacity:.4;pointer-events:none}
+.hand-area.my-turn{box-shadow:inset 0 1px 0 rgba(46,204,64,.3)}
+.hand-top{display:flex;justify-content:space-between;align-items:center;padding-bottom:6px}
+.my-label{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:2px;color:#00d4ff}
+.turn-badge{font-family:'Russo One',sans-serif;font-size:10px;padding:5px 12px;border-radius:14px;letter-spacing:1px;transition:all .3s}
+.turn-me{background:rgba(46,204,64,.18);color:#2ecc40;border:1px solid rgba(46,204,64,.45);animation:mepulse 1.1s ease-in-out infinite}
+@keyframes mepulse{0%,100%{box-shadow:0 0 0 0 rgba(46,204,64,.25)}50%{box-shadow:0 0 10px 3px rgba(46,204,64,.18)}}
+.turn-other{background:rgba(255,255,255,.04);color:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.07)}
+.turn-bot{background:rgba(255,150,0,.1);color:rgba(255,150,0,.7);border:1px solid rgba(255,150,0,.2)}
+.hand-scroll{display:flex;gap:8px;overflow-x:auto;padding:4px 4px 5px;-webkit-overflow-scrolling:touch;scrollbar-width:none;transition:opacity .25s;min-height:96px;align-items:center}
 .hand-scroll::-webkit-scrollbar{display:none}
 
 /* ── UNO CARD ── */
-.ucard{width:58px;height:88px;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;border:3px solid rgba(255,255,255,.25);box-shadow:0 3px 10px rgba(0,0,0,.5);cursor:default;transition:transform .15s,box-shadow .15s,opacity .15s;flex-shrink:0;font-family:'Russo One',sans-serif;overflow:hidden}
-.ucard.large{width:78px;height:118px;border-radius:11px;cursor:default}
-.ucard-back{background:linear-gradient(135deg,#14003d,#280070);border-color:rgba(255,255,255,.15);cursor:pointer}
-.ucard-back::after{content:'UNO';position:absolute;color:rgba(255,255,255,.07);font-size:16px;font-family:'Russo One',sans-serif;letter-spacing:3px;transform:rotate(-30deg)}
-.ucard.playable{box-shadow:0 0 18px rgba(255,255,255,.55),0 3px 10px rgba(0,0,0,.5)!important;border-color:rgba(255,255,255,.95)!important;cursor:pointer}
-.ucard.playable:active{transform:translateY(-8px) scale(1.06)!important}
-.ucard.dim{opacity:.45;cursor:default}
-.ucard-val{font-family:'Russo One',sans-serif;font-size:26px;color:#fff;line-height:1;text-shadow:0 1px 3px rgba(0,0,0,.6)}
-.ucard-val.sm{font-size:19px}
-.ucard-corner{position:absolute;font-family:'Russo One',sans-serif;font-size:10px;color:rgba(255,255,255,.85);line-height:1}
-.ucard-corner.tl{top:3px;left:5px}
-.ucard-corner.br{bottom:3px;right:5px;transform:rotate(180deg)}
-.uc-red{background:linear-gradient(145deg,#b5101c,#e32636);border-color:rgba(255,130,130,.35)}
-.uc-blue{background:linear-gradient(145deg,#0b449a,#1565c0);border-color:rgba(100,160,255,.35)}
-.uc-green{background:linear-gradient(145deg,#185a1c,#2e7d32);border-color:rgba(100,220,100,.35)}
-.uc-yellow{background:linear-gradient(145deg,#d97000,#f9a825);border-color:rgba(255,220,80,.35)}
-.uc-wild{background:conic-gradient(#e32636 0 25%,#f9a825 25% 50%,#2e7d32 50% 75%,#1565c0 75% 100%);background-color:#111;border-color:rgba(255,255,255,.4)}
+.ucard{width:60px;height:90px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;border:2px solid rgba(255,255,255,.2);box-shadow:0 4px 12px rgba(0,0,0,.55);cursor:default;transition:transform .15s,box-shadow .15s,opacity .15s;flex-shrink:0;font-family:'Russo One',sans-serif;overflow:hidden}
+.ucard::before{content:'';position:absolute;width:58%;height:70%;border-radius:50%;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.15);pointer-events:none}
+.ucard.large{width:80px;height:120px;border-radius:12px;cursor:default}
+.ucard.large::before{width:60%;height:72%}
+.ucard-back{background:linear-gradient(145deg,#10003a,#220060);border-color:rgba(255,255,255,.12);cursor:pointer}
+.ucard-back::before{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08)}
+.ucard-back::after{content:'UNO';position:absolute;color:rgba(255,255,255,.1);font-size:14px;font-family:'Russo One',sans-serif;letter-spacing:3px;transform:rotate(-30deg)}
+.ucard.playable{box-shadow:0 0 22px rgba(255,255,255,.6),0 4px 12px rgba(0,0,0,.5)!important;border-color:rgba(255,255,255,.9)!important;cursor:pointer;transform:translateY(-4px)}
+.ucard.playable:hover{transform:translateY(-8px);box-shadow:0 0 28px rgba(255,255,255,.7),0 6px 18px rgba(0,0,0,.5)!important}
+.ucard.playable:active{transform:translateY(-2px) scale(1.04)!important}
+.ucard.dim{opacity:.38;cursor:default}
+.ucard-val{font-family:'Russo One',sans-serif;font-size:26px;color:#fff;line-height:1;text-shadow:0 1px 4px rgba(0,0,0,.7);position:relative;z-index:1}
+.ucard-val.sm{font-size:18px}
+.ucard-corner{position:absolute;font-family:'Russo One',sans-serif;font-size:11px;color:rgba(255,255,255,.9);line-height:1;z-index:1;text-shadow:0 1px 2px rgba(0,0,0,.8)}
+.ucard-corner.tl{top:4px;left:6px}
+.ucard-corner.br{bottom:4px;right:6px;transform:rotate(180deg)}
+.uc-red{background:linear-gradient(145deg,#980f1a,#d42030);border-color:rgba(255,120,120,.3)}
+.uc-blue{background:linear-gradient(145deg,#0a3a85,#1555b0);border-color:rgba(80,150,255,.3)}
+.uc-green{background:linear-gradient(145deg,#124e16,#1e6e22);border-color:rgba(80,200,80,.3)}
+.uc-yellow{background:linear-gradient(145deg,#b86000,#e09020);border-color:rgba(255,200,60,.3)}
+.uc-wild{background:conic-gradient(#d42030 0 25%,#e09020 25% 50%,#1e6e22 50% 75%,#1555b0 75% 100%);border-color:rgba(255,255,255,.35)}
+.uc-wild::before{background:rgba(0,0,0,.15);border-color:rgba(255,255,255,.2)}
 
-/* Bot thinking indicator */
-#botThinking{position:fixed;top:88px;left:50%;transform:translateX(-50%);z-index:60;background:rgba(10,10,31,.9);border:1px solid rgba(255,140,0,.4);border-radius:20px;padding:5px 16px;font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:2px;color:rgba(255,140,0,.8);display:none;pointer-events:none}
+/* ── DRAW PILE LOCKED ── */
+.draw-pile-locked{pointer-events:none!important;opacity:.35!important}
 
-#passBtn{position:fixed;bottom:14px;right:14px;z-index:80;display:none;font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:1px;padding:11px 18px;border:none;border-radius:10px;cursor:pointer;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.2);touch-action:manipulation}
+/* ── BOT THINKING ── */
+#botThinking{position:fixed;top:92px;left:50%;transform:translateX(-50%);z-index:60;background:rgba(10,10,30,.95);border:1px solid rgba(255,150,0,.35);border-radius:22px;padding:6px 18px;font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:2px;color:rgba(255,150,0,.85);display:none;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+
+/* ── PASS BUTTON ── */
+#passBtn{position:fixed;bottom:16px;right:16px;z-index:80;display:none;font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:1.5px;padding:12px 20px;border:none;border-radius:12px;cursor:pointer;background:rgba(255,255,255,.1);color:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,.18);touch-action:manipulation;transition:background .15s}
 #passBtn:active{opacity:.7}
-#unoBtnWrap{position:fixed;bottom:110px;right:14px;z-index:80;display:none}
-#unoBtn{font-family:'Russo One',sans-serif;font-size:20px;letter-spacing:3px;padding:12px 18px;border:none;border-radius:12px;cursor:pointer;background:linear-gradient(135deg,#a00018,#ff006e);color:#fff;box-shadow:0 0 24px rgba(255,0,110,.55);animation:unopulse .8s ease-in-out infinite;touch-action:manipulation}
-@keyframes unopulse{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+#unoBtnWrap{position:fixed;bottom:115px;right:16px;z-index:80;display:none}
+#unoBtn{font-family:'Russo One',sans-serif;font-size:21px;letter-spacing:4px;padding:13px 20px;border:none;border-radius:14px;cursor:pointer;background:linear-gradient(135deg,#8a0014,#ff1744);color:#fff;box-shadow:0 0 28px rgba(255,23,68,.5);animation:unopulse .85s ease-in-out infinite;touch-action:manipulation}
+@keyframes unopulse{0%,100%{transform:scale(1);box-shadow:0 0 22px rgba(255,23,68,.5)}50%{transform:scale(1.1);box-shadow:0 0 36px rgba(255,23,68,.7)}}
 
 /* ── COLOUR PICKER ── */
-#colorPick{position:fixed;inset:0;z-index:200;background:rgba(5,5,16,.93);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px}
+#colorPick{position:fixed;inset:0;z-index:200;background:rgba(5,5,18,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;backdrop-filter:blur(4px)}
 #colorPick.off{display:none}
-.cp-title{font-family:'Russo One',sans-serif;font-size:20px;letter-spacing:4px;color:#fff}
-.cp-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.cp-btn{width:118px;height:118px;border-radius:16px;border:3px solid rgba(255,255,255,.25);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Russo One',sans-serif;font-size:17px;letter-spacing:2px;color:#fff;transition:transform .15s;touch-action:manipulation}
+.cp-title{font-family:'Russo One',sans-serif;font-size:22px;letter-spacing:5px;color:#fff}
+.cp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.cp-btn{width:124px;height:124px;border-radius:18px;border:3px solid rgba(255,255,255,.2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Russo One',sans-serif;font-size:17px;letter-spacing:2px;color:#fff;transition:transform .15s,box-shadow .15s;touch-action:manipulation}
+.cp-btn:hover{transform:scale(1.05)}
 .cp-btn:active{transform:scale(.92)}
-.cp-red{background:linear-gradient(145deg,#b5101c,#e32636);box-shadow:0 0 18px rgba(227,38,54,.45)}
-.cp-blue{background:linear-gradient(145deg,#0b449a,#1565c0);box-shadow:0 0 18px rgba(21,101,192,.45)}
-.cp-green{background:linear-gradient(145deg,#185a1c,#2e7d32);box-shadow:0 0 18px rgba(46,125,50,.45)}
-.cp-yellow{background:linear-gradient(145deg,#d97000,#f9a825);box-shadow:0 0 18px rgba(249,168,37,.45)}
+.cp-red{background:linear-gradient(145deg,#980f1a,#d42030);box-shadow:0 0 22px rgba(212,32,48,.4)}
+.cp-blue{background:linear-gradient(145deg,#0a3a85,#1555b0);box-shadow:0 0 22px rgba(21,85,176,.4)}
+.cp-green{background:linear-gradient(145deg,#124e16,#1e6e22);box-shadow:0 0 22px rgba(30,110,34,.4)}
+.cp-yellow{background:linear-gradient(145deg,#b86000,#e09020);box-shadow:0 0 22px rgba(224,144,32,.4)}
 
 /* ── WINNER ── */
-.winner-box{background:rgba(10,10,31,.97);border:2px solid rgba(0,245,255,.4);border-radius:20px;padding:32px 28px;width:min(340px,92vw);display:flex;flex-direction:column;align-items:center;gap:16px}
-.winner-title{font-family:'Russo One',sans-serif;font-size:26px;color:#ffff00;letter-spacing:4px;text-align:center}
-.winner-name{font-family:'Russo One',sans-serif;font-size:34px;color:#00f5ff;text-align:center;filter:drop-shadow(0 0 14px #00f5ff)}
-.winner-sub{font-size:12px;color:rgba(255,255,255,.4);letter-spacing:2px;text-align:center}
+.winner-box{background:rgba(10,10,30,.98);border:1px solid rgba(0,212,255,.4);border-radius:22px;padding:36px 30px;width:min(340px,92vw);display:flex;flex-direction:column;align-items:center;gap:18px;box-shadow:0 12px 50px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.06)}
+.winner-title{font-family:'Russo One',sans-serif;font-size:28px;color:#ffd600;letter-spacing:5px;text-align:center;text-shadow:0 0 20px rgba(255,214,0,.4)}
+.winner-name{font-family:'Russo One',sans-serif;font-size:36px;color:#00d4ff;text-align:center;filter:drop-shadow(0 0 16px #00d4ff)}
+.winner-sub{font-size:12px;color:rgba(255,255,255,.38);letter-spacing:2px;text-align:center}
 
 /* ── TOAST ── */
-.toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(10,10,31,.97);border:1px solid rgba(0,245,255,.4);border-radius:10px;padding:9px 20px;font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:2px;color:#00f5ff;white-space:nowrap;pointer-events:none;animation:toastin .3s ease;max-width:90vw;text-align:center}
-@keyframes toastin{from{opacity:0;top:8px}to{opacity:1;top:18px}}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(10,10,30,.98);border:1px solid rgba(0,212,255,.35);border-radius:12px;padding:10px 22px;font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:2px;color:#00d4ff;white-space:nowrap;pointer-events:none;animation:toastin .3s ease;max-width:90vw;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+@keyframes toastin{from{opacity:0;top:8px}to{opacity:1;top:20px}}
+
+/* ── WAITING OVERLAY TEXT ── */
+.not-my-turn-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:25;font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:3px;color:rgba(255,255,255,.4);pointer-events:none;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -143,10 +173,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050510;color:#fff;f
   <div class="gsub">MULTIPLAYER</div>
   <div class="sep"></div>
   <div class="pcard">
-    <div style="font-size:26px">🃏</div>
+    <div style="font-size:28px">🃏</div>
     <div style="flex:1;min-width:0">
       <div class="pname" id="pName">PLAYER</div>
-      <div style="font-size:11px;color:rgba(255,255,255,.4);letter-spacing:1px">Bereit zum Spielen</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.35);letter-spacing:1px">Bereit zum Spielen</div>
     </div>
   </div>
 
@@ -165,19 +195,19 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050510;color:#fff;f
   <!-- Multiplayer -->
   <button class="btn bcyan" id="multiBtn">⚔️ MULTIPLAYER</button>
   <div class="multibtns" id="multibtns">
-    <button class="btn bcyan" id="createBtn" style="font-size:13px;padding:11px">+ RAUM ERSTELLEN</button>
-    <button class="btn bghost" id="joinShowBtn" style="font-size:13px;padding:11px">🔍 RAUM BEITRETEN</button>
+    <button class="btn bcyan" id="createBtn" style="font-size:13px;padding:12px">+ RAUM ERSTELLEN</button>
+    <button class="btn bghost" id="joinShowBtn" style="font-size:13px;padding:12px">🔍 RAUM BEITRETEN</button>
     <div class="joinrow" id="joinRow">
       <input class="jinp" id="joinInput" maxlength="4" placeholder="CODE" autocomplete="off" spellcheck="false"/>
-      <button class="btn bcyan" id="joinBtn" style="width:auto;padding:11px 18px;font-size:13px">JOIN</button>
+      <button class="btn bcyan" id="joinBtn" style="width:auto;padding:12px 20px;font-size:13px">JOIN</button>
     </div>
   </div>
 
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center">
     <input class="nameinp" id="nameInp" maxlength="16" placeholder="NAME ÄNDERN..." autocomplete="off" spellcheck="false"/>
-    <button class="btn bcyan" id="nameBtn" style="width:auto;padding:11px 16px;font-size:13px">OK</button>
+    <button class="btn bcyan" id="nameBtn" style="width:auto;padding:12px 18px;font-size:13px">OK</button>
   </div>
-  <a href="../menu.html" class="btn bghost" style="font-family:'Russo One',sans-serif;font-size:13px;padding:10px">← SPIELAUSWAHL</a>
+  <a href="../menu.html" class="btn bghost" style="font-family:'Russo One',sans-serif;font-size:13px;padding:11px">← SPIELAUSWAHL</a>
   <div class="berr" id="menuErr"></div>
 </div>
 
@@ -186,11 +216,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050510;color:#fff;f
   <div class="lbox">
     <div class="ltitle">LOBBY</div>
     <div class="codebig" id="codeVal" onclick="copyCode()">----</div>
-    <div style="font-size:10px;color:rgba(255,255,255,.3);letter-spacing:2px;text-align:center;margin-bottom:10px">TIPPE ZUM KOPIEREN</div>
+    <div style="font-size:10px;color:rgba(255,255,255,.25);letter-spacing:2px;text-align:center;margin-bottom:12px">TIPPE ZUM KOPIEREN</div>
     <div class="plist" id="pListEl"></div>
     <button class="btn bgreen" id="startBtn" style="margin-bottom:8px;display:none">▶ SPIEL STARTEN</button>
     <div class="berr" id="lobbyInfo">Warte auf weitere Spieler…</div>
-    <button class="btn bghost" id="leaveBtn" style="margin-top:4px">← VERLASSEN</button>
+    <button class="btn bghost" id="leaveBtn" style="margin-top:6px">← VERLASSEN</button>
   </div>
 </div>
 
@@ -211,23 +241,24 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050510;color:#fff;f
       <div class="last-action" id="lastActionLbl"></div>
     </div>
   </div>
-  <div class="hand-area">
+  <div class="hand-area not-my-turn" id="handArea">
     <div class="hand-top">
       <div class="my-label" id="myLabel">ICH (0)</div>
       <div class="turn-badge turn-other" id="turnBadge">WARTEN…</div>
     </div>
     <div class="hand-scroll" id="handEl"></div>
+    <div class="not-my-turn-label" id="waitingLabel">WARTEN…</div>
   </div>
 </div>
 
 <!-- ══ WINNER ═════════════════════════════════════════════════════ -->
 <div id="sWinner" class="screen off">
   <div class="winner-box">
-    <div style="font-size:52px">🏆</div>
+    <div style="font-size:56px">🏆</div>
     <div class="winner-title">GEWONNEN!</div>
     <div class="winner-name" id="winnerNameEl">---</div>
     <div class="winner-sub" id="winnerSubEl"></div>
-    <button class="btn bgreen" id="playAgainBtn" style="display:none;margin-top:4px">↺ NOCHMAL</button>
+    <button class="btn bgreen" id="playAgainBtn" style="display:none;margin-top:6px">↺ NOCHMAL</button>
     <button class="btn bghost" id="wLeaveBtn">← ZUM MENÜ</button>
   </div>
 </div>
@@ -257,8 +288,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050510;color:#fff;f
 // ════════════════════════════════════════════════════════
 var SUPA_URL   = 'https://ozvyymrqibpyqccgszlz.supabase.co';
 var SUPA_KEY   = 'sb_publishable_30WmZF8d8h_rUSrTGtBwnQ_Kn9gquwL';
-var PLR_COLORS = ['#ff006e','#ff6b00','#ffdd00','#39ff14','#00f5ff','#bf00ff','#ff3cac','#00ffa3'];
-var COLOR_HEX  = {red:'#e32636', blue:'#1565c0', green:'#2e7d32', yellow:'#f9a825'};
+var PLR_COLORS = ['#ff1744','#ff6d00','#ffd600','#2ecc40','#00d4ff','#d500f9','#ff4081','#00e5ff'];
+var COLOR_HEX  = {red:'#d42030', blue:'#1555b0', green:'#1e6e22', yellow:'#e09020'};
 var COLOR_NAME = {red:'Rot', blue:'Blau', green:'Grün', yellow:'Gelb'};
 var BOT_NAMES  = ['BOT ALEX','BOT SARA','BOT MAX'];
 
@@ -487,7 +518,6 @@ function doBotTurn(){
 }
 
 function botPickCard(playable, fullHand){
-  // Priority: draw2 > skip > reverse > wild4 > colored cards > wild
   var prio=['draw2','skip','reverse','wild4'];
   for(var i=0;i<prio.length;i++){
     var f=playable.find(function(c){return c.v===prio[i];});
@@ -499,7 +529,6 @@ function botPickCard(playable, fullHand){
 }
 
 function botPickColor(hand){
-  // Choose the most frequent colour in remaining hand
   var counts={red:0,blue:0,green:0,yellow:0};
   hand.forEach(function(c){ if(counts[c.c]!==undefined) counts[c.c]++; });
   var best='red', max=-1;
@@ -553,7 +582,7 @@ function joinRoom(){
   if(code.length!==4){ setErr('Bitte 4-stelligen Code eingeben!'); return; }
   isSolo=false; myRoom=code; myId=myName+'_'+Date.now(); isHost=false;
   lobby={}; botIds=[];
-  lobby[myId]={id:myId,name:myName,ci:0}; // add self so lobby shows us immediately
+  lobby[myId]={id:myId,name:myName,ci:0};
   showScreen('sLobby');
   document.getElementById('codeVal').textContent=myRoom;
   document.getElementById('startBtn').style.display='none';
@@ -668,7 +697,7 @@ function updateLobbyUI(){
   ids.forEach(function(pid,i){
     var p=lobby[pid]; var col=PLR_COLORS[i%PLR_COLORS.length];
     html+='<div class="pslot filled"><div class="pslot-dot" style="background:'+col+'"></div>'
-      +(p.name||'?')+(pid===myId?' <span style="color:rgba(0,245,255,.5);font-size:11px">(Du)</span>':'')+'</div>';
+      +(p.name||'?')+(pid===myId?' <span style="color:rgba(0,212,255,.5);font-size:11px">(Du)</span>':'')+'</div>';
   });
   document.getElementById('pListEl').innerHTML=html;
   var info=document.getElementById('lobbyInfo'), sb2=document.getElementById('startBtn');
@@ -711,24 +740,29 @@ function updateGameUI(){
 
   // Colour ring
   var ring=document.getElementById('colorRing');
-  ring.style.background=hex; ring.style.boxShadow='0 0 12px '+hex;
+  ring.style.background=hex; ring.style.boxShadow='0 0 16px '+hex+', 0 0 6px '+hex;
 
   // Direction, deck count, last action
   document.getElementById('dirBadge').textContent=gs.dir===1?'▶▶':'◀◀';
   document.getElementById('deckCountLbl').textContent=(gs.deckCount||0)+' Karten';
   document.getElementById('lastActionLbl').textContent=gs.lastAction||'';
 
-  // Draw pile
+  // Draw pile — locked when not my turn
   var dp=document.getElementById('drawPileEl');
   var canDraw=isMyTurn&&!gs.drewUid;
-  dp.style.opacity=(isMyTurn&&!isBotTurn())?'1':'0.4';
-  dp.style.cursor=canDraw?'pointer':'default';
+  if(isMyTurn&&!isBotTurn()){
+    dp.classList.remove('draw-pile-locked');
+    dp.style.opacity='1';
+    dp.style.cursor=canDraw?'pointer':'default';
+  } else {
+    dp.classList.add('draw-pile-locked');
+  }
 
   // Discard
   var discEl=document.getElementById('discardEl'); discEl.innerHTML='';
   if(gs.topCard){
     var tc=buildCardEl(gs.topCard,false,true); tc.classList.remove('dim');
-    if(gs.topCard.c==='wild'){ tc.style.outline='3px solid '+hex; tc.style.outlineOffset='2px'; }
+    if(gs.topCard.c==='wild'){ tc.style.outline='3px solid '+hex; tc.style.outlineOffset='3px'; }
     discEl.appendChild(tc);
   }
 
@@ -756,6 +790,21 @@ function updateGameUI(){
     if(isMyTurn&&gs.drewUid===card.u&&canPlay(card,gs.topCard,gs.curColor)) pl=true;
     handEl.appendChild(buildCardEl(card,pl,false));
   });
+
+  // Hand area turn locking
+  var handArea=document.getElementById('handArea');
+  var waitingLabel=document.getElementById('waitingLabel');
+  if(isMyTurn){
+    handArea.classList.remove('not-my-turn');
+    handArea.classList.add('my-turn');
+    waitingLabel.style.display='none';
+  } else {
+    handArea.classList.add('not-my-turn');
+    handArea.classList.remove('my-turn');
+    var botTurnNow=cur&&botIds.indexOf(cur.id)!==-1;
+    waitingLabel.style.display='block';
+    waitingLabel.textContent=botTurnNow?'BOT DENKT NACH…':'WARTEN…';
+  }
 
   // Turn badge
   var tb=document.getElementById('turnBadge');
