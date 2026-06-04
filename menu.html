@@ -224,6 +224,31 @@
   </div>
 </div>
 
+<!-- ── ADMIN MICRO BUTTON ── -->
+<button id="adminDot" onclick="openAdminPanel()" style="position:fixed;bottom:14px;left:14px;z-index:400;width:14px;height:14px;border-radius:50%;background:#39ff14;border:none;cursor:pointer;opacity:.5;padding:0;touch-action:manipulation;box-shadow:0 0 7px rgba(57,255,20,.6)"></button>
+
+<!-- ── ADMIN OVERLAY ── -->
+<div id="adminOv" onclick="if(event.target===this)closeAdminPanel()" style="position:fixed;inset:0;z-index:500;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.65);backdrop-filter:blur(4px)">
+  <div style="background:rgba(5,5,16,.97);border:2px solid rgba(57,255,20,.3);border-radius:18px;padding:22px 20px;width:min(300px,90vw);font-family:'Russo One',sans-serif;display:flex;flex-direction:column;gap:10px;position:relative">
+    <button onclick="closeAdminPanel()" style="position:absolute;top:10px;right:12px;background:none;border:none;color:rgba(255,255,255,.3);font-size:18px;cursor:pointer;line-height:1">✕</button>
+    <div id="adminUnlockSec">
+      <input id="adminCodeInp" type="password" placeholder="..." onkeydown="if(event.key==='Enter')tryAdminUnlock()" autocomplete="off" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:9px;padding:10px 14px;font-family:'Russo One',sans-serif;font-size:14px;outline:none;width:100%;letter-spacing:3px"/>
+      <div id="adminCodeErr" style="font-size:10px;color:#ff4444;margin-top:5px;min-height:14px;text-align:center"></div>
+      <button onclick="tryAdminUnlock()" style="background:rgba(57,255,20,.12);border:1px solid rgba(57,255,20,.3);color:#39ff14;border-radius:9px;padding:9px;font-size:12px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:2px;width:100%;margin-top:4px;touch-action:manipulation">ENTER</button>
+    </div>
+    <div id="adminToolsSec" style="display:none;flex-direction:column;gap:10px">
+      <div style="font-size:9px;letter-spacing:3px;color:#39ff14;text-align:center;margin-bottom:2px">⚡ ADMIN PANEL</div>
+      <div style="border-top:1px solid rgba(57,255,20,.15);padding-top:10px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-size:9px;letter-spacing:2px;color:rgba(255,215,0,.7)">🪙 COINS GEBEN</div>
+        <input id="adminCoinUser" type="text" placeholder="USERNAME" autocomplete="off" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;font-family:'Russo One',sans-serif;font-size:12px;outline:none;width:100%;letter-spacing:1px"/>
+        <input id="adminCoinAmt" type="number" placeholder="MENGE" min="1" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;font-family:'Russo One',sans-serif;font-size:12px;outline:none;width:100%"/>
+        <button onclick="adminGiveCoins()" style="background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.35);color:#ffd700;border-radius:8px;padding:8px;font-size:12px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;width:100%;touch-action:manipulation">GEBEN</button>
+        <div id="adminCoinMsg" style="font-size:10px;color:#39ff14;min-height:14px;text-align:center;letter-spacing:1px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ── JACKY OVERLAY ── -->
 <div id="jackyOverlay" onclick="closeJacky()">
   <div style="font-size:80px">🔥</div>
@@ -689,6 +714,56 @@ async function onInlineSkinClick(skin) {
   document.getElementById('inlineShopCoins').textContent = getCoins();
   renderInlineShop();
   showToastPortal('🎉 '+skin.name+' gekauft & aktiviert!');
+}
+
+// ── ADMIN PANEL ──────────────────────────────────────────────────
+var isPortalAdmin = localStorage.getItem('adminUnlocked') === 'true';
+
+function openAdminPanel() {
+  document.getElementById('adminOv').style.display = 'flex';
+  if (isPortalAdmin) {
+    document.getElementById('adminUnlockSec').style.display = 'none';
+    document.getElementById('adminToolsSec').style.display = 'flex';
+  } else {
+    document.getElementById('adminUnlockSec').style.display = 'block';
+    document.getElementById('adminToolsSec').style.display = 'none';
+    setTimeout(function(){ document.getElementById('adminCodeInp').focus(); }, 100);
+  }
+}
+function closeAdminPanel() {
+  document.getElementById('adminOv').style.display = 'none';
+}
+function tryAdminUnlock() {
+  var code  = document.getElementById('adminCodeInp').value;
+  var errEl = document.getElementById('adminCodeErr');
+  if (code === 'enzae67') {
+    isPortalAdmin = true;
+    localStorage.setItem('adminUnlocked', 'true');
+    document.getElementById('adminUnlockSec').style.display = 'none';
+    document.getElementById('adminToolsSec').style.display = 'flex';
+    errEl.textContent = '';
+  } else {
+    errEl.textContent = '✗ Falscher Code';
+    document.getElementById('adminCodeInp').value = '';
+  }
+}
+async function adminGiveCoins() {
+  var username = (document.getElementById('adminCoinUser').value || '').trim().toUpperCase();
+  var amount   = parseInt(document.getElementById('adminCoinAmt').value || '0');
+  var msgEl    = document.getElementById('adminCoinMsg');
+  msgEl.style.color = '#39ff14';
+  msgEl.textContent = '';
+  if (!username || !amount || amount <= 0) { msgEl.style.color='#ff4444'; msgEl.textContent='Ungültige Eingabe'; return; }
+  if (!sb) { msgEl.style.color='#ff4444'; msgEl.textContent='Keine DB'; return; }
+  msgEl.textContent = '...';
+  var res = await sb.from('players').select('coins').eq('username', username).single();
+  if (res.error || !res.data) { msgEl.style.color='#ff4444'; msgEl.textContent='Spieler nicht gefunden'; return; }
+  var newCoins = (res.data.coins || 0) + amount;
+  var upd = await sb.from('players').update({coins: newCoins}).eq('username', username);
+  if (upd.error) { msgEl.style.color='#ff4444'; msgEl.textContent='Fehler'; return; }
+  msgEl.textContent = '✓ '+username+' +'+amount+' 🪙';
+  document.getElementById('adminCoinAmt').value = '';
+  if (lbOpen) loadLb();
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────

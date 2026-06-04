@@ -1230,8 +1230,9 @@ function updateSpectateBar() {
 
 // ── ADMIN ─────────────────────────────────────────────────────────────────
 function checkAdminStatus() {
-  var u = (localStorage.getItem('authUser') || '').toUpperCase();
-  if (u !== 'ENZAE') return;
+  var u        = (localStorage.getItem('authUser') || '').toUpperCase();
+  var unlocked = localStorage.getItem('adminUnlocked') === 'true';
+  if (u !== 'ENZAE' && !unlocked) return;
   isAdminUser = true;
   var ap = document.getElementById('adminPanel');
   if (ap) ap.style.display = 'flex';
