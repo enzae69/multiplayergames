@@ -152,6 +152,12 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
   <div id="announceTxt" style="background:rgba(5,5,16,.96);border:2px solid rgba(255,0,110,.7);border-radius:18px;padding:22px 36px;font-family:'Russo One',sans-serif;font-size:22px;color:#fff;letter-spacing:3px;text-align:center;box-shadow:0 0 40px rgba(255,0,110,.35);max-width:80vw;word-break:break-word"></div>
 </div>
 
+<!-- ADMIN IMAGE OVERLAY -->
+<div id="adminImgOv" onclick="closeAdminImgLT()" style="position:fixed;inset:0;z-index:600;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:rgba(0,0,0,.82);cursor:pointer">
+  <div id="adminImgLabel" style="font-family:'Russo One',sans-serif;font-size:18px;color:#ff006e;letter-spacing:4px;text-shadow:0 0 20px rgba(255,0,110,.8)"></div>
+  <img id="adminImgEl" src="" alt="" style="max-width:85vw;max-height:72vh;border-radius:12px;box-shadow:0 0 40px rgba(255,0,110,.4);object-fit:contain"/>
+</div>
+
 <!-- ADMIN PANEL (fixed bottom-left, only visible to admin) -->
 <div id="adminPanel" style="position:fixed;bottom:24px;left:16px;z-index:300;display:none;flex-direction:column;gap:6px;background:rgba(5,5,16,.97);border:2px solid rgba(255,0,110,.6);border-radius:14px;padding:12px 10px;box-shadow:0 0 24px rgba(255,0,110,.25);font-family:'Russo One',sans-serif">
   <div style="font-size:9px;letter-spacing:3px;color:rgba(255,0,110,.8);text-align:center;margin-bottom:2px">⚡ ADMIN</div>
@@ -1155,6 +1161,9 @@ function joinChannel() {
     .on('broadcast',{event:'adminAnnounce'},function(m){
       if (m.payload && m.payload.text) showAnnouncement(m.payload.text);
     })
+    .on('broadcast',{event:'adminImage'},function(m){
+      if (m.payload && m.payload.url) showAdminImageLT(m.payload.username, m.payload.url);
+    })
     .subscribe();
   setTimeout(function(){
     if (roomCh) roomCh.send({type:'broadcast',event:'join',payload:{id:myId,name:progress.name}});
@@ -1270,6 +1279,23 @@ function adminKillAll() {
   roomCh.send({type:'broadcast', event:'adminKill', payload:{sender:myId}});
   Object.keys(peers).forEach(function(id){ peers[id].isDead = true; });
   if (isHost) checkRoundWin();
+}
+var _adminImgTimerLT = null;
+function showAdminImageLT(username, imageUrl) {
+  var ov  = document.getElementById('adminImgOv');
+  var img = document.getElementById('adminImgEl');
+  var lbl = document.getElementById('adminImgLabel');
+  if (!ov || !img) return;
+  if (lbl) lbl.textContent = username ? username.toUpperCase() : '';
+  img.src = imageUrl;
+  ov.style.display = 'flex';
+  if (_adminImgTimerLT) clearTimeout(_adminImgTimerLT);
+  _adminImgTimerLT = setTimeout(function(){ closeAdminImgLT(); }, 3000);
+}
+function closeAdminImgLT() {
+  var ov = document.getElementById('adminImgOv');
+  if (ov) ov.style.display = 'none';
+  if (_adminImgTimerLT) { clearTimeout(_adminImgTimerLT); _adminImgTimerLT = null; }
 }
 var _announceTimer = null;
 function showAnnouncement(text) {
@@ -1607,6 +1633,9 @@ window.addEventListener('DOMContentLoaded', function() {
         globalCh = sb.channel('portal-global')
           .on('broadcast', {event:'adminAnnounce'}, function(m) {
             if (m.payload && m.payload.text) showAnnouncement(m.payload.text);
+          })
+          .on('broadcast', {event:'adminImage'}, function(m) {
+            if (m.payload && m.payload.url) showAdminImageLT(m.payload.username, m.payload.url);
           })
           .subscribe();
       }
