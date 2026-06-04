@@ -1140,6 +1140,11 @@ function joinChannel() {
       if (d > ARENA_R - 0.8) { myX = myX/d*(ARENA_R-0.8); myZ = myZ/d*(ARENA_R-0.8); }
       myVY = JUMP_V * 0.6; // small upward bounce
     })
+    .on('broadcast',{event:'adminLaser'},function(m){
+      var L = m.payload;
+      if (!L || !L.type) return;
+      lasers.push({type:L.type, ang0:L.ang0||L.ang, ang:L.ang, t0:L.t0, speed:L.speed, color:L.color, offset:L.offset});
+    })
     .on('broadcast',{event:'adminKill'},function(m){
       if (m.payload.sender === myId) return;
       if (myDead) return;
@@ -1242,6 +1247,13 @@ function adminSpawnLaser() {
   if (!isAdminUser) return;
   if (gameState !== 'solo' && gameState !== 'multi') return;
   addLaser();
+  if (gameState === 'multi' && roomCh) {
+    var L = lasers[lasers.length - 1];
+    roomCh.send({type:'broadcast', event:'adminLaser', payload:{
+      type:L.type, ang0:L.ang0, ang:L.ang, t0:L.t0,
+      speed:L.speed, color:L.color, offset:L.offset
+    }});
+  }
 }
 function adminToggleInvincible() {
   if (!isAdminUser) return;
@@ -1254,14 +1266,10 @@ function adminToggleInvincible() {
 }
 function adminKillAll() {
   if (!isAdminUser) return;
-  if (gameState === 'multi' && roomCh) {
-    roomCh.send({type:'broadcast', event:'adminKill', payload:{sender:myId}});
-    Object.keys(peers).forEach(function(id){ peers[id].isDead = true; });
-    if (isHost) checkRoundWin();
-  } else if (gameState === 'solo') {
-    myDead = true;
-    showScreen('sResult');
-  }
+  if (gameState !== 'multi' || !roomCh) return;
+  roomCh.send({type:'broadcast', event:'adminKill', payload:{sender:myId}});
+  Object.keys(peers).forEach(function(id){ peers[id].isDead = true; });
+  if (isHost) checkRoundWin();
 }
 var _announceTimer = null;
 function showAnnouncement(text) {
