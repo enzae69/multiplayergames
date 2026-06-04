@@ -500,84 +500,77 @@ function updateCam() {
 
 // ── SKY ───────────────────────────────────────────────────────────────────
 function drawSky(t) {
-  // Very dark gradient base
+  // Dark background
   var bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#000004');
-  bg.addColorStop(0.6, '#020210');
-  bg.addColorStop(1, '#050518');
+  bg.addColorStop(0,   '#000004');
+  bg.addColorStop(0.5, '#020210');
+  bg.addColorStop(1,   '#050518');
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
-  ctx.save();
-  var pulse  = 0.82 + 0.18 * Math.sin(t * 0.55);
-  var pulse2 = 0.82 + 0.18 * Math.sin(t * 0.4 + 1.8);
+  // Project 3D LED ceiling structure into screen space
+  // The structure sits high above the arena centre so it appears in the sky
+  var R = ARENA_R * 1.1;
+  var H3 = 14; // height above floor
+  var pulse = 0.8 + 0.2 * Math.sin(t * 0.6);
 
-  // Center the LED structure in the upper canvas
-  var ox = W * 0.5;
-  var oy = H * 0.21;
-  var s  = Math.min(W * 0.46, H * 0.38);
-
-  function gLine(x1,y1,x2,y2,col,w,blur){
-    ctx.shadowBlur = blur; ctx.shadowColor = col;
-    ctx.strokeStyle = col; ctx.lineWidth = w;
-    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
-  }
-
-  // Main angular hexagonal LED frame (like in image)
-  // Six outer vertices of a slightly irregular angular shape
-  var hex = [
-    [ox - s*0.72, oy + s*0.08],   // 0 left
-    [ox - s*0.38, oy - s*0.62],   // 1 top-left
-    [ox + s*0.38, oy - s*0.62],   // 2 top-right
-    [ox + s*0.72, oy + s*0.08],   // 3 right
-    [ox + s*0.36, oy + s*0.52],   // 4 bottom-right
-    [ox - s*0.36, oy + s*0.52],   // 5 bottom-left
-  ];
-
-  var edgeCol = 'rgba(210,235,255,' + (0.72*pulse) + ')';
-  var edgeW   = 2.2;
-  var edgeBlur = 22 * pulse;
-
-  // Outer frame edges
-  for (var i = 0; i < hex.length; i++) {
-    var p = hex[i], q = hex[(i+1)%hex.length];
-    gLine(p[0],p[1],q[0],q[1], edgeCol, edgeW, edgeBlur);
-  }
-
-  // Inner cross struts (like internal LED skeleton)
-  var strutCol = 'rgba(160,210,255,' + (0.38*pulse2) + ')';
-  gLine(hex[0][0],hex[0][1], hex[3][0],hex[3][1], strutCol, 1.2, 12*pulse2);
-  gLine(hex[1][0],hex[1][1], hex[4][0],hex[4][1], strutCol, 1.2, 12*pulse2);
-  gLine(hex[2][0],hex[2][1], hex[5][0],hex[5][1], strutCol, 1.2, 12*pulse2);
-
-  // Bright hotspots at corners (where LED strips bend)
-  ctx.shadowBlur = 0;
-  hex.forEach(function(p, i) {
-    var r = (i % 2 === 0) ? 3.5 : 2.8;
-    var a = (i % 2 === 0) ? 0.9 * pulse : 0.7 * pulse2;
-    ctx.fillStyle = 'rgba(230,245,255,' + a + ')';
-    ctx.shadowBlur = 18 * pulse; ctx.shadowColor = '#aaddff';
-    ctx.beginPath(); ctx.arc(p[0], p[1], r, 0, Math.PI*2); ctx.fill();
+  // Define ceiling hex as 3D world points (x, y, z)
+  var angles6 = [0,1,2,3,4,5].map(function(i){ return i*Math.PI/3; });
+  var outerPts = angles6.map(function(a){
+    return proj(Math.cos(a)*R, H3, Math.sin(a)*R);
   });
+  var innerPts = angles6.map(function(a){
+    return proj(Math.cos(a)*R*0.45, H3, Math.sin(a)*R*0.45);
+  });
+  var centrePt = proj(0, H3, 0);
 
-  // Second smaller inner frame (detail, like the inner structure in the image)
-  var s2 = s * 0.48;
-  var inner = [
-    [ox - s2*0.68, oy + s2*0.08],
-    [ox - s2*0.34, oy - s2*0.6],
-    [ox + s2*0.34, oy - s2*0.6],
-    [ox + s2*0.68, oy + s2*0.08],
-    [ox + s2*0.34, oy + s2*0.52],
-    [ox - s2*0.34, oy + s2*0.52],
-  ];
-  var inCol = 'rgba(180,220,255,' + (0.28*pulse2) + ')';
-  for (var j = 0; j < inner.length; j++) {
-    var a2 = inner[j], b2 = inner[(j+1)%inner.length];
-    gLine(a2[0],a2[1],b2[0],b2[1], inCol, 1.0, 8*pulse2);
+  // Helper: draw a glow line by layering multiple semi-transparent strokes
+  // No shadowBlur — pure layering for iOS performance
+  function glowLine(p1, p2, r, g, b, bright) {
+    if (!p1 || !p2) return;
+    var a = bright * pulse;
+    ctx.lineCap = 'round';
+    // Wide soft halo
+    ctx.globalAlpha = 0.07 * a;
+    ctx.strokeStyle = 'rgb('+r+','+g+','+b+')';
+    ctx.lineWidth = 14;
+    ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+    // Medium
+    ctx.globalAlpha = 0.18 * a;
+    ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+    // Core bright
+    ctx.globalAlpha = 0.9 * a;
+    ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+    ctx.globalAlpha = 1;
   }
 
-  ctx.shadowBlur = 0;
-  ctx.restore();
+  // Outer hex edges
+  for (var i = 0; i < 6; i++) {
+    glowLine(outerPts[i], outerPts[(i+1)%6], 210, 235, 255, 1.0);
+  }
+  // Spokes outer→inner
+  for (var j = 0; j < 6; j++) {
+    glowLine(outerPts[j], innerPts[j], 160, 210, 255, 0.7);
+  }
+  // Inner hex edges
+  for (var k = 0; k < 6; k++) {
+    glowLine(innerPts[k], innerPts[(k+1)%6], 180, 225, 255, 0.85);
+  }
+  // Spokes inner→centre
+  for (var l = 0; l < 6; l++) {
+    glowLine(innerPts[l], centrePt, 200, 230, 255, 0.5);
+  }
+
+  // Bright dot at each vertex
+  outerPts.concat(innerPts).forEach(function(p){
+    if (!p) return;
+    ctx.globalAlpha = 0.85 * pulse;
+    ctx.fillStyle = '#daeeff';
+    ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+  });
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────
