@@ -250,10 +250,11 @@
     <div id="adminToolsSec" style="display:none;flex-direction:column;gap:10px">
       <div style="font-size:9px;letter-spacing:3px;color:#39ff14;text-align:center;margin-bottom:2px">⚡ ADMIN PANEL</div>
       <div style="border-top:1px solid rgba(57,255,20,.15);padding-top:10px;display:flex;flex-direction:column;gap:7px">
-        <div style="font-size:9px;letter-spacing:2px;color:rgba(255,215,0,.7)">🪙 COINS PRÜFEN</div>
-        <input id="adminCoinUser" type="text" placeholder="USERNAME" autocomplete="off" onkeydown="if(event.key==='Enter')adminCheckCoins()" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;font-family:'Russo One',sans-serif;font-size:12px;outline:none;width:100%;letter-spacing:1px"/>
-        <button onclick="adminCheckCoins()" style="background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.35);color:#ffd700;border-radius:8px;padding:8px;font-size:12px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;width:100%;touch-action:manipulation">PRÜFEN</button>
-        <div id="adminCoinMsg" style="font-size:10px;color:#39ff14;min-height:16px;text-align:center;letter-spacing:1px;line-height:1.6"></div>
+        <div style="font-size:9px;letter-spacing:2px;color:rgba(255,215,0,.7)">🪙 COINS SETZEN</div>
+        <input id="adminCoinUser" type="text" placeholder="USERNAME" autocomplete="off" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;font-family:'Russo One',sans-serif;font-size:12px;outline:none;width:100%;letter-spacing:1px"/>
+        <input id="adminCoinAmt" type="number" placeholder="NEUER BETRAG" min="0" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;font-family:'Russo One',sans-serif;font-size:12px;outline:none;width:100%"/>
+        <button onclick="adminSetCoins()" style="background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.35);color:#ffd700;border-radius:8px;padding:8px;font-size:12px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;width:100%;touch-action:manipulation">SETZEN</button>
+        <div id="adminCoinMsg" style="font-size:10px;color:#39ff14;min-height:14px;text-align:center;letter-spacing:1px"></div>
       </div>
       <div style="border-top:1px solid rgba(57,255,20,.15);padding-top:10px;display:flex;flex-direction:column;gap:7px">
         <div style="font-size:9px;letter-spacing:2px;color:rgba(255,0,110,.8)">📢 ANKÜNDIGUNG</div>
@@ -836,19 +837,20 @@ function tryAdminUnlock() {
     document.getElementById('adminCodeInp').value = '';
   }
 }
-async function adminCheckCoins() {
+async function adminSetCoins() {
   var username = (document.getElementById('adminCoinUser').value || '').trim().toUpperCase();
+  var amount   = parseInt(document.getElementById('adminCoinAmt').value);
   var msgEl    = document.getElementById('adminCoinMsg');
   msgEl.style.color = '#ffd700';
   msgEl.textContent = '';
   if (!username) { msgEl.style.color='#ff4444'; msgEl.textContent='Username eingeben'; return; }
+  if (isNaN(amount) || amount < 0) { msgEl.style.color='#ff4444'; msgEl.textContent='Betrag eingeben'; return; }
   if (!sb) { msgEl.style.color='#ff4444'; msgEl.textContent='Keine DB'; return; }
   msgEl.textContent = '...';
-  var res = await sb.from('players').select('coins').eq('username', username).single();
-  if (res.error || !res.data) { msgEl.style.color='#ff4444'; msgEl.textContent='Spieler nicht gefunden'; return; }
-  var portalCoins = res.data.coins || 0;
-  var ltCoins     = parseInt(localStorage.getItem('lt_coins') || '0');
-  msgEl.innerHTML = username + '<br>Portal: <b>' + portalCoins + '</b> 🪙<br>LT: <b>' + ltCoins + '</b> 🪙';
+  var upd = await sb.from('players').update({coins: amount}).eq('username', username);
+  if (upd.error) { msgEl.style.color='#ff4444'; msgEl.textContent='Spieler nicht gefunden'; return; }
+  msgEl.textContent = '✓ ' + username + ' → ' + amount + ' 🪙';
+  if (lbOpen) loadLb();
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────
