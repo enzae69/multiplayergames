@@ -62,6 +62,20 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
 #jumpBtn{position:fixed;bottom:130px;right:48px;width:130px;height:130px;border-radius:50%;background:rgba(57,255,20,0.2);border:3px solid #39ff14;color:#39ff14;font-family:'Russo One',sans-serif;font-size:20px;cursor:pointer;touch-action:manipulation;z-index:101;display:none;align-items:center;justify-content:center;box-shadow:0 0 36px rgba(57,255,20,.45)}
 #jumpBtn:active{background:rgba(57,255,20,0.45)}
 #errBanner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:999;background:#c00;color:#fff;font-size:12px;padding:8px 12px;font-family:monospace;white-space:pre-wrap;max-height:120px;overflow-y:auto}
+
+/* ── ABILITY SHOP ── */
+.ab-shop{width:min(340px,93vw);background:rgba(8,6,24,.97);border:2px solid rgba(191,0,255,.3);border-radius:16px;padding:14px 12px;display:flex;flex-direction:column;gap:10px}
+.ab-shop-head{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:3px;color:rgba(191,0,255,.85);display:flex;justify-content:space-between;align-items:center}
+.ab-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ab-card{background:rgba(191,0,255,.07);border:2px solid rgba(191,0,255,.18);border-radius:12px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;touch-action:manipulation;transition:border-color .2s,background .2s}
+.ab-card:active{transform:scale(.94)}
+.ab-card.ab-eq{border-color:#bf00ff;background:rgba(191,0,255,.14);box-shadow:0 0 14px rgba(191,0,255,.22)}
+.ab-icon{font-size:26px}
+.ab-name{font-family:'Russo One',sans-serif;font-size:10px;letter-spacing:1px;color:#fff;text-align:center}
+.ab-desc{font-size:9px;color:rgba(255,255,255,.4);text-align:center;line-height:1.3}
+.ab-count{font-family:'Russo One',sans-serif;font-size:14px;color:#bf00ff}
+.ab-cost{font-family:'Russo One',sans-serif;font-size:10px;color:#ffd700}
+.ab-err{font-family:'Russo One',sans-serif;font-size:10px;color:#ff4444;text-align:center;min-height:12px;letter-spacing:1px}
 </style>
 </head>
 <body>
@@ -77,7 +91,7 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
       <div class="pname" id="pName">PLAYER</div>
       <div class="pstat">Lv.<span id="pLvl">1</span> &nbsp;|&nbsp; <span id="pXp">0</span> XP &nbsp;|&nbsp; Best: W<span id="pBest">-</span></div>
     </div>
-    <div style="color:#ffd700;font-family:'Russo One',sans-serif;font-size:13px">🪙<span id="pCoins">0</span></div>
+    <div style="color:#ffd700;font-family:'Russo One',sans-serif;font-size:13px">☀️<span id="pCoins">0</span></div>
   </div>
   <button class="btn bgreen" id="soloBtn">🎯 SOLO ÜBEN</button>
   <button class="btn bcyan" id="multiBtn">⚔️ MULTIPLAYER</button>
@@ -93,6 +107,16 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
     <input class="nameinp" id="nameInp" maxlength="16" placeholder="NAME ÄNDERN..." autocomplete="off" spellcheck="false"/>
     <button class="btn bcyan" id="nameBtn" style="width:auto;padding:11px 16px;font-size:13px">OK</button>
   </div>
+  <!-- Ability Shop -->
+  <div class="ab-shop">
+    <div class="ab-shop-head">
+      <span>🔮 ABILITIES</span>
+      <span style="color:#ffd700;font-size:12px">☀️<span id="abCoins">0</span></span>
+    </div>
+    <div class="ab-grid" id="abGrid"></div>
+    <div class="ab-err" id="abErr"></div>
+  </div>
+
   <a href="../menu.html" class="btn bghost" style="text-align:center;text-decoration:none;font-family:'Russo One',sans-serif;font-size:13px;padding:10px">← SPIELAUSWAHL</a>
   <div class="berr" id="menuErr"></div>
 </div>
@@ -107,11 +131,49 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
     </div>
     <div style="background:rgba(5,5,16,0.7);border:1px solid rgba(0,245,255,0.2);border-radius:20px;padding:5px 12px;font-size:10px;color:rgba(0,245,255,0.4);letter-spacing:1px;pointer-events:none">🎥 Rechts = Kamera</div>
   </div>
-  <!-- Shown only when eliminated in multi -->
-  <div id="elimBanner" style="display:none;flex-direction:column;align-items:center;gap:10px;pointer-events:auto;margin-top:32px">
-    <div style="background:rgba(255,0,110,0.88);padding:10px 28px;border-radius:12px;font-family:'Russo One',sans-serif;font-size:22px;color:#fff;letter-spacing:4px">ELIMINATED</div>
-    <div style="color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:2px">Du schaust zu...</div>
+  <!-- Leave button when eliminated -->
+  <div id="elimBanner" style="display:none;flex-direction:column;align-items:center;pointer-events:auto;margin-top:20px">
     <button class="btn bghost" id="elimLeaveBtn" style="width:auto;padding:10px 22px;font-size:13px;pointer-events:auto">← VERLASSEN</button>
+  </div>
+</div>
+
+<!-- SPECTATE BAR (fixed, outside all screens) -->
+<div id="spectateBar" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:200;background:rgba(5,5,16,.95);border:2px solid rgba(0,245,255,.4);border-radius:16px;padding:10px 8px;display:none;align-items:center;gap:12px;white-space:nowrap;box-shadow:0 0 20px rgba(0,245,255,.18);font-family:'Russo One',sans-serif">
+  <button id="specPrev" onclick="switchSpectate(-1)" style="background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.35);color:#00f5ff;border-radius:10px;font-size:18px;padding:7px 16px;cursor:pointer;touch-action:manipulation">◀</button>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:1px;min-width:90px">
+    <div style="font-size:9px;color:rgba(255,255,255,.35);letter-spacing:3px">BEOBACHTET</div>
+    <div id="specName" style="font-size:16px;color:#00f5ff;letter-spacing:2px">-</div>
+  </div>
+  <button id="specNext" onclick="switchSpectate(1)" style="background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.35);color:#00f5ff;border-radius:10px;font-size:18px;padding:7px 16px;cursor:pointer;touch-action:manipulation">▶</button>
+</div>
+
+<!-- ANNOUNCEMENT OVERLAY (centered, shown to all players) -->
+<div id="announceOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:500;display:none;align-items:center;justify-content:center;pointer-events:none">
+  <div id="announceTxt" style="background:rgba(5,5,16,.96);border:2px solid rgba(255,0,110,.7);border-radius:18px;padding:22px 36px;font-family:'Russo One',sans-serif;font-size:22px;color:#fff;letter-spacing:3px;text-align:center;box-shadow:0 0 40px rgba(255,0,110,.35);max-width:80vw;word-break:break-word"></div>
+</div>
+
+<!-- ADMIN IMAGE OVERLAY -->
+<div id="adminImgOv" onclick="closeAdminImgLT()" style="position:fixed;inset:0;z-index:600;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:rgba(0,0,0,.82);cursor:pointer">
+  <div id="adminImgLabel" style="font-family:'Russo One',sans-serif;font-size:18px;color:#ff006e;letter-spacing:4px;text-shadow:0 0 20px rgba(255,0,110,.8)"></div>
+  <img id="adminImgEl" src="" alt="" style="max-width:85vw;max-height:72vh;border-radius:12px;box-shadow:0 0 40px rgba(255,0,110,.4);object-fit:contain"/>
+</div>
+
+<!-- ADMIN PANEL (fixed bottom-left, only visible to admin) -->
+<div id="adminPanel" style="position:fixed;bottom:24px;left:16px;z-index:300;display:none;flex-direction:column;gap:6px;background:rgba(5,5,16,.97);border:2px solid rgba(255,0,110,.6);border-radius:14px;padding:12px 10px;box-shadow:0 0 24px rgba(255,0,110,.25);font-family:'Russo One',sans-serif">
+  <div style="font-size:9px;letter-spacing:3px;color:rgba(255,0,110,.8);text-align:center;margin-bottom:2px">⚡ ADMIN</div>
+  <button onclick="adminSpawnLaser()" style="background:rgba(255,0,110,.15);border:1px solid rgba(255,0,110,.5);color:#ff006e;border-radius:8px;font-size:12px;padding:6px 10px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;touch-action:manipulation">➕ LASER</button>
+  <button onclick="adminToggleInvincible()" id="adminInvBtn" style="background:rgba(255,0,110,.15);border:1px solid rgba(255,0,110,.5);color:#ff006e;border-radius:8px;font-size:12px;padding:6px 10px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;touch-action:manipulation">🛡️ INVINCIBLE</button>
+  <button onclick="adminKillAll()" style="background:rgba(255,0,110,.15);border:1px solid rgba(255,0,110,.5);color:#ff006e;border-radius:8px;font-size:12px;padding:6px 10px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;touch-action:manipulation">💀 KILL ALL</button>
+  <div style="border-top:1px solid rgba(255,0,110,.3);margin-top:2px;padding-top:6px;display:flex;flex-direction:column;gap:4px">
+    <input id="adminAnnounceInp" type="text" placeholder="Nachricht..." onkeydown="if(event.key==='Enter')adminSendAnnounce()" style="background:rgba(255,0,110,.1);border:1px solid rgba(255,0,110,.4);color:#fff;border-radius:7px;font-size:11px;padding:5px 8px;font-family:'Russo One',sans-serif;outline:none;width:100%;box-sizing:border-box" />
+    <button onclick="adminSendAnnounce()" style="background:rgba(255,0,110,.15);border:1px solid rgba(255,0,110,.5);color:#ff006e;border-radius:8px;font-size:12px;padding:6px 10px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;touch-action:manipulation">📢 ANNOUNCE</button>
+  </div>
+  <div style="border-top:1px solid rgba(255,0,110,.3);margin-top:2px;padding-top:6px;display:flex;flex-direction:column;gap:4px">
+    <div style="font-size:8px;letter-spacing:2px;color:rgba(255,215,0,.7)">☀️ SONNEN MÜNZEN</div>
+    <input id="ltAdminCoinUser" type="text" placeholder="USERNAME" autocomplete="off" style="background:rgba(255,0,110,.1);border:1px solid rgba(255,0,110,.4);color:#fff;border-radius:7px;font-size:11px;padding:5px 8px;font-family:'Russo One',sans-serif;outline:none;width:100%;box-sizing:border-box"/>
+    <input id="ltAdminCoinAmt" type="number" placeholder="BETRAG" min="0" style="background:rgba(255,0,110,.1);border:1px solid rgba(255,0,110,.4);color:#fff;border-radius:7px;font-size:11px;padding:5px 8px;font-family:'Russo One',sans-serif;outline:none;width:100%;box-sizing:border-box"/>
+    <button onclick="ltAdminSetCoins()" style="background:rgba(255,215,0,.15);border:1px solid rgba(255,215,0,.5);color:#ffd700;border-radius:8px;font-size:12px;padding:6px 10px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;touch-action:manipulation">SETZEN</button>
+    <div id="ltAdminCoinMsg" style="font-size:9px;min-height:12px;text-align:center;letter-spacing:1px"></div>
   </div>
 </div>
 
@@ -121,7 +183,7 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
     <div class="rstitle">GAME OVER</div>
     <div class="rsstat">Welle</div><div class="rsval" id="rsWave">1</div>
     <div class="rsstat">Überlebt</div><div class="rsval" id="rsSurv">0.0s</div>
-    <div class="rsstat">Münzen</div><div class="rsval" id="rsCoins">+0</div>
+    <div class="rsstat">Sonnen Münzen</div><div class="rsval" id="rsCoins">+0 ☀️</div>
     <button class="btn bgreen" id="retryBtn">↺ NOCHMAL</button>
     <button class="btn bghost" id="menuBtn">← MENÜ</button>
   </div>
@@ -161,6 +223,7 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
 <div id="joyBase"><div id="joyKnob"></div></div>
 <div id="joyZone"></div>
 <button id="jumpBtn">JUMP</button>
+<button id="abilityBtn" onclick="useAbility()" style="position:fixed;bottom:280px;right:48px;width:96px;height:96px;border-radius:50%;background:rgba(191,0,255,.18);border:3px solid #bf00ff;color:#bf00ff;font-family:'Russo One',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation;z-index:101;display:none;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 28px rgba(191,0,255,.4);gap:2px"><span id="abilityBtnIcon" style="font-size:22px">🔮</span><span id="abilityBtnName" style="font-size:8px;letter-spacing:1px;text-align:center">ABILITY</span><span id="abilityBtnCount" style="font-size:12px">×0</span></button>
 <div id="errBanner"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -202,8 +265,40 @@ var myWalkPhase = 0, myIsMoving = false;
 var myDead = false, lastSyncTime = 0;
 var sb = null, myRoom = null, myId = null, peers = {}, isHost = false;
 var roomCh = null;
+var globalCh = null;
 var totalRounds = 5, roundNum = 1, myWins = 0, roundEndActive = false;
 var rng = Math.random; // overridden in multiplayer with seeded RNG
+
+// ── ABILITIES ─────────────────────────────────────────────────────────────
+var ABILITIES = [
+  {type:'unsterblich', icon:'🛡️', name:'UNSTERBLICH', desc:'10 Sek. unbesiegbar',    duration:10000, cost:1000},
+  {type:'kick',        icon:'💥', name:'KICK',         desc:'Wirf alle 7 Felder weg', duration:0,     cost:1500},
+  {type:'speed',       icon:'⚡', name:'SPEED',        desc:'5 Sek. 2× Schnell',      duration:5000,  cost:1000},
+  {type:'nolaser',     icon:'🚫', name:'KEIN LASER',   desc:'5 Sek. Laser-Schutz',    duration:5000,  cost:1000}
+];
+var ownedAbilities  = {unsterblich:0, kick:0, speed:0, nolaser:0};
+var equippedAbility = 'unsterblich';
+var activeAbility   = null; // {type, endTime (performance.now ms)}
+var lastStaleCheckTS = 0;  // for watchdog: marks disconnected peers dead
+var watchX = 0, watchY = 0, watchZ = 10; // camera follows this point (self or spectated peer)
+var spectatingId = null;   // peer ID being spectated when dead
+var isAdminUser    = false;
+var adminInvincible = false;
+
+// ── SKIN COLORS ───────────────────────────────────────────────────────────
+var SKIN_COLORS = {
+  'default':'#00f5ff', 'ocean':'#0088ff', 'forest':'#39ff14',
+  'sunset':'#ff6b00',  'purple':'#bf00ff', 'gold':'#ffd700',
+  'pink':'#ff3cac',    'dark':'#aaaaaa'
+};
+function getSkinColor() {
+  var skin = localStorage.getItem('activeSkin') || 'default';
+  if (skin === 'rainbow') {
+    var hue = (performance.now() / 18) % 360;
+    return 'hsl(' + Math.round(hue) + ',100%,55%)';
+  }
+  return SKIN_COLORS[skin] || '#00f5ff';
+}
 
 // ── SEEDED RNG (mulberry32) ────────────────────────────────────────────────
 function mulberry32(seed) {
@@ -213,6 +308,140 @@ function mulberry32(seed) {
     t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
   };
+}
+
+// ── ABILITY FUNCTIONS ─────────────────────────────────────────────────────
+function loadAbilities() {
+  ownedAbilities.unsterblich = parseInt(localStorage.getItem('lt_ab_u')||'0');
+  ownedAbilities.kick        = parseInt(localStorage.getItem('lt_ab_k')||'0');
+  ownedAbilities.speed       = parseInt(localStorage.getItem('lt_ab_s')||'0');
+  ownedAbilities.nolaser     = parseInt(localStorage.getItem('lt_ab_n')||'0');
+  equippedAbility = localStorage.getItem('lt_ab_eq') || 'unsterblich';
+}
+function saveAbilities() {
+  localStorage.setItem('lt_ab_u',  ownedAbilities.unsterblich);
+  localStorage.setItem('lt_ab_k',  ownedAbilities.kick);
+  localStorage.setItem('lt_ab_s',  ownedAbilities.speed);
+  localStorage.setItem('lt_ab_n',  ownedAbilities.nolaser);
+  localStorage.setItem('lt_ab_eq', equippedAbility);
+}
+function renderAbilityShop() {
+  var grid    = document.getElementById('abGrid');
+  var coinsEl = document.getElementById('abCoins');
+  if (!grid) return;
+  if (coinsEl) coinsEl.textContent = progress.coins;
+  grid.innerHTML = '';
+  ABILITIES.forEach(function(ab) {
+    var owned = !!ownedAbilities[ab.type];
+    var isEq  = equippedAbility === ab.type;
+    var card  = document.createElement('div');
+    card.className = 'ab-card' + (isEq ? ' ab-eq' : '');
+    var bottomHtml = owned
+      ? '<div style="font-size:9px;letter-spacing:1px;color:#39ff14;background:rgba(57,255,20,.1);border-radius:6px;padding:2px 8px">' + (isEq ? '✓ AUSGERÜSTET' : '✓ BESESSEN') + '</div>'
+      : '<div class="ab-cost">' + ab.cost + ' ☀️ KAUFEN</div>';
+    card.innerHTML =
+      '<div class="ab-icon">' + ab.icon + '</div>'
+      + '<div class="ab-name">' + ab.name + '</div>'
+      + '<div class="ab-desc">' + ab.desc + '</div>'
+      + bottomHtml;
+    card.addEventListener('click', function() { buyAbility(ab.type, ab.cost); });
+    grid.appendChild(card);
+  });
+}
+function buyAbility(type, cost) {
+  var errEl = document.getElementById('abErr');
+  if (errEl) errEl.textContent = '';
+  if (ownedAbilities[type]) {
+    // Already owned — just equip it
+    equippedAbility = type;
+    saveAbilities(); renderAbilityShop(); updateAbilityBtn(); return;
+  }
+  if (progress.coins < cost) {
+    if (errEl) errEl.textContent = 'Zu wenig Sonnen Münzen! (' + progress.coins + '/' + cost + ' ☀️)';
+    return;
+  }
+  progress.coins -= cost;
+  ownedAbilities[type] = 1;
+  equippedAbility = type;
+  saveLocal(); saveAbilities(); renderProfile(); renderAbilityShop(); updateAbilityBtn();
+}
+function useAbility() {
+  if (!soloAlive) return;
+  var type = equippedAbility;
+  if (!ownedAbilities[type]) {
+    var order = ['unsterblich','speed','nolaser','kick'];
+    type = null;
+    for (var i = 0; i < order.length; i++) {
+      if (ownedAbilities[order[i]]) { type = order[i]; break; }
+    }
+    if (!type) return;
+  }
+  if (type !== 'kick' && activeAbility) return; // non-kick abilities don't stack
+  if (type === 'kick') {
+    doKick();
+    updateAbilityBtn();
+    return;
+  }
+  var ab = null;
+  for (var j = 0; j < ABILITIES.length; j++) { if (ABILITIES[j].type === type) { ab = ABILITIES[j]; break; } }
+  activeAbility = {type: type, endTime: performance.now() + ab.duration};
+  updateAbilityBtn();
+}
+function doKick() {
+  var KICK_DIST = 7;
+  if (gameState === 'multi' && roomCh) {
+    roomCh.send({type:'broadcast', event:'kick', payload:{id:myId, x:myX, z:myZ}});
+  } else if (gameState === 'solo') {
+    // Solo: blast all lasers away (clear for 3s)
+    var savedLasers = lasers.slice();
+    lasers = [];
+    setTimeout(function(){
+      if (gameState === 'solo' && soloAlive) lasers = savedLasers;
+    }, 3000);
+  }
+  var btn = document.getElementById('abilityBtn');
+  if (btn) {
+    btn.style.background  = 'rgba(255,100,0,.55)';
+    btn.style.borderColor = '#ff6400';
+    btn.style.color       = '#ff6400';
+    setTimeout(function(){ updateAbilityBtn(); }, 600);
+  }
+}
+function updateAbilityBtn() {
+  var btn = document.getElementById('abilityBtn');
+  if (!btn) return;
+  var iconEl  = document.getElementById('abilityBtnIcon');
+  var nameEl  = document.getElementById('abilityBtnName');
+  var countEl = document.getElementById('abilityBtnCount');
+  if (activeAbility) {
+    var aab = null;
+    for (var j = 0; j < ABILITIES.length; j++) { if (ABILITIES[j].type === activeAbility.type) { aab = ABILITIES[j]; break; } }
+    if (iconEl)  iconEl.textContent  = aab ? aab.icon : '🔮';
+    if (nameEl)  nameEl.textContent  = 'AKTIV!';
+    if (countEl) countEl.textContent = '';
+    btn.style.borderColor  = '#00f5ff';
+    btn.style.color        = '#00f5ff';
+    btn.style.background   = 'rgba(0,245,255,.2)';
+    btn.style.boxShadow    = '0 0 28px rgba(0,245,255,.5)';
+    return;
+  }
+  var type  = equippedAbility;
+  var owned = !!ownedAbilities[type];
+  if (!owned) {
+    var order = ['unsterblich','speed','nolaser','kick'];
+    for (var i = 0; i < order.length; i++) {
+      if (ownedAbilities[order[i]]) { type = order[i]; owned = true; break; }
+    }
+  }
+  var ab = null;
+  for (var k = 0; k < ABILITIES.length; k++) { if (ABILITIES[k].type === type) { ab = ABILITIES[k]; break; } }
+  if (iconEl)  iconEl.textContent  = ab ? ab.icon : '🔮';
+  if (nameEl)  nameEl.textContent  = ab ? ab.name : 'ABILITY';
+  if (countEl) countEl.textContent = owned ? '∞' : '---';
+  btn.style.borderColor  = owned ? '#bf00ff' : 'rgba(191,0,255,.3)';
+  btn.style.color        = owned ? '#bf00ff' : 'rgba(191,0,255,.3)';
+  btn.style.background   = owned ? 'rgba(191,0,255,.18)' : 'rgba(191,0,255,.06)';
+  btn.style.boxShadow    = owned ? '0 0 28px rgba(191,0,255,.4)' : 'none';
 }
 
 // Triangle-wave for sweep lasers: bounces between -r and +r deterministically
@@ -227,8 +456,7 @@ function sweepPos(elapsed, r, speed) {
 
 // ── LOOKAT CAMERA MATRIX ───────────────────────────────────────────────────
 function buildCamMatrix() {
-  // Camera looks toward (myX, myY+CAM_TARGET_H, myZ)
-  var tx = myX - camX, ty = (myY + CAM_TARGET_H) - camY, tz = myZ - camZ;
+  var tx = watchX - camX, ty = (watchY + CAM_TARGET_H) - camY, tz = watchZ - camZ;
   var tl = Math.sqrt(tx*tx + ty*ty + tz*tz);
   if (tl < 0.01) return;
   _fx = tx/tl; _fy = ty/tl; _fz = tz/tl;
@@ -255,34 +483,41 @@ function proj(wx, wy, wz) {
 
 // ── CAMERA ────────────────────────────────────────────────────────────────
 function updateCam() {
-  // Spherical orbit — fixed radius, no zoom on pitch change
+  // Resolve what the camera follows: spectated peer when dead, otherwise self
+  if (myDead && spectatingId && peers[spectatingId] && typeof peers[spectatingId].x === 'number') {
+    watchX = peers[spectatingId].x;
+    watchY = peers[spectatingId].y || 0;
+    watchZ = peers[spectatingId].z;
+  } else {
+    watchX = myX; watchY = myY; watchZ = myZ;
+  }
   var hDist = Math.cos(camPitch) * CAM_DIST;
-  camX = myX - Math.sin(camYaw) * hDist;
-  camZ = myZ - Math.cos(camYaw) * hDist;
-  camY = myY + 1.0 + Math.sin(camPitch) * CAM_DIST;
+  camX = watchX - Math.sin(camYaw) * hDist;
+  camZ = watchZ - Math.cos(camYaw) * hDist;
+  camY = watchY + 1.0 + Math.sin(camPitch) * CAM_DIST;
   buildCamMatrix();
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────
 function render(t) {
-  ctx.fillStyle = '#08101e';
+  ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, W, H);
   drawFloor();
   drawWall();
   drawLasers(t);
-  // Other players (behind me — draw first)
+  // Other players — skip dead, highlight spectated peer
   for (var id in peers) {
     if (id !== myId) {
       var p = peers[id];
-      if (p.isDead) ctx.globalAlpha = 0.35;
-      drawChar(p.x||0, p.y||0, p.z||0, p.color||'#ff006e', p.name||'?', false, p.wp||0, (p.y||0)>0.1);
-      ctx.globalAlpha = 1;
+      if (p.isDead) continue; // dead players are off the field
+      var isWatching = (myDead && id === spectatingId);
+      drawChar(p.x||0, p.y||0, p.z||0, p.color||'#ff006e', p.name||'?', isWatching, p.wp||0, (p.y||0)>0.1);
     }
   }
-  // Draw self (semi-transparent when dead so you can still see the game)
-  if (myDead) ctx.globalAlpha = 0.30;
-  drawChar(myX, myY, myZ, '#00f5ff', progress.name, true, myWalkPhase, myY>0.1);
-  ctx.globalAlpha = 1;
+  // Draw self only when alive
+  if (!myDead) {
+    drawChar(myX, myY, myZ, getSkinColor(), progress.name, true, myWalkPhase, myY>0.1);
+  }
 }
 
 // ── FLOOR (checkered tiles) ────────────────────────────────────────────────
@@ -603,8 +838,9 @@ function updatePlayer(dt) {
     var cy = Math.cos(camYaw), sy = Math.sin(camYaw);
     var wx = -dx*cy + dz*sy;
     var wz =  dx*sy + dz*cy;
-    var nx = myX + wx*WALK_SPEED*dt;
-    var nz = myZ + wz*WALK_SPEED*dt;
+    var curSpeed = (activeAbility && activeAbility.type === 'speed') ? WALK_SPEED * 2 : WALK_SPEED;
+    var nx = myX + wx*curSpeed*dt;
+    var nz = myZ + wz*curSpeed*dt;
     var d = Math.sqrt(nx*nx+nz*nz);
     if (d > ARENA_R-0.8) { nx=nx/d*(ARENA_R-0.8); nz=nz/d*(ARENA_R-0.8); }
     myX=nx; myZ=nz;
@@ -619,6 +855,8 @@ function updatePlayer(dt) {
 function doJump() { if (myY <= 0.05) myVY = JUMP_V; }
 
 function checkHit() {
+  if (adminInvincible) return false;
+  if (activeAbility && (activeAbility.type === 'unsterblich' || activeAbility.type === 'nolaser')) return false;
   if (myY > 1.3) return false;
   for (var i = 0; i < lasers.length; i++) {
     var L    = lasers[i];
@@ -701,12 +939,20 @@ function loop(ts) {
   lastTS = ts;
   if (gameState === 'solo' || gameState === 'multi') {
     updatePlayer(dt);
+    soloTime = (ts - soloStart)/1000; // always advance time so lasers keep moving for spectators
     updateLasers();
     if (!myDead && jumpHeld && myY <= 0.05) doJump();
     lerpPeers(dt);
+    if (gameState === 'multi' && isHost && ts - lastStaleCheckTS > 3000) {
+      lastStaleCheckTS = ts;
+      checkStalePeers();
+    }
     updateCam();
     if (soloAlive) {
-      soloTime = (ts - soloStart)/1000;
+      if (activeAbility && performance.now() > activeAbility.endTime) {
+        activeAbility = null;
+        updateAbilityBtn();
+      }
       updateHUD();
       var playTime = soloTime - soloGrace;
       if (playTime > 0 && playTime >= nextWaveSec) {
@@ -721,8 +967,13 @@ function loop(ts) {
           // Immediately send final position so survivor still sees us
           syncPos(); lastSyncTime = ts;
           if (roomCh) roomCh.send({type:'broadcast',event:'dead',payload:{id:myId}});
+          // Hide in-game action buttons (dead players can't jump/use abilities)
+          var jbEl=document.getElementById('jumpBtn'); if(jbEl) jbEl.style.display='none';
+          var abEl=document.getElementById('abilityBtn'); if(abEl) abEl.style.display='none';
+          // Show leave button and start spectating
           var eb = document.getElementById('elimBanner');
           if (eb) eb.style.display = 'flex';
+          beginSpectating();
           if (isHost) checkRoundWin(); // non-hosts wait for roundEnd event from host
         }
       }
@@ -746,9 +997,13 @@ function startSolo() {
   camY = myY + 1.0 + Math.sin(camPitch)*CAM_DIST;
   buildCamMatrix();
   soloWave=1; soloAlive=true; nextWaveSec=10; myDead=false;
+  activeAbility=null; spectatingId=null;
+  watchX=myX; watchY=myY; watchZ=myZ;
+  var sb=document.getElementById('spectateBar'); if(sb) sb.style.display='none';
   soloStart = performance.now();
   buildLasers(2);
   gameState='solo';
+  updateAbilityBtn();
   showScreen('sGame');
 }
 
@@ -759,10 +1014,10 @@ function endSolo() {
   if (soloWave > progress.bestWave) progress.bestWave = soloWave;
   var needed = progress.level*100;
   while (progress.xp >= needed) { progress.level++; progress.xp-=needed; needed=progress.level*100; }
-  saveLocal(); renderProfile();
+  saveLocal(); renderProfile(); renderAbilityShop();
   document.getElementById('rsWave').textContent = soloWave;
   document.getElementById('rsSurv').textContent = soloTime.toFixed(1)+'s';
-  document.getElementById('rsCoins').textContent = '+'+coins;
+  document.getElementById('rsCoins').textContent = '+'+coins+' ☀️';
   showScreen('sResult');
 }
 
@@ -845,18 +1100,22 @@ function joinChannel() {
         if (typeof p.x !== 'number' || isNaN(p.x)) { p.x=d.x; p.y=d.y; p.z=d.z; }
         p.tx=d.x; p.ty=d.y; p.tz=d.z;
         p.wp=d.wp; p.color=d.color; p.name=d.name;
+        p.lastSeen = Date.now();
       } else {
         peers[d.id] = {x:d.x,y:d.y,z:d.z, tx:d.x,ty:d.y,tz:d.z,
-                       wp:d.wp||0, color:d.color, name:d.name, id:d.id};
+                       wp:d.wp||0, color:d.color, name:d.name, id:d.id, lastSeen:Date.now()};
       }
     })
     .on('broadcast',{event:'dead'},function(m){
       if (peers[m.payload.id]) peers[m.payload.id].isDead = true;
+      // If we're spectating the player who just died, switch to next alive
+      if (myDead && spectatingId === m.payload.id) switchSpectate(1);
       // Only the host is authoritative for round-end to avoid race conditions with 3+ players
       if (isHost) checkRoundWin();
     })
     .on('broadcast',{event:'roundEnd'},function(m){
-      if (isHost) return; // host already called showRoundEnd locally
+      if (isHost) return;
+      if (gameState !== 'multi') return; // stale delayed event — already moved to next round
       roundEndActive = true;
       // Sync authoritative win counts from host
       if (m.payload.wins) {
@@ -882,6 +1141,56 @@ function joinChannel() {
         var ri = document.getElementById('roundInfo');
         if (ri) ri.textContent = totalRounds + ' Runden';
         beginMulti(m.payload.laserSeed);
+      }
+    })
+    .on('broadcast',{event:'hostLeft'},function(m){
+      if (!isHost) {
+        if (roomCh) { roomCh.unsubscribe(); roomCh=null; }
+        myRoom=null; peers={}; isHost=false; gameState='menu';
+        roundNum=1; myWins=0; roundEndActive=false;
+        var hr=document.getElementById('hudRound'); if(hr) hr.style.display='none';
+        showScreen('sMenu');
+        var err=document.getElementById('menuErr');
+        if(err){err.textContent='Host hat das Spiel verlassen.';setTimeout(function(){err.textContent='';},4000);}
+      }
+    })
+    .on('broadcast',{event:'kick'},function(m){
+      if (m.payload.id === myId) return;
+      if (myDead) return;
+      var KICK_DIST = 7;
+      var dx = myX - m.payload.x;
+      var dz = myZ - m.payload.z;
+      var dist = Math.sqrt(dx*dx + dz*dz);
+      if (dist < 0.01) { dx = 1; dz = 0; dist = 1; }
+      myX = myX + (dx/dist) * KICK_DIST;
+      myZ = myZ + (dz/dist) * KICK_DIST;
+      var d = Math.sqrt(myX*myX + myZ*myZ);
+      if (d > ARENA_R - 0.8) { myX = myX/d*(ARENA_R-0.8); myZ = myZ/d*(ARENA_R-0.8); }
+      myVY = JUMP_V * 0.6; // small upward bounce
+    })
+    .on('broadcast',{event:'adminLaser'},function(m){
+      var L = m.payload;
+      if (!L || !L.type) return;
+      lasers.push({type:L.type, ang0:L.ang0||L.ang, ang:L.ang, t0:L.t0, speed:L.speed, color:L.color, offset:L.offset});
+    })
+    .on('broadcast',{event:'adminKill'},function(m){
+      if (m.payload.sender === myId) return;
+      if (myDead) return;
+      myDead = true;
+      if (roomCh) roomCh.send({type:'broadcast', event:'dead', payload:{id:myId}});
+      beginSpectating();
+    })
+    .on('broadcast',{event:'adminAnnounce'},function(m){
+      if (m.payload && m.payload.text) showAnnouncement(m.payload.text);
+    })
+    .on('broadcast',{event:'adminImage'},function(m){
+      if (m.payload && m.payload.url) showAdminImageLT(m.payload.username, m.payload.url);
+    })
+    .on('broadcast',{event:'setSunCoins'},function(m){
+      if (!m.payload) return;
+      var me = (localStorage.getItem('authUser')||localStorage.getItem('playerName')||'').toUpperCase();
+      if (m.payload.username === me) {
+        progress.coins = m.payload.amount; saveLocal(); renderProfile(); renderAbilityShop();
       }
     })
     .subscribe();
@@ -910,12 +1219,16 @@ function startMulti() {
 }
 function beginMulti(laserSeed) {
   roundEndActive = false;
-  Object.keys(peers).forEach(function(id){ peers[id].isDead = false; });
+  lastStaleCheckTS = 0;
+  var now = Date.now();
+  Object.keys(peers).forEach(function(id){ peers[id].isDead = false; peers[id].lastSeen = now; });
   myX=(Math.random()-0.5)*8; myZ=(Math.random()-0.5)*8; myY=0; myVY=0;
   camYaw=Math.PI; camPitch=0.54; buildCamMatrix();
   soloWave=1; soloAlive=true; nextWaveSec=10;
   soloStart=performance.now(); soloTime=0; soloGrace=2.5;
-  myDead=false;
+  myDead=false; activeAbility=null; spectatingId=null;
+  watchX=myX; watchY=myY; watchZ=myZ;
+  var sb=document.getElementById('spectateBar'); if(sb) sb.style.display='none';
   // Use seeded RNG so every client builds identical laser parameters
   rng = laserSeed !== undefined ? mulberry32(laserSeed) : Math.random;
   var eb=document.getElementById('elimBanner'); if(eb) eb.style.display='none';
@@ -923,6 +1236,157 @@ function beginMulti(laserSeed) {
   if (hr) { hr.style.display=''; hr.textContent='R'+roundNum+'/'+totalRounds; }
   buildLasers(2); gameState='multi';
   showScreen('sGame');
+}
+// ── SPECTATOR ─────────────────────────────────────────────────────────────
+function getAlivePeerIds() {
+  return Object.keys(peers).filter(function(id){ return !peers[id].isDead; });
+}
+function beginSpectating() {
+  var alive = getAlivePeerIds();
+  spectatingId = alive.length > 0 ? alive[0] : null;
+  updateSpectateBar();
+}
+function switchSpectate(dir) {
+  var alive = getAlivePeerIds();
+  if (alive.length === 0) { spectatingId = null; updateSpectateBar(); return; }
+  var idx = alive.indexOf(spectatingId);
+  if (idx === -1) idx = 0;
+  else idx = (idx + dir + alive.length) % alive.length;
+  spectatingId = alive[idx];
+  updateSpectateBar();
+}
+function updateSpectateBar() {
+  var bar  = document.getElementById('spectateBar');
+  var nm   = document.getElementById('specName');
+  var prev = document.getElementById('specPrev');
+  var next = document.getElementById('specNext');
+  if (!bar || !myDead) { if (bar) bar.style.display = 'none'; return; }
+  var alive = getAlivePeerIds();
+  if (alive.length === 0 || !spectatingId || !peers[spectatingId]) {
+    bar.style.display = 'none'; return;
+  }
+  bar.style.display = 'flex';
+  if (nm) nm.textContent = peers[spectatingId].name || '?';
+  var showArrows = alive.length > 1;
+  if (prev) prev.style.visibility = showArrows ? 'visible' : 'hidden';
+  if (next) next.style.visibility = showArrows ? 'visible' : 'hidden';
+}
+
+// ── ADMIN ─────────────────────────────────────────────────────────────────
+function checkAdminStatus() {
+  if ((localStorage.getItem('authUser') || '').toUpperCase() !== 'ENZAE') return;
+  isAdminUser = true;
+  var ap = document.getElementById('adminPanel');
+  if (ap) ap.style.display = 'flex';
+}
+function adminSpawnLaser() {
+  if (!isAdminUser) return;
+  if (gameState !== 'solo' && gameState !== 'multi') return;
+  addLaser();
+  if (gameState === 'multi' && roomCh) {
+    var L = lasers[lasers.length - 1];
+    roomCh.send({type:'broadcast', event:'adminLaser', payload:{
+      type:L.type, ang0:L.ang0, ang:L.ang, t0:L.t0,
+      speed:L.speed, color:L.color, offset:L.offset
+    }});
+  }
+}
+function adminToggleInvincible() {
+  if (!isAdminUser) return;
+  adminInvincible = !adminInvincible;
+  var btn = document.getElementById('adminInvBtn');
+  if (btn) {
+    btn.style.background  = adminInvincible ? 'rgba(255,0,110,.6)'  : 'rgba(255,0,110,.15)';
+    btn.style.color        = adminInvincible ? '#fff'               : '#ff006e';
+  }
+}
+function adminKillAll() {
+  if (!isAdminUser) return;
+  if (gameState !== 'multi' || !roomCh) return;
+  roomCh.send({type:'broadcast', event:'adminKill', payload:{sender:myId}});
+  Object.keys(peers).forEach(function(id){ peers[id].isDead = true; });
+  if (isHost) checkRoundWin();
+}
+var _adminImgTimerLT = null;
+function showAdminImageLT(username, imageUrl) {
+  var ov  = document.getElementById('adminImgOv');
+  var img = document.getElementById('adminImgEl');
+  var lbl = document.getElementById('adminImgLabel');
+  if (!ov || !img) return;
+  if (lbl) lbl.textContent = username ? username.toUpperCase() : '';
+  img.src = imageUrl;
+  ov.style.display = 'flex';
+  if (_adminImgTimerLT) clearTimeout(_adminImgTimerLT);
+  _adminImgTimerLT = setTimeout(function(){ closeAdminImgLT(); }, 3000);
+}
+function closeAdminImgLT() {
+  var ov = document.getElementById('adminImgOv');
+  if (ov) ov.style.display = 'none';
+  if (_adminImgTimerLT) { clearTimeout(_adminImgTimerLT); _adminImgTimerLT = null; }
+}
+var _announceTimer = null;
+function showAnnouncement(text) {
+  var overlay = document.getElementById('announceOverlay');
+  var txt     = document.getElementById('announceTxt');
+  if (!overlay || !txt) return;
+  txt.textContent = text;
+  overlay.style.display = 'flex';
+  overlay.style.opacity = '1';
+  if (_announceTimer) clearTimeout(_announceTimer);
+  _announceTimer = setTimeout(function() {
+    overlay.style.transition = 'opacity 0.8s';
+    overlay.style.opacity = '0';
+    setTimeout(function(){ overlay.style.display = 'none'; overlay.style.transition = ''; overlay.style.opacity = '1'; }, 800);
+    _announceTimer = null;
+  }, 4000);
+}
+function adminSendAnnounce() {
+  if (!isAdminUser) return;
+  var inp  = document.getElementById('adminAnnounceInp');
+  var text = inp ? inp.value.trim() : '';
+  if (!text) return;
+  if (inp) inp.value = '';
+  showAnnouncement(text);
+  // Broadcast to players in the same room
+  if (gameState === 'multi' && roomCh) {
+    roomCh.send({type:'broadcast', event:'adminAnnounce', payload:{text:text}});
+  }
+  // Broadcast globally to everyone on the portal/other pages
+  if (globalCh) {
+    globalCh.send({type:'broadcast', event:'adminAnnounce', payload:{text:text}});
+  }
+}
+
+function ltAdminSetCoins() {
+  if (!isAdminUser) return;
+  var username = (document.getElementById('ltAdminCoinUser').value || '').trim().toUpperCase();
+  var amount   = parseInt(document.getElementById('ltAdminCoinAmt').value);
+  var msgEl    = document.getElementById('ltAdminCoinMsg');
+  msgEl.style.color = '#ffd700'; msgEl.textContent = '';
+  if (!username) { msgEl.style.color='#ff4444'; msgEl.textContent='Username?'; return; }
+  if (isNaN(amount) || amount < 0) { msgEl.style.color='#ff4444'; msgEl.textContent='Betrag?'; return; }
+  var payload = {username: username, amount: amount};
+  // Apply locally if it's our own account
+  if ((localStorage.getItem('authUser')||'').toUpperCase() === username) {
+    progress.coins = amount; saveLocal(); renderProfile(); renderAbilityShop();
+  }
+  // Broadcast to all connected clients
+  if (globalCh) globalCh.send({type:'broadcast', event:'setSunCoins', payload: payload});
+  if (gameState === 'multi' && roomCh) roomCh.send({type:'broadcast', event:'setSunCoins', payload: payload});
+  msgEl.textContent = '✓ '+username+' = '+amount+' ☀️';
+}
+
+function checkStalePeers() {
+  if (!isHost || gameState !== 'multi') return;
+  var now = Date.now();
+  var changed = false;
+  Object.keys(peers).forEach(function(id) {
+    if (!peers[id].isDead && peers[id].lastSeen && now - peers[id].lastSeen > 5000) {
+      peers[id].isDead = true;
+      changed = true;
+    }
+  });
+  if (changed) checkRoundWin();
 }
 function checkRoundWin() {
   // Only the host runs this — sole authority for round-end (fixes 3+ player race conditions)
@@ -952,6 +1416,8 @@ function checkRoundWin() {
 }
 function showRoundEnd(winnerName, scores) {
   gameState = 'roundEnd';
+  spectatingId = null;
+  var sb=document.getElementById('spectateBar'); if(sb) sb.style.display='none';
   var reR = document.getElementById('reRound');
   var reW = document.getElementById('reWinner');
   var reS = document.getElementById('reScores');
@@ -973,6 +1439,7 @@ function showRoundEnd(winnerName, scores) {
     if (reC) reC.textContent = isLast ? cnt : 'Nächste Runde in: '+cnt;
     if (cnt <= 0) {
       clearInterval(iv);
+      if (gameState !== 'roundEnd') return; // start event arrived early, already in new round
       if (isLast) {
         showFinalResult(scores);
       } else {
@@ -1002,12 +1469,24 @@ function showFinalResult(scores) {
 }
 function syncPos() {
   if (roomCh) roomCh.send({type:'broadcast',event:'pos',payload:{
-    id:myId, x:myX, y:myY, z:myZ, color:'#00f5ff', name:progress.name,
+    id:myId, x:myX, y:myY, z:myZ, color:getSkinColor(), name:progress.name,
     wp:myWalkPhase
   }});
 }
 function leaveRoom() {
-  if (roomCh) { roomCh.unsubscribe(); roomCh=null; }
+  spectatingId = null;
+  var sb=document.getElementById('spectateBar'); if(sb) sb.style.display='none';
+  if (roomCh) {
+    if ((gameState === 'multi' || gameState === 'roundEnd') && !myDead && soloAlive) {
+      // Leaving while alive — notify host so round can progress
+      roomCh.send({type:'broadcast', event:'dead', payload:{id:myId}});
+    }
+    if (isHost) {
+      // Tell everyone host left so they return to menu instead of hanging
+      roomCh.send({type:'broadcast', event:'hostLeft', payload:{id:myId}});
+    }
+    roomCh.unsubscribe(); roomCh=null;
+  }
   myRoom=null; peers={}; isHost=false; gameState='menu';
   roundNum=1; myWins=0; roundEndActive=false;
   var hr=document.getElementById('hudRound'); if(hr) hr.style.display='none';
@@ -1023,8 +1502,10 @@ function showScreen(id) {
   var inGame = (id === 'sGame');
   var jz = document.getElementById('joyZone');
   var jb = document.getElementById('jumpBtn');
+  var ab = document.getElementById('abilityBtn');
   if (jz) jz.style.display = inGame ? 'block' : 'none';
   if (jb) jb.style.display = inGame ? 'flex' : 'none';
+  if (ab) ab.style.display = inGame ? 'flex' : 'none';
 }
 
 // ── PROFILE ───────────────────────────────────────────────────────────────
@@ -1172,6 +1653,8 @@ window.addEventListener('DOMContentLoaded', function() {
   document.getElementById('elimLeaveBtn').addEventListener('click', leaveRoom);
 
   loadLocal(); renderProfile();
+  loadAbilities(); renderAbilityShop(); updateAbilityBtn();
+  checkAdminStatus();
 
   canvas = document.getElementById('c');
   ctx = canvas.getContext('2d');
@@ -1191,7 +1674,24 @@ window.addEventListener('DOMContentLoaded', function() {
 
   setTimeout(function(){
     try {
-      if (typeof supabase !== 'undefined') sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+      if (typeof supabase !== 'undefined') {
+        sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+        globalCh = sb.channel('portal-global')
+          .on('broadcast', {event:'adminAnnounce'}, function(m) {
+            if (m.payload && m.payload.text) showAnnouncement(m.payload.text);
+          })
+          .on('broadcast', {event:'adminImage'}, function(m) {
+            if (m.payload && m.payload.url) showAdminImageLT(m.payload.username, m.payload.url);
+          })
+          .on('broadcast', {event:'setSunCoins'}, function(m) {
+            if (!m.payload) return;
+            var me = (localStorage.getItem('authUser')||localStorage.getItem('playerName')||'').toUpperCase();
+            if (m.payload.username === me) {
+              progress.coins = m.payload.amount; saveLocal(); renderProfile(); renderAbilityShop();
+            }
+          })
+          .subscribe();
+      }
     } catch(e) {}
   }, 300);
 });

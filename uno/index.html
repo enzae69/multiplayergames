@@ -1040,18 +1040,35 @@ function saveName(){
   document.getElementById('pName').textContent=myName; showToast('Name: '+myName);
 }
 
-// ════ LEADERBOARD ════
+// ════ PROGRESS / LEADERBOARD ════
+function calcLevel(xp){ return Math.floor(Math.sqrt(xp/80))+1; }
+
 async function submitScore(playerName, won){
   if(!sb||!playerName||playerName.startsWith('BOT')) return;
-  try {
-    var res=await sb.from('leaderboard').select('wins,games').eq('player_name',playerName).maybeSingle();
-    var ex=res.data;
-    if(ex){
-      await sb.from('leaderboard').update({wins:ex.wins+(won?1:0),games:ex.games+1,last_seen:new Date().toISOString()}).eq('player_name',playerName);
-    } else {
-      await sb.from('leaderboard').insert({player_name:playerName,wins:won?1:0,games:1,last_seen:new Date().toISOString()});
-    }
-  } catch(e){ console.log('Score submit error:',e); }
+  var xpGain    = won ? 50 : 10;
+  var coinsGain = won ? 25 : 5;
+  // Update players table for logged-in user
+  var authUser = localStorage.getItem('authUser');
+  var authHash = localStorage.getItem('authHash');
+  if(authUser && authHash){
+    try {
+      var res = await sb.from('players').select('xp,coins,wins,games').eq('username',authUser).eq('password_hash',authHash).single();
+      if(res.data){
+        var d   = res.data;
+        var nxp = d.xp + xpGain;
+        await sb.from('players').update({
+          xp:   nxp,
+          coins: d.coins + coinsGain,
+          wins:  d.wins  + (won?1:0),
+          games: d.games + 1,
+          level: calcLevel(nxp),
+          last_seen: new Date().toISOString()
+        }).eq('username', authUser);
+        if(won) showToast('+'+xpGain+' XP  +'+coinsGain+' 🪙  Gewonnen!');
+        else    showToast('+'+xpGain+' XP  +'+coinsGain+' 🪙');
+      }
+    } catch(e){ console.log('Progress update error:',e); }
+  }
 }
 
 async function loadLeaderboard(){
@@ -1092,7 +1109,13 @@ function showLeaderboard(prevScreen){
 }
 
 // ════ BOOT ════
+function applySkin(){
+  var skin=localStorage.getItem('activeSkin')||'default';
+  document.body.setAttribute('data-skin',skin);
+}
+
 window.addEventListener('load',function(){
+  applySkin();
   var stored=localStorage.getItem('playerName');
   if(stored){ myName=stored; document.getElementById('pName').textContent=myName; document.getElementById('nameInp').value=myName; }
   if(typeof supabase!=='undefined') sb=supabase.createClient(SUPA_URL,SUPA_KEY);

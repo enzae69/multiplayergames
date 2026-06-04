@@ -8,67 +8,293 @@
   @import url('https://fonts.googleapis.com/css2?family=Russo+One&family=Exo+2:wght@400;700;900&display=swap');
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{background:#050510;color:#fff;font-family:'Exo 2',sans-serif;min-height:100vh;overflow-x:hidden}
-  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,245,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.04) 1px,transparent 1px);background-size:40px 40px;animation:grid 20s linear infinite;pointer-events:none;z-index:0}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,245,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,.04) 1px,transparent 1px);background-size:40px 40px;animation:grid 20s linear infinite;pointer-events:none;z-index:0}
   @keyframes grid{0%{background-position:0 0}100%{background-position:40px 40px}}
-  .wrap{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:32px 16px 48px}
+  .wrap{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:32px 16px 100px}
+
+  /* ── TITLE ── */
   .portal-title{font-family:'Russo One',sans-serif;font-size:clamp(32px,9vw,72px);background:linear-gradient(90deg,#00f5ff,#ff006e,#ffff00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:3px;text-align:center;filter:drop-shadow(0 0 30px #00f5ff);animation:pulse 3s ease-in-out infinite}
   @keyframes pulse{0%,100%{filter:drop-shadow(0 0 20px #00f5ff)}50%{filter:drop-shadow(0 0 50px #ff006e)}}
-  .subtitle{color:rgba(255,255,255,0.4);letter-spacing:6px;font-size:12px;text-transform:uppercase;margin-top:-8px;margin-bottom:28px}
+  .subtitle{color:rgba(255,255,255,.4);letter-spacing:6px;font-size:12px;text-transform:uppercase;margin-top:-8px;margin-bottom:28px}
   .sep{width:60px;height:2px;background:linear-gradient(90deg,transparent,#00f5ff,transparent);margin-bottom:28px}
 
-  /* profile strip */
-  .profile-strip{display:flex;align-items:center;gap:12px;background:rgba(10,10,31,0.9);border:1px solid rgba(0,245,255,0.3);border-radius:14px;padding:12px 16px;width:min(480px,95vw);margin-bottom:28px}
+  /* ── PROFILE ── */
+  .profile-strip{display:flex;align-items:center;gap:12px;background:rgba(10,10,31,.9);border:1px solid rgba(0,245,255,.3);border-radius:14px;padding:12px 16px;width:min(480px,95vw);margin-bottom:28px}
   .p-avatar{width:44px;height:44px;flex-shrink:0}
   .p-info{flex:1;min-width:0}
   .p-name{font-weight:900;font-size:16px;color:#00f5ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .p-lvl{font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1px}
+  .p-lvl{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:1px}
   .p-coins{display:flex;align-items:center;gap:4px;font-family:'Russo One',sans-serif;color:#ffd700;font-size:15px}
-  .edit-btn{background:none;border:1px solid rgba(0,245,255,0.25);border-radius:8px;color:rgba(0,245,255,0.6);cursor:pointer;font-size:13px;padding:5px 10px;flex-shrink:0;transition:border-color .2s}
+  .edit-btn{background:none;border:1px solid rgba(0,245,255,.25);border-radius:8px;color:rgba(0,245,255,.6);cursor:pointer;font-size:13px;padding:5px 10px;flex-shrink:0;transition:border-color .2s}
   .edit-btn:hover{border-color:#00f5ff;color:#00f5ff}
 
-  /* games grid */
-  .games-label{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:4px;color:rgba(255,255,255,0.3);text-transform:uppercase;align-self:flex-start;margin-left:calc((100% - min(480px,95vw))/2);margin-bottom:12px}
+  /* ── GAMES GRID ── */
+  .games-label{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:4px;color:rgba(255,255,255,.3);text-transform:uppercase;align-self:flex-start;margin-left:calc((100% - min(480px,95vw))/2);margin-bottom:12px}
   .games-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:min(480px,95vw)}
-  .game-card{background:rgba(10,10,31,0.9);border:2px solid rgba(255,255,255,0.08);border-radius:18px;padding:20px 14px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:transform 0.15s,box-shadow 0.2s;text-decoration:none;color:inherit;position:relative;overflow:hidden}
-  .game-card:active{transform:scale(0.96)}
-  .game-card.laser{border-color:rgba(0,245,255,0.3)}
-  .game-card.laser:hover,.game-card.laser:active{box-shadow:0 0 30px rgba(0,245,255,0.25)}
-  .game-card.auslaender{border-color:rgba(255,215,0,0.3)}
-  .game-card.auslaender:hover{box-shadow:0 0 30px rgba(255,215,0,0.25)}
-  .game-card.uno{border-color:rgba(227,38,54,0.4)}
-  .game-card.uno:hover,.game-card.uno:active{box-shadow:0 0 30px rgba(227,38,54,0.3)}
-  .game-card.soon{opacity:0.5;cursor:default}
+  .game-card{background:rgba(10,10,31,.9);border:2px solid rgba(255,255,255,.08);border-radius:18px;padding:20px 14px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:transform .15s,box-shadow .2s;text-decoration:none;color:inherit;position:relative;overflow:hidden}
+  .game-card:active{transform:scale(.96)}
+  .game-card.laser{border-color:rgba(0,245,255,.3)}.game-card.laser:hover{box-shadow:0 0 30px rgba(0,245,255,.25)}
+  .game-card.uno{border-color:rgba(227,38,54,.4)}.game-card.uno:hover{box-shadow:0 0 30px rgba(227,38,54,.3)}
+  .game-card.shop{border-color:rgba(255,214,0,.4)}.game-card.shop:hover{box-shadow:0 0 30px rgba(255,214,0,.3)}
+  .game-card.jacky{border-color:rgba(255,0,110,.5);background:linear-gradient(145deg,rgba(10,10,31,.9),rgba(40,0,20,.9))}.game-card.jacky:hover{box-shadow:0 0 30px rgba(255,0,110,.4)}
+  .game-card.auslaender{border-color:rgba(255,215,0,.3)}
+  .game-card.soon{opacity:.5;cursor:default;pointer-events:none}
   .game-icon{font-size:44px;filter:drop-shadow(0 0 12px currentColor)}
-  .game-name{font-family:'Russo One',sans-serif;font-size:16px;letter-spacing:1px;text-align:center}
-  .game-desc{font-size:11px;color:rgba(255,255,255,0.4);text-align:center;letter-spacing:0.5px}
+  .game-name{font-family:'Russo One',sans-serif;font-size:14px;letter-spacing:1px;text-align:center;line-height:1.3}
+  .game-desc{font-size:11px;color:rgba(255,255,255,.4);text-align:center;letter-spacing:.5px}
   .game-badge{position:absolute;top:10px;right:10px;font-size:10px;letter-spacing:1px;font-weight:700;padding:3px 8px;border-radius:20px}
-  .badge-live{background:rgba(57,255,20,0.15);color:#39ff14;border:1px solid rgba(57,255,20,0.3)}
-  .badge-soon{background:rgba(255,140,0,0.15);color:#ff8c00;border:1px solid rgba(255,140,0,0.3)}
-  .game-players{font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:1px}
+  .badge-live{background:rgba(57,255,20,.15);color:#39ff14;border:1px solid rgba(57,255,20,.3)}
+  .badge-soon{background:rgba(255,140,0,.15);color:#ff8c00;border:1px solid rgba(255,140,0,.3)}
+  .badge-hot{background:rgba(255,0,110,.15);color:#ff006e;border:1px solid rgba(255,0,110,.3)}
+  .game-players{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:1px}
 
-  /* name modal */
-  .modal-overlay{position:fixed;inset:0;background:rgba(5,5,16,0.97);z-index:200;display:flex;align-items:center;justify-content:center}
-  .modal-overlay.off{display:none}
-  .modal-box{background:rgba(10,10,31,0.99);border:2px solid rgba(0,245,255,0.4);border-radius:20px;padding:36px 28px;width:min(400px,92vw);display:flex;flex-direction:column;gap:20px;align-items:center}
-  .modal-title{font-family:'Russo One',sans-serif;font-size:26px;color:#00f5ff;letter-spacing:3px;text-align:center}
-  .modal-sub{font-size:12px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-align:center;line-height:1.6}
-  .name-inp{background:rgba(15,15,42,1);border:2px solid rgba(0,245,255,0.3);color:#00f5ff;font-family:'Russo One',sans-serif;font-size:22px;padding:14px 18px;border-radius:10px;outline:none;width:100%;text-align:center;letter-spacing:5px;text-transform:uppercase}
-  .name-inp:focus{border-color:#00f5ff;box-shadow:0 0 12px rgba(0,245,255,0.2)}
-  .modal-btn{font-family:'Russo One',sans-serif;font-size:16px;letter-spacing:2px;padding:14px;border:none;border-radius:10px;cursor:pointer;background:linear-gradient(135deg,#007a8a,#00c4d4);color:#050510;width:100%;text-transform:uppercase;transition:opacity .15s}
-  .modal-btn:active{opacity:0.85}
+  /* ── LEADERBOARD PANEL ── */
+  #lbToggle{position:fixed;top:14px;right:14px;z-index:300;font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:1px;padding:9px 14px;border:none;border-radius:12px;cursor:pointer;background:linear-gradient(135deg,#7a4a00,#ffb300);color:#000;box-shadow:0 4px 18px rgba(255,179,0,.4);touch-action:manipulation;transition:transform .15s;display:flex;align-items:center;gap:6px;white-space:nowrap}
+  #lbToggle:active{transform:scale(.93)}
+  #lbToggle .lb-c{font-size:10px;background:rgba(0,0,0,.25);border-radius:8px;padding:1px 6px;letter-spacing:0}
+  #lbPanel{position:fixed;top:0;right:0;z-index:290;width:min(300px,96vw);height:100vh;background:rgba(8,6,20,.97);border-left:1px solid rgba(255,179,0,.2);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:-8px 0 40px rgba(0,0,0,.6)}
+  #lbPanel.open{transform:translateX(0)}
+  .lb-head{padding:14px 14px 10px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;background:rgba(255,179,0,.04)}
+  .lb-title{font-family:'Russo One',sans-serif;font-size:16px;letter-spacing:3px;color:#ffb300}
+  .lb-sub{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:2px;margin-top:3px}
+  .lb-acts{display:flex;gap:7px;margin-top:10px}
+  .lb-btn{font-family:'Russo One',sans-serif;font-size:10px;letter-spacing:1px;padding:6px 12px;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);cursor:pointer;touch-action:manipulation}
+  .lb-btn.ml{margin-left:auto;color:rgba(255,255,255,.4)}
+  .lb-col-head{display:grid;grid-template-columns:38px 1fr 48px 52px;padding:6px 12px;font-family:'Russo One',sans-serif;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.22);border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0}
+  .lb-col-head span:nth-child(3),.lb-col-head span:nth-child(4){text-align:center}
+  .lb-list{flex:1;overflow-y:auto;padding:6px 8px 16px;scrollbar-width:thin;scrollbar-color:rgba(255,179,0,.3) transparent}
+  .lb-list::-webkit-scrollbar{width:4px}
+  .lb-list::-webkit-scrollbar-thumb{background:rgba(255,179,0,.3);border-radius:4px}
+  .lb-item{display:grid;grid-template-columns:38px 1fr 48px 52px;align-items:center;padding:7px 4px;border-radius:8px;margin-bottom:3px;border:1px solid transparent}
+  .lb-item:hover{background:rgba(255,255,255,.04)}
+  .lb-item.r1{background:rgba(255,179,0,.1);border-color:rgba(255,179,0,.2)}
+  .lb-item.r2{background:rgba(180,180,180,.07);border-color:rgba(180,180,180,.14)}
+  .lb-item.r3{background:rgba(180,80,20,.1);border-color:rgba(200,100,40,.14)}
+  .lb-item.me{border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.05)}
+  .lb-rank{font-family:'Russo One',sans-serif;font-size:15px;text-align:center}
+  .lb-name{font-family:'Russo One',sans-serif;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
+  .lb-name.me{color:#00d4ff}
+  .lb-xp{font-family:'Russo One',sans-serif;font-size:12px;color:#a78bfa;text-align:center}
+  .lb-coins{font-family:'Russo One',sans-serif;font-size:12px;color:#ffd700;text-align:center}
+  .lb-msg{text-align:center;padding:28px 12px;font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.25)}
+  .lb-msg.err{color:rgba(255,80,80,.5)}
+  #lbBackdrop{position:fixed;inset:0;z-index:280;background:rgba(0,0,0,.5);display:none;backdrop-filter:blur(2px)}
+  #lbBackdrop.show{display:block}
+
+  /* ── AUTH BUTTON ── */
+  #authBtn{position:fixed;bottom:18px;right:18px;z-index:300;font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:1px;padding:10px 16px;border:none;border-radius:14px;cursor:pointer;touch-action:manipulation;transition:transform .15s,box-shadow .15s;display:flex;align-items:center;gap:8px;white-space:nowrap;max-width:220px;overflow:hidden}
+  #authBtn.guest{background:linear-gradient(135deg,#1a1a3a,#2a2a5a);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.15);box-shadow:0 4px 16px rgba(0,0,0,.4)}
+  #authBtn.loggedin{background:linear-gradient(135deg,#003a28,#00c47a);color:#000;box-shadow:0 4px 18px rgba(0,196,122,.35)}
+  #authBtn:active{transform:scale(.93)}
+  #authBtn .ab-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* ── AUTH MODAL ── */
+  .modal-ov{position:fixed;inset:0;background:rgba(5,5,16,.97);z-index:400;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+  .modal-ov.off{display:none}
+  .modal-box{background:rgba(10,10,31,.99);border:1px solid rgba(0,212,255,.35);border-radius:22px;padding:32px 26px;width:min(400px,94vw);display:flex;flex-direction:column;gap:18px;align-items:center;box-shadow:0 12px 50px rgba(0,0,0,.6)}
+  .modal-title{font-family:'Russo One',sans-serif;font-size:22px;color:#00d4ff;letter-spacing:3px;text-align:center}
+  .modal-sub{font-size:12px;color:rgba(255,255,255,.35);letter-spacing:1px;text-align:center;line-height:1.6;margin-top:-8px}
+  .auth-inp{background:rgba(12,12,36,1);border:2px solid rgba(0,212,255,.25);color:#fff;font-family:'Exo 2',sans-serif;font-size:16px;font-weight:700;padding:12px 16px;border-radius:10px;outline:none;width:100%;letter-spacing:2px;transition:border-color .2s}
+  .auth-inp:focus{border-color:#00d4ff;box-shadow:0 0 0 3px rgba(0,212,255,.12)}
+  .auth-inp::placeholder{color:rgba(255,255,255,.25);font-weight:400;letter-spacing:1px}
+  .auth-submit{font-family:'Russo One',sans-serif;font-size:15px;letter-spacing:2px;padding:14px;border:none;border-radius:12px;cursor:pointer;width:100%;text-transform:uppercase;transition:opacity .15s}
+  .auth-submit:active{opacity:.85}
+  .auth-submit.reg{background:linear-gradient(135deg,#006680,#00c4d4);color:#000;box-shadow:0 4px 18px rgba(0,196,212,.3)}
+  .auth-submit.log{background:linear-gradient(135deg,#003a28,#00c47a);color:#000;box-shadow:0 4px 18px rgba(0,196,122,.3)}
+  .auth-toggle{font-size:12px;color:rgba(255,255,255,.35);text-align:center;cursor:pointer;letter-spacing:1px;border:none;background:none;width:100%;padding:4px}
+  .auth-toggle span{color:#00d4ff;text-decoration:underline}
+  .auth-err{color:#ff4444;font-size:12px;min-height:16px;text-align:center;letter-spacing:1px;font-family:'Russo One',sans-serif}
+  .auth-sep{width:100%;height:1px;background:rgba(255,255,255,.08)}
+  .modal-cancel{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:1px;padding:8px;border:none;background:none;color:rgba(255,255,255,.25);cursor:pointer;width:100%}
+  .user-info-box{width:100%;background:rgba(0,196,122,.06);border:1px solid rgba(0,196,122,.2);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+  .ui-name{font-family:'Russo One',sans-serif;font-size:18px;color:#00c47a}
+  .ui-stats{display:flex;gap:16px;font-size:12px;color:rgba(255,255,255,.5);letter-spacing:1px;flex-wrap:wrap}
+  .ui-stats b{color:#fff}
+  .ui-logout{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:1px;padding:8px 14px;border:1px solid rgba(255,80,80,.3);border-radius:8px;background:rgba(255,80,80,.08);color:rgba(255,100,100,.7);cursor:pointer;align-self:flex-start}
+
+  /* ── SHOP MODAL ── */
+  #shopModal{z-index:410}
+  #shopModal .modal-box{max-height:90vh;overflow:hidden;display:flex;flex-direction:column;gap:14px;padding:24px 18px}
+  .shop-title{font-family:'Russo One',sans-serif;font-size:20px;letter-spacing:4px;color:#ffd700;text-align:center}
+  .shop-sub{font-size:11px;color:rgba(255,255,255,.3);letter-spacing:2px;text-align:center;margin-top:-6px}
+  .shop-coins-row{display:flex;align-items:center;justify-content:center;gap:8px;font-family:'Russo One',sans-serif;font-size:15px;color:#ffd700;background:rgba(255,214,0,.07);border:1px solid rgba(255,214,0,.2);border-radius:10px;padding:8px 16px}
+  .skin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;overflow-y:auto;padding:4px 2px 8px;scrollbar-width:thin;scrollbar-color:rgba(255,214,0,.3) transparent}
+  .skin-grid::-webkit-scrollbar{width:4px}
+  .skin-grid::-webkit-scrollbar-thumb{background:rgba(255,214,0,.3);border-radius:4px}
+  .skin-card{display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 6px;border-radius:12px;border:2px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);cursor:pointer;transition:border-color .2s,background .2s;touch-action:manipulation}
+  .skin-card:active{transform:scale(.94)}
+  .skin-card.owned{border-color:rgba(46,204,64,.3);background:rgba(46,204,64,.05)}
+  .skin-card.active-skin{border-color:#ffd700;background:rgba(255,214,0,.1);box-shadow:0 0 14px rgba(255,214,0,.2)}
+  .skin-preview{width:42px;height:62px;border-radius:7px;border:2px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;font-family:'Russo One',sans-serif;color:rgba(255,255,255,.15);position:relative;overflow:hidden;flex-shrink:0}
+  .skin-preview.rgb-prev{animation:rbg 2s linear infinite}
+  @keyframes rbg{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
+  .skin-name{font-family:'Russo One',sans-serif;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.7);text-align:center;line-height:1.3}
+  .skin-price{font-family:'Russo One',sans-serif;font-size:10px;color:#ffd700;text-align:center}
+  .skin-status{font-family:'Russo One',sans-serif;font-size:9px;letter-spacing:1px;text-align:center;padding:3px 7px;border-radius:6px}
+  .skin-status.free{color:#39ff14;background:rgba(57,255,20,.1)}
+  .skin-status.owned-s{color:#00d4ff;background:rgba(0,212,255,.1)}
+  .skin-status.active-s{color:#ffd700;background:rgba(255,214,0,.15)}
+  .skin-status.buy-s{color:rgba(255,255,255,.5);background:rgba(255,255,255,.07)}
+  .shop-err{font-family:'Russo One',sans-serif;font-size:11px;color:#ff4444;text-align:center;min-height:16px}
+
+  /* ── JACKY OVERLAY ── */
+  #jackyOverlay{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;background:rgba(5,0,15,.97);display:none}
+  #jackyOverlay.show{display:flex;animation:jackyIn .4s ease}
+  @keyframes jackyIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+  .jacky-text{font-family:'Russo One',sans-serif;font-size:clamp(28px,8vw,64px);text-align:center;letter-spacing:4px;background:linear-gradient(90deg,#ff006e,#ff6d00,#ffd600,#00e676,#00d4ff,#bf00ff,#ff006e);background-size:300% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:rainbow 2s linear infinite,jackyPulse 1s ease-in-out infinite}
+  @keyframes rainbow{0%{background-position:0%}100%{background-position:300%}}
+  @keyframes jackyPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+  .jacky-sub{font-family:'Russo One',sans-serif;font-size:18px;color:rgba(255,255,255,.5);letter-spacing:6px}
+  .jacky-close{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:2px;padding:12px 28px;border:2px solid rgba(255,255,255,.2);border-radius:12px;background:transparent;color:rgba(255,255,255,.5);cursor:pointer;margin-top:10px;touch-action:manipulation}
+
+  /* ── NAV TABS ── */
+  .nav-tabs{display:flex;gap:12px;width:min(480px,95vw);margin-bottom:20px}
+  .nav-tab{flex:1;font-family:'Russo One',sans-serif;font-size:18px;letter-spacing:2px;padding:18px;border-radius:16px;border:2px solid;cursor:pointer;transition:all .2s;touch-action:manipulation;background:transparent}
+  .nav-tab:active{transform:scale(.97)}
+  .nav-tab.spiele-tab{border-color:rgba(0,245,255,.3);color:rgba(0,245,255,.55)}
+  .nav-tab.spiele-tab.active{background:rgba(0,245,255,.12);border-color:#00f5ff;color:#00f5ff;box-shadow:0 0 24px rgba(0,245,255,.2)}
+  .nav-tab.shop-tab{border-color:rgba(255,214,0,.3);color:rgba(255,214,0,.55)}
+  .nav-tab.shop-tab.active{background:rgba(255,214,0,.12);border-color:#ffd700;color:#ffd700;box-shadow:0 0 24px rgba(255,214,0,.2)}
+  .jacky-line{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:4px;text-align:center;background:linear-gradient(90deg,#ff006e,#ff6d00,#ffd600,#00e676,#00d4ff,#bf00ff,#ff006e);background-size:300% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:rainbow 3s linear infinite;margin-bottom:16px;cursor:pointer;width:min(480px,95vw)}
+  .inline-shop{width:min(480px,95vw);display:flex;flex-direction:column;gap:10px;padding-bottom:20px}
+
+  /* ── NAME MODAL ── */
+  #nameModal{z-index:500}
+  .name-inp{background:rgba(15,15,42,1);border:2px solid rgba(0,245,255,.3);color:#00f5ff;font-family:'Russo One',sans-serif;font-size:22px;padding:14px 18px;border-radius:10px;outline:none;width:100%;text-align:center;letter-spacing:5px;text-transform:uppercase}
+  .name-inp:focus{border-color:#00f5ff}
+  .modal-btn{font-family:'Russo One',sans-serif;font-size:16px;letter-spacing:2px;padding:14px;border:none;border-radius:10px;cursor:pointer;background:linear-gradient(135deg,#007a8a,#00c4d4);color:#050510;width:100%;text-transform:uppercase}
   .name-err{color:#ff006e;font-size:12px;min-height:16px;text-align:center}
 </style>
 </head>
 <body>
 
-<!-- Name modal -->
-<div id="nameModal" class="modal-overlay off">
+<!-- ── LB TOGGLE ── -->
+<button id="lbToggle" onclick="toggleLb()">🏆 TOP <span class="lb-c" id="lbCount">200</span></button>
+<div id="lbBackdrop" onclick="closeLb()"></div>
+<div id="lbPanel">
+  <div class="lb-head">
+    <div class="lb-title">🏆 BESTENLISTE</div>
+    <div class="lb-sub">GLOBALE TOP 200</div>
+    <div class="lb-acts">
+      <button class="lb-btn" onclick="loadLb()">↻ REFRESH</button>
+      <button class="lb-btn ml" onclick="closeLb()">✕</button>
+    </div>
+  </div>
+  <div class="lb-col-head">
+    <span>#</span><span>SPIELER</span><span>XP</span><span>🪙</span>
+  </div>
+  <div class="lb-list" id="lbList"><div class="lb-msg">Laden…</div></div>
+</div>
+
+<!-- ── AUTH BUTTON ── -->
+<button id="authBtn" class="guest" onclick="openAuthModal()">
+  <span>🔑</span><span class="ab-name">LOGIN / REGISTER</span>
+</button>
+
+<!-- ── AUTH MODAL ── -->
+<div class="modal-ov off" id="authModal">
   <div class="modal-box">
-    <div class="modal-title">SPIELERNAME</div>
-    <div class="modal-sub">Wähle deinen Namen — jederzeit über das Profil änderbar</div>
+    <div class="modal-title" id="authTitle">REGISTRIEREN</div>
+    <div class="modal-sub" id="authSub">Erstelle deinen Account — nur Username &amp; Passwort</div>
+    <div class="auth-sep"></div>
+    <div id="authLoggedIn" style="display:none;width:100%;flex-direction:column;gap:12px;align-items:center">
+      <div class="user-info-box" id="userInfoBox"></div>
+      <button class="ui-logout" onclick="logout()">AUSLOGGEN</button>
+    </div>
+    <div id="authForm" style="width:100%;display:flex;flex-direction:column;gap:12px">
+      <input class="auth-inp" id="authUser" maxlength="16" placeholder="USERNAME" autocomplete="off" spellcheck="false"/>
+      <input class="auth-inp" id="authPass" type="password" maxlength="32" placeholder="PASSWORT" autocomplete="off"/>
+      <div class="auth-err" id="authErr"></div>
+      <button class="auth-submit reg" id="authSubmit" onclick="submitAuth()">REGISTRIEREN</button>
+      <button class="auth-toggle" onclick="toggleAuthMode()"><span id="authToggleText">Bereits einen Account? <span>EINLOGGEN</span></span></button>
+    </div>
+    <button class="modal-cancel" onclick="closeAuthModal()">ABBRECHEN</button>
+  </div>
+</div>
+
+<!-- ── SHOP MODAL ── -->
+<div class="modal-ov off" id="shopModal">
+  <div class="modal-box">
+    <div class="shop-title">🛒 SKIN SHOP</div>
+    <div class="shop-sub">UNO KARTEN SKINS</div>
+    <div class="shop-coins-row">🪙 <span id="shopCoinsDisplay">0</span> Coins verfügbar</div>
+    <div class="shop-err" id="shopErr"></div>
+    <div class="skin-grid" id="skinGrid"></div>
+    <button class="modal-cancel" onclick="closeShop()">✕ SCHLIESSEN</button>
+  </div>
+</div>
+
+<!-- ── GLOBAL ANNOUNCEMENT OVERLAY ── -->
+<div id="portalAnnounceOv" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:600;display:none;align-items:center;justify-content:center;pointer-events:none">
+  <div id="portalAnnounceTxt" style="background:rgba(5,5,16,.96);border:2px solid rgba(255,0,110,.7);border-radius:18px;padding:22px 36px;font-family:'Russo One',sans-serif;font-size:22px;color:#fff;letter-spacing:3px;text-align:center;box-shadow:0 0 40px rgba(255,0,110,.35);max-width:80vw;word-break:break-word"></div>
+</div>
+
+<!-- ── ADMIN IMAGE OVERLAY ── -->
+<div id="adminImgOv" onclick="closeAdminImg()" style="position:fixed;inset:0;z-index:700;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:rgba(0,0,0,.82);cursor:pointer">
+  <div id="adminImgLabel" style="font-family:'Russo One',sans-serif;font-size:18px;color:#ff006e;letter-spacing:4px;text-shadow:0 0 20px rgba(255,0,110,.8)"></div>
+  <img id="adminImgEl" src="" alt="" style="max-width:85vw;max-height:72vh;border-radius:12px;box-shadow:0 0 40px rgba(255,0,110,.4);object-fit:contain"/>
+</div>
+
+<!-- ── ADMIN MICRO BUTTON ── -->
+<button id="adminDot" onclick="openAdminPanel()" style="position:fixed;bottom:14px;left:14px;z-index:400;width:14px;height:14px;border-radius:50%;background:#39ff14;border:none;cursor:pointer;opacity:.5;padding:0;touch-action:manipulation;box-shadow:0 0 7px rgba(57,255,20,.6)"></button>
+
+<!-- ── ADMIN OVERLAY ── -->
+<div id="adminOv" onclick="if(event.target===this)closeAdminPanel()" style="position:fixed;inset:0;z-index:500;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.65);backdrop-filter:blur(4px)">
+  <div style="background:rgba(5,5,16,.97);border:2px solid rgba(57,255,20,.3);border-radius:18px;padding:22px 20px;width:min(300px,90vw);font-family:'Russo One',sans-serif;display:flex;flex-direction:column;gap:10px;position:relative">
+    <button onclick="closeAdminPanel()" style="position:absolute;top:10px;right:12px;background:none;border:none;color:rgba(255,255,255,.3);font-size:18px;cursor:pointer;line-height:1">✕</button>
+    <div id="adminUnlockSec">
+      <input id="adminCodeInp" type="password" placeholder="..." onkeydown="if(event.key==='Enter')tryAdminUnlock()" autocomplete="off" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:9px;padding:10px 14px;font-family:'Russo One',sans-serif;font-size:14px;outline:none;width:100%;letter-spacing:3px"/>
+      <div id="adminCodeErr" style="font-size:10px;color:#ff4444;margin-top:5px;min-height:14px;text-align:center"></div>
+      <button onclick="tryAdminUnlock()" style="background:rgba(57,255,20,.12);border:1px solid rgba(57,255,20,.3);color:#39ff14;border-radius:9px;padding:9px;font-size:12px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:2px;width:100%;margin-top:4px;touch-action:manipulation">ENTER</button>
+    </div>
+    <div id="adminToolsSec" style="display:none;flex-direction:column;gap:10px">
+      <div style="font-size:9px;letter-spacing:3px;color:#39ff14;text-align:center;margin-bottom:2px">⚡ ADMIN PANEL</div>
+      <div style="border-top:1px solid rgba(57,255,20,.15);padding-top:10px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-size:9px;letter-spacing:2px;color:rgba(255,215,0,.7)">🪙 COINS SETZEN</div>
+        <input id="adminCoinUser" type="text" placeholder="USERNAME" autocomplete="off" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;font-family:'Russo One',sans-serif;font-size:12px;outline:none;width:100%;letter-spacing:1px"/>
+        <input id="adminCoinAmt" type="number" placeholder="NEUER BETRAG" min="0" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;font-family:'Russo One',sans-serif;font-size:12px;outline:none;width:100%"/>
+        <button onclick="adminSetCoins()" style="background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.35);color:#ffd700;border-radius:8px;padding:8px;font-size:12px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;width:100%;touch-action:manipulation">SETZEN</button>
+        <div id="adminCoinMsg" style="font-size:10px;color:#39ff14;min-height:14px;text-align:center;letter-spacing:1px"></div>
+      </div>
+      <div style="border-top:1px solid rgba(57,255,20,.15);padding-top:10px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-size:9px;letter-spacing:2px;color:rgba(255,215,0,.8)">☀️ SONNEN MÜNZEN</div>
+        <input id="adminSunUser" type="text" placeholder="USERNAME" autocomplete="off" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;font-family:'Russo One',sans-serif;font-size:12px;outline:none;width:100%;letter-spacing:1px"/>
+        <input id="adminSunAmt" type="number" placeholder="BETRAG" min="0" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;font-family:'Russo One',sans-serif;font-size:12px;outline:none;width:100%"/>
+        <button onclick="adminSetSunCoins()" style="background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.35);color:#ffd700;border-radius:8px;padding:8px;font-size:12px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;width:100%;touch-action:manipulation">SETZEN</button>
+        <div id="adminSunMsg" style="font-size:10px;color:#ffd700;min-height:14px;text-align:center;letter-spacing:1px"></div>
+      </div>
+      <div style="border-top:1px solid rgba(57,255,20,.15);padding-top:10px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-size:9px;letter-spacing:2px;color:rgba(255,0,110,.8)">📢 ANKÜNDIGUNG</div>
+        <input id="adminAnnounceInpPortal" type="text" placeholder="Nachricht an alle..." autocomplete="off" onkeydown="if(event.key==='Enter')adminPortalAnnounce()" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;font-family:'Russo One',sans-serif;font-size:12px;outline:none;width:100%;letter-spacing:1px"/>
+        <button onclick="adminPortalAnnounce()" style="background:rgba(255,0,110,.12);border:1px solid rgba(255,0,110,.35);color:#ff006e;border-radius:8px;padding:8px;font-size:12px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;width:100%;touch-action:manipulation">SENDEN</button>
+      </div>
+      <div style="border-top:1px solid rgba(57,255,20,.15);padding-top:10px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-size:9px;letter-spacing:2px;color:rgba(0,245,255,.8)">🖼️ BILD SENDEN</div>
+        <input id="adminImgUser" type="text" placeholder="USERNAME" autocomplete="off" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;font-family:'Russo One',sans-serif;font-size:12px;outline:none;width:100%;letter-spacing:1px"/>
+        <input id="adminImgUrl" type="url" placeholder="BILD URL..." autocomplete="off" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;font-family:'Russo One',sans-serif;font-size:11px;outline:none;width:100%"/>
+        <button onclick="adminSendImage()" style="background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.35);color:#00f5ff;border-radius:8px;padding:8px;font-size:12px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;width:100%;touch-action:manipulation">SENDEN</button>
+        <div id="adminImgMsg" style="font-size:10px;color:#ff4444;min-height:14px;text-align:center;letter-spacing:1px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── JACKY OVERLAY ── -->
+<div id="jackyOverlay" onclick="closeJacky()">
+  <div style="font-size:80px">🔥</div>
+  <div class="jacky-text">JACKY PHAM<br>IST COOL</div>
+  <div class="jacky-sub">FACTS ONLY 💯</div>
+  <button class="jacky-close" onclick="closeJacky()">OK ICH WEISS</button>
+</div>
+
+<!-- ── NAME MODAL ── -->
+<div id="nameModal" class="modal-ov off">
+  <div class="modal-box">
+    <div class="modal-title" style="color:#00f5ff">SPIELERNAME</div>
+    <div class="modal-sub">Wähle einen Anzeigenamen</div>
     <input id="nameInput" class="name-inp" maxlength="16" placeholder="NAME..." autocomplete="off" spellcheck="false"/>
     <div class="name-err" id="nameErr"></div>
-    <button class="modal-btn" onclick="saveName()">SPIELEN →</button>
+    <button class="modal-btn" onclick="saveGuestName()">SPIELEN →</button>
   </div>
 </div>
 
@@ -87,34 +313,328 @@
     <button class="edit-btn" onclick="openNameModal()">✏️</button>
   </div>
 
-  <div class="games-label">SPIELE</div>
-  <div class="games-grid">
-    <a class="game-card laser" href="laser-tracer/index.html?v=3">
-      <div class="game-badge badge-live">LIVE</div>
-      <div class="game-icon" style="color:#00f5ff">⚡</div>
-      <div class="game-name">LASER TRACER</div>
-      <div class="game-desc">Weiche Lasern aus, überlebe am längsten</div>
-      <div class="game-players">Multiplayer • Solo</div>
-    </a>
-    <a class="game-card uno" href="uno/index.html">
-      <div class="game-badge badge-live">LIVE</div>
-      <div class="game-icon" style="color:#e32636">🃏</div>
-      <div class="game-name">UNO</div>
-      <div class="game-desc">Klassisches Kartenspiel, spiele Karten aus</div>
-      <div class="game-players">Multiplayer • 2–10</div>
-    </a>
-    <div class="game-card auslaender soon">
-      <div class="game-badge badge-soon">BALD</div>
-      <div class="game-icon" style="color:#ffd700">🌍</div>
-      <div class="game-name">WHO IS THE AUSLÄNDER?</div>
-      <div class="game-desc">Finde den Ausländer unter euch</div>
-      <div class="game-players">Multiplayer</div>
+  <div class="jacky-line" onclick="openJacky()">✦ JACKY PHAM IST COOL ✦</div>
+
+  <div class="nav-tabs">
+    <button class="nav-tab spiele-tab active" id="tabSpiele" onclick="showTab('spiele')">🎮 SPIELE</button>
+    <button class="nav-tab shop-tab" id="tabShop" onclick="showTab('shop')">🛒 SHOP</button>
+  </div>
+
+  <div id="contentSpiele">
+    <div class="games-grid">
+      <a class="game-card laser" href="laser-tracer/index.html?v=4">
+        <div class="game-badge badge-live">LIVE</div>
+        <div class="game-icon" style="color:#00f5ff">⚡</div>
+        <div class="game-name">LASER TRACER</div>
+        <div class="game-desc">Weiche Lasern aus, überlebe am längsten</div>
+        <div class="game-players">Multiplayer • Solo</div>
+      </a>
+      <a class="game-card uno" href="uno/index.html">
+        <div class="game-badge badge-live">LIVE</div>
+        <div class="game-icon" style="color:#e32636">🃏</div>
+        <div class="game-name">UNO</div>
+        <div class="game-desc">Klassisches Kartenspiel, spiele Karten aus</div>
+        <div class="game-players">Multiplayer • 2–10</div>
+      </a>
+      <div class="game-card auslaender soon" style="grid-column:span 2">
+        <div class="game-badge badge-soon">BALD</div>
+        <div class="game-icon" style="color:#ffd700">🌍</div>
+        <div class="game-name">WHO IS THE AUSLÄNDER?</div>
+        <div class="game-desc">Finde den Ausländer unter euch</div>
+        <div class="game-players">Multiplayer</div>
+      </div>
     </div>
+  </div>
+
+  <div id="contentShop" style="display:none" class="inline-shop">
+    <div class="shop-coins-row">🪙 <span id="inlineShopCoins">0</span> Coins verfügbar</div>
+    <div class="shop-err" id="inlineShopErr"></div>
+    <div class="skin-grid" id="inlineSkinGrid"></div>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-function avatarSVG(color, size){
+'use strict';
+var SUPA_URL = 'https://ozvyymrqibpyqccgszlz.supabase.co';
+var SUPA_KEY = 'sb_publishable_30WmZF8d8h_rUSrTGtBwnQ_Kn9gquwL';
+var sb = null;
+if(typeof supabase !== 'undefined') sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// ── SKIN DEFINITIONS ─────────────────────────────────────────────
+var SKINS = [
+  {id:'default', name:'STANDARD',      price:0,   bg:'linear-gradient(145deg,#10003a,#220060)', rgb:false},
+  {id:'ocean',   name:'OZEAN',         price:100, bg:'linear-gradient(145deg,#003a6a,#0077cc)', rgb:false},
+  {id:'forest',  name:'WALD',          price:100, bg:'linear-gradient(145deg,#003a10,#007a22)', rgb:false},
+  {id:'sunset',  name:'SUNSET',        price:100, bg:'linear-gradient(145deg,#6a1a00,#cc5500)', rgb:false},
+  {id:'purple',  name:'LILA',          price:100, bg:'linear-gradient(145deg,#2a003a,#7700cc)', rgb:false},
+  {id:'gold',    name:'GOLD',          price:100, bg:'linear-gradient(145deg,#3a2a00,#cc9900)', rgb:false},
+  {id:'pink',    name:'PINK',          price:100, bg:'linear-gradient(145deg,#3a0018,#cc0055)', rgb:false},
+  {id:'dark',    name:'DUNKEL',        price:100, bg:'linear-gradient(145deg,#050505,#111111)', rgb:false},
+  {id:'rainbow', name:'RGB ✨',        price:200, bg:'linear-gradient(145deg,#ff0000,#ff7700,#ffff00,#00ff00,#0000ff,#8b00ff)', rgb:true},
+];
+
+// ── AUTH STATE ────────────────────────────────────────────────────
+var currentUser = null;
+var authMode    = 'register';
+
+async function sha256(str){
+  var buf  = new TextEncoder().encode(str);
+  var hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+}
+
+function calcLevel(xp){ return Math.floor(Math.sqrt(xp/80))+1; }
+
+async function register(username, password){
+  var hash = await sha256(password);
+  var res  = await sb.from('players').insert({username:username,password_hash:hash,xp:0,coins:0,level:1,wins:0,games:0}).select().single();
+  if(res.error){ if(res.error.code==='23505') throw new Error('Username bereits vergeben!'); throw new Error(res.error.message); }
+  return res.data;
+}
+
+async function login(username, password){
+  var hash = await sha256(password);
+  var res  = await sb.from('players').select('*').eq('username',username).eq('password_hash',hash).single();
+  if(res.error||!res.data) throw new Error('Falscher Username oder Passwort!');
+  return res.data;
+}
+
+function saveSession(user){
+  currentUser = user;
+  localStorage.setItem('authUser', user.username);
+  localStorage.setItem('authHash', user.password_hash);
+  localStorage.setItem('playerName', user.username);
+  applyUserToUI(user);
+}
+
+function applyUserToUI(user){
+  var lvl = calcLevel(user.xp);
+  document.getElementById('pName').textContent  = user.username;
+  document.getElementById('pLvl').textContent   = lvl;
+  document.getElementById('pXp').textContent    = user.xp;
+  document.getElementById('pCoins').textContent = user.coins;
+  document.getElementById('pAvatar').innerHTML  = avatarSVG('#00c47a', 44);
+  var btn = document.getElementById('authBtn');
+  btn.className = 'loggedin';
+  btn.innerHTML = '<span>✅</span><span class="ab-name">'+user.username+'</span>';
+  document.getElementById('userInfoBox').innerHTML =
+    '<div class="ui-name">'+user.username+'</div>'
+    +'<div class="ui-stats"><span>Level <b>'+lvl+'</b></span><span>XP <b>'+user.xp+'</b></span><span>🪙 <b>'+user.coins+'</b></span><span>Siege <b>'+user.wins+'</b></span></div>';
+}
+
+async function tryAutoLogin(){
+  var u = localStorage.getItem('authUser'), h = localStorage.getItem('authHash');
+  if(!sb||!u||!h) return;
+  try {
+    var res = await sb.from('players').select('*').eq('username',u).eq('password_hash',h).single();
+    if(res.data) saveSession(res.data);
+  } catch(e){}
+}
+
+function logout(){
+  currentUser=null;
+  localStorage.removeItem('authUser'); localStorage.removeItem('authHash');
+  var btn=document.getElementById('authBtn');
+  btn.className='guest'; btn.innerHTML='<span>🔑</span><span class="ab-name">LOGIN / REGISTER</span>';
+  document.getElementById('authLoggedIn').style.display='none';
+  document.getElementById('authForm').style.display='flex';
+  closeAuthModal(); showGuestProfile();
+}
+
+function getCoins(){
+  if(currentUser) return currentUser.coins;
+  return parseInt(localStorage.getItem('playerCoins')||'0');
+}
+
+async function spendCoins(amount){
+  if(currentUser){
+    var nc = currentUser.coins - amount;
+    currentUser.coins = nc;
+    await sb.from('players').update({coins:nc}).eq('username',currentUser.username);
+    applyUserToUI(currentUser);
+  } else {
+    localStorage.setItem('playerCoins', Math.max(0, getCoins()-amount));
+    showGuestProfile();
+  }
+}
+
+// ── AUTH MODAL ────────────────────────────────────────────────────
+function openAuthModal(){
+  document.getElementById('authErr').textContent='';
+  if(currentUser){
+    document.getElementById('authTitle').textContent='MEIN ACCOUNT';
+    document.getElementById('authSub').textContent='Dein Fortschritt ist gespeichert';
+    document.getElementById('authLoggedIn').style.display='flex';
+    document.getElementById('authForm').style.display='none';
+  } else {
+    document.getElementById('authTitle').textContent=authMode==='register'?'REGISTRIEREN':'EINLOGGEN';
+    document.getElementById('authSub').textContent=authMode==='register'?'Kein Email nötig — nur Username & Passwort':'Willkommen zurück!';
+    document.getElementById('authLoggedIn').style.display='none';
+    document.getElementById('authForm').style.display='flex';
+  }
+  document.getElementById('authModal').classList.remove('off');
+  setTimeout(function(){if(!currentUser) document.getElementById('authUser').focus();},120);
+}
+
+function closeAuthModal(){ document.getElementById('authModal').classList.add('off'); }
+
+function toggleAuthMode(){
+  authMode=authMode==='register'?'login':'register';
+  var r=authMode==='register';
+  document.getElementById('authTitle').textContent=r?'REGISTRIEREN':'EINLOGGEN';
+  document.getElementById('authSub').textContent=r?'Kein Email nötig — nur Username & Passwort':'Willkommen zurück!';
+  document.getElementById('authSubmit').textContent=r?'REGISTRIEREN':'EINLOGGEN';
+  document.getElementById('authSubmit').className='auth-submit '+(r?'reg':'log');
+  document.getElementById('authToggleText').innerHTML=r?'Bereits einen Account? <span>EINLOGGEN</span>':'Noch kein Account? <span>REGISTRIEREN</span>';
+  document.getElementById('authErr').textContent='';
+}
+
+async function submitAuth(){
+  var username=(document.getElementById('authUser').value||'').trim().toUpperCase();
+  var password=(document.getElementById('authPass').value||'').trim();
+  var errEl=document.getElementById('authErr');
+  errEl.textContent='';
+  if(username.length<2){errEl.textContent='Username zu kurz!';return;}
+  if(password.length<3){errEl.textContent='Passwort zu kurz (min. 3)!';return;}
+  if(!sb){errEl.textContent='Keine Verbindung!';return;}
+  var btn=document.getElementById('authSubmit');
+  btn.textContent='…'; btn.disabled=true;
+  try {
+    var user=authMode==='register'?await register(username,password):await login(username,password);
+    saveSession(user); closeAuthModal();
+    showToastPortal(authMode==='register'?'🎉 Willkommen, '+user.username+'!':'✅ Eingeloggt als '+user.username+'!');
+  } catch(e){ errEl.textContent=e.message||'Fehler'; }
+  finally { btn.textContent=authMode==='register'?'REGISTRIEREN':'EINLOGGEN'; btn.disabled=false; }
+}
+
+document.getElementById('authUser').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('authPass').focus();});
+document.getElementById('authPass').addEventListener('keydown',function(e){if(e.key==='Enter')submitAuth();});
+
+// ── SHOP ─────────────────────────────────────────────────────────
+function getOwnedSkins(){ return JSON.parse(localStorage.getItem('ownedSkins')||'["default"]'); }
+function saveOwnedSkins(arr){ localStorage.setItem('ownedSkins',JSON.stringify(arr)); }
+function getActiveSkin(){ return localStorage.getItem('activeSkin')||'default'; }
+
+function openShop(){
+  document.getElementById('shopErr').textContent='';
+  document.getElementById('shopCoinsDisplay').textContent=getCoins();
+  renderShop();
+  document.getElementById('shopModal').classList.remove('off');
+}
+function closeShop(){ document.getElementById('shopModal').classList.add('off'); }
+
+function renderShop(){
+  var owned   = getOwnedSkins();
+  var active  = getActiveSkin();
+  var grid    = document.getElementById('skinGrid');
+  grid.innerHTML='';
+  SKINS.forEach(function(skin){
+    var isOwned  = owned.indexOf(skin.id)!==-1;
+    var isActive = active===skin.id;
+    var isFree   = skin.price===0;
+    var card = document.createElement('div');
+    card.className='skin-card'+(isOwned?' owned':'')+(isActive?' active-skin':'');
+    var prevClass = skin.rgb?'skin-preview rgb-prev':'skin-preview';
+    var statusHtml;
+    if(isActive)       statusHtml='<div class="skin-status active-s">AKTIV</div>';
+    else if(isOwned)   statusHtml='<div class="skin-status owned-s">AUSRÜSTEN</div>';
+    else if(isFree)    statusHtml='<div class="skin-status free">KOSTENLOS</div>';
+    else               statusHtml='<div class="skin-status buy-s">'+skin.price+' 🪙</div>';
+    card.innerHTML=
+      '<div class="'+prevClass+'" style="background:'+skin.bg+'"><span style="font-size:8px;opacity:.3">UNO</span></div>'
+      +'<div class="skin-name">'+skin.name+'</div>'
+      +statusHtml;
+    card.addEventListener('click',function(){ onSkinClick(skin); });
+    grid.appendChild(card);
+  });
+}
+
+async function onSkinClick(skin){
+  var owned   = getOwnedSkins();
+  var isOwned = owned.indexOf(skin.id)!==-1;
+  document.getElementById('shopErr').textContent='';
+
+  if(isOwned||skin.price===0){
+    // Activate it
+    localStorage.setItem('activeSkin', skin.id);
+    renderShop();
+    showToastPortal('Skin aktiviert: '+skin.name);
+    return;
+  }
+
+  // Try to buy
+  var coins = getCoins();
+  if(coins < skin.price){
+    document.getElementById('shopErr').textContent='Zu wenig Coins! ('+coins+'/'+skin.price+' 🪙)';
+    return;
+  }
+  await spendCoins(skin.price);
+  owned.push(skin.id);
+  saveOwnedSkins(owned);
+  localStorage.setItem('activeSkin', skin.id);
+  document.getElementById('shopCoinsDisplay').textContent=getCoins();
+  renderShop();
+  showToastPortal('🎉 '+skin.name+' gekauft & aktiviert!');
+}
+
+// ── JACKY ─────────────────────────────────────────────────────────
+function openJacky(){
+  document.getElementById('jackyOverlay').classList.add('show');
+}
+function closeJacky(e){
+  if(e && e.target!==document.getElementById('jackyOverlay') && !e.target.classList.contains('jacky-close')) return;
+  document.getElementById('jackyOverlay').classList.remove('show');
+}
+
+// ── LEADERBOARD ──────────────────────────────────────────────────
+var lbOpen=false;
+function toggleLb(){ lbOpen?closeLb():openLb(); }
+function openLb(){
+  lbOpen=true;
+  document.getElementById('lbPanel').classList.add('open');
+  document.getElementById('lbBackdrop').classList.add('show');
+  loadLb();
+}
+function closeLb(){
+  lbOpen=false;
+  document.getElementById('lbPanel').classList.remove('open');
+  document.getElementById('lbBackdrop').classList.remove('show');
+}
+async function loadLb(){
+  var list=document.getElementById('lbList');
+  list.innerHTML='<div class="lb-msg">Laden…</div>';
+  if(!sb){list.innerHTML='<div class="lb-msg err">Keine Verbindung</div>';return;}
+  try {
+    var res=await sb.from('players').select('username,xp,coins').order('xp',{ascending:false}).limit(200);
+    if(res.error) throw res.error;
+    renderLb(res.data||[]);
+  } catch(e){
+    list.innerHTML='<div class="lb-msg err">Tabelle nicht gefunden.<br><span style="font-size:9px;opacity:.6">players.sql in Supabase ausführen</span></div>';
+  }
+}
+function renderLb(data){
+  var myName=(localStorage.getItem('playerName')||'').toUpperCase();
+  var medals=['🥇','🥈','🥉'];
+  document.getElementById('lbCount').textContent=data.length||200;
+  if(!data.length){document.getElementById('lbList').innerHTML='<div class="lb-msg">Noch keine Spieler.</div>';return;}
+  var html='';
+  data.forEach(function(row,i){
+    var rank=i+1, name=(row.username||'?').toUpperCase(), isMe=name===myName;
+    var cls='lb-item'+(rank===1?' r1':rank===2?' r2':rank===3?' r3':'')+(isMe?' me':'');
+    html+='<div class="'+cls+'"><div class="lb-rank">'+(rank<=3?medals[rank-1]:rank)+'</div>'
+      +'<div class="lb-name'+(isMe?' me':'')+'">'+ name+(isMe?' ◀':'')+'</div>'
+      +'<div class="lb-xp">'+(row.xp||0)+'</div>'
+      +'<div class="lb-coins">'+(row.coins||0)+'</div></div>';
+  });
+  var el=document.getElementById('lbList');
+  el.innerHTML=html;
+  var me=el.querySelector('.lb-item.me');
+  if(me) me.scrollIntoView({block:'center',behavior:'smooth'});
+}
+
+// ── PROFILE ──────────────────────────────────────────────────────
+function avatarSVG(color,size){
   var cid='g'+color.replace('#','');
   return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 60 60">'
     +'<defs><radialGradient id="'+cid+'" cx="40%" cy="35%"><stop offset="0%" stop-color="#fff"/><stop offset="45%" stop-color="'+color+'"/><stop offset="100%" stop-color="'+color+'"/></radialGradient></defs>'
@@ -123,54 +643,254 @@ function avatarSVG(color, size){
     +'<circle cx="24.5" cy="24.5" r="1.8" fill="#fff"/><circle cx="38.5" cy="24.5" r="1.8" fill="#fff"/>'
     +'<path d="M 23 38 Q 30 43 37 38" stroke="#1a1a2e" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>';
 }
+function showGuestProfile(){
+  var name=localStorage.getItem('playerName')||'GAST';
+  document.getElementById('pAvatar').innerHTML=avatarSVG('#00f5ff',44);
+  document.getElementById('pName').textContent=name;
+  document.getElementById('pLvl').textContent=localStorage.getItem('playerLevel')||'1';
+  document.getElementById('pXp').textContent=localStorage.getItem('playerXp')||'0';
+  document.getElementById('pCoins').textContent=localStorage.getItem('playerCoins')||'0';
+}
+function openNameModal(){
+  document.getElementById('nameInput').value=localStorage.getItem('playerName')||'';
+  document.getElementById('nameErr').textContent='';
+  document.getElementById('nameModal').classList.remove('off');
+  setTimeout(function(){document.getElementById('nameInput').focus();},100);
+}
+function saveGuestName(){
+  var name=document.getElementById('nameInput').value.trim().toUpperCase();
+  if(!name){document.getElementById('nameErr').textContent='Bitte gib einen Namen ein!';return;}
+  localStorage.setItem('playerName',name);
+  document.getElementById('nameModal').classList.add('off');
+  if(!currentUser) showGuestProfile();
+}
+document.getElementById('nameInput').addEventListener('keydown',function(e){if(e.key==='Enter')saveGuestName();});
 
-function showProfile(){
-  var name = localStorage.getItem('playerName') || 'Player';
-  var level = parseInt(localStorage.getItem('playerLevel') || '1') || 1;
-  var xp = parseInt(localStorage.getItem('playerXp') || '0') || 0;
-  var coins = parseInt(localStorage.getItem('playerCoins') || '0') || 0;
-  document.getElementById('pAvatar').innerHTML = avatarSVG('#00f5ff', 44);
-  document.getElementById('pName').textContent = name;
-  document.getElementById('pLvl').textContent = level;
-  document.getElementById('pXp').textContent = xp;
-  document.getElementById('pCoins').textContent = coins;
+// ── TOAST ─────────────────────────────────────────────────────────
+function showToastPortal(msg){
+  var t=document.createElement('div');
+  t.style.cssText='position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(10,10,30,.98);border:1px solid rgba(0,212,255,.35);border-radius:12px;padding:10px 22px;font-family:Russo One,sans-serif;font-size:12px;letter-spacing:2px;color:#00d4ff;white-space:nowrap;pointer-events:none;max-width:90vw;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.4)';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(function(){t.remove();},3000);
 }
 
-function saveName(){
-  var inp = document.getElementById('nameInput');
-  var name = inp.value.trim().toUpperCase();
-  if(!name || name.length < 1){
-    document.getElementById('nameErr').textContent = 'Bitte gib einen Namen ein!';
-    inp.style.borderColor = '#ff006e';
+// ── TAB NAVIGATION & INLINE SHOP ─────────────────────────────────────────
+function showTab(tab) {
+  var spiele = document.getElementById('contentSpiele');
+  var shop   = document.getElementById('contentShop');
+  var ts     = document.getElementById('tabSpiele');
+  var tc     = document.getElementById('tabShop');
+  if (tab === 'spiele') {
+    spiele.style.display = '';
+    shop.style.display   = 'none';
+    ts.classList.add('active');
+    tc.classList.remove('active');
+  } else {
+    spiele.style.display = 'none';
+    shop.style.display   = '';
+    ts.classList.remove('active');
+    tc.classList.add('active');
+    renderInlineShop();
+  }
+}
+
+function renderInlineShop() {
+  document.getElementById('inlineShopCoins').textContent = getCoins();
+  document.getElementById('inlineShopErr').textContent   = '';
+  var owned  = getOwnedSkins();
+  var active = getActiveSkin();
+  var grid   = document.getElementById('inlineSkinGrid');
+  grid.innerHTML = '';
+  SKINS.forEach(function(skin){
+    var isOwned  = owned.indexOf(skin.id) !== -1;
+    var isActive = active === skin.id;
+    var card = document.createElement('div');
+    card.className = 'skin-card'+(isOwned?' owned':'')+(isActive?' active-skin':'');
+    var prevClass  = skin.rgb ? 'skin-preview rgb-prev' : 'skin-preview';
+    var statusHtml;
+    if(isActive)         statusHtml = '<div class="skin-status active-s">AKTIV</div>';
+    else if(isOwned)     statusHtml = '<div class="skin-status owned-s">AUSRÜSTEN</div>';
+    else if(!skin.price) statusHtml = '<div class="skin-status free">KOSTENLOS</div>';
+    else                 statusHtml = '<div class="skin-status buy-s">'+skin.price+' 🪙</div>';
+    card.innerHTML =
+      '<div class="'+prevClass+'" style="background:'+skin.bg+'"><span style="font-size:8px;opacity:.3">UNO</span></div>'
+      +'<div class="skin-name">'+skin.name+'</div>'
+      +statusHtml;
+    card.addEventListener('click', function(){ onInlineSkinClick(skin); });
+    grid.appendChild(card);
+  });
+}
+
+async function onInlineSkinClick(skin) {
+  var owned   = getOwnedSkins();
+  var isOwned = owned.indexOf(skin.id) !== -1;
+  document.getElementById('inlineShopErr').textContent = '';
+  if (isOwned || skin.price === 0) {
+    localStorage.setItem('activeSkin', skin.id);
+    renderInlineShop();
+    showToastPortal('Skin aktiviert: '+skin.name);
     return;
   }
-  inp.style.borderColor = 'rgba(0,245,255,0.3)';
-  document.getElementById('nameErr').textContent = '';
-  localStorage.setItem('playerName', name);
-  document.getElementById('nameModal').classList.add('off');
-  showProfile();
+  var coins = getCoins();
+  if (coins < skin.price) {
+    document.getElementById('inlineShopErr').textContent = 'Zu wenig Coins! ('+coins+'/'+skin.price+' 🪙)';
+    return;
+  }
+  await spendCoins(skin.price);
+  owned.push(skin.id);
+  saveOwnedSkins(owned);
+  localStorage.setItem('activeSkin', skin.id);
+  document.getElementById('inlineShopCoins').textContent = getCoins();
+  renderInlineShop();
+  showToastPortal('🎉 '+skin.name+' gekauft & aktiviert!');
 }
 
-function openNameModal(){
-  document.getElementById('nameInput').value = localStorage.getItem('playerName') || '';
-  document.getElementById('nameErr').textContent = '';
-  document.getElementById('nameInput').style.borderColor = 'rgba(0,245,255,0.3)';
-  document.getElementById('nameModal').classList.remove('off');
-  setTimeout(function(){ document.getElementById('nameInput').focus(); }, 100);
+// ── GLOBAL ANNOUNCE CHANNEL ──────────────────────────────────────
+var globalCh = null;
+var _portalAnnTimer = null;
+function showPortalAnnouncement(text) {
+  var ov  = document.getElementById('portalAnnounceOv');
+  var txt = document.getElementById('portalAnnounceTxt');
+  if (!ov || !txt) return;
+  txt.textContent = text;
+  ov.style.display = 'flex';
+  ov.style.opacity = '1';
+  ov.style.transition = '';
+  if (_portalAnnTimer) clearTimeout(_portalAnnTimer);
+  _portalAnnTimer = setTimeout(function() {
+    ov.style.transition = 'opacity 0.8s';
+    ov.style.opacity = '0';
+    setTimeout(function(){ ov.style.display='none'; ov.style.transition=''; ov.style.opacity='1'; }, 800);
+    _portalAnnTimer = null;
+  }, 4000);
+}
+var _adminImgTimer = null;
+function showAdminImage(username, imageUrl) {
+  var ov  = document.getElementById('adminImgOv');
+  var img = document.getElementById('adminImgEl');
+  var lbl = document.getElementById('adminImgLabel');
+  if (!ov || !img) return;
+  if (lbl) lbl.textContent = username ? username.toUpperCase() : '';
+  img.src = imageUrl;
+  ov.style.display = 'flex';
+  if (_adminImgTimer) clearTimeout(_adminImgTimer);
+  _adminImgTimer = setTimeout(function(){ closeAdminImg(); }, 3000);
+}
+function closeAdminImg() {
+  var ov = document.getElementById('adminImgOv');
+  if (ov) ov.style.display = 'none';
+  if (_adminImgTimer) { clearTimeout(_adminImgTimer); _adminImgTimer = null; }
+}
+function adminSendImage() {
+  var username = (document.getElementById('adminImgUser').value || '').trim();
+  var url      = (document.getElementById('adminImgUrl').value || '').trim();
+  var msgEl    = document.getElementById('adminImgMsg');
+  if (!url) { msgEl.textContent = 'Bitte URL eingeben'; return; }
+  msgEl.textContent = '';
+  showAdminImage(username, url);
+  if (globalCh) globalCh.send({type:'broadcast', event:'adminImage', payload:{username:username, url:url}});
+  document.getElementById('adminImgUrl').value = '';
 }
 
-document.getElementById('nameInput').addEventListener('keydown', function(e){
-  if(e.key === 'Enter') saveName();
-});
-
-// Boot — no login required
-var existingName = localStorage.getItem('playerName');
-if(!existingName){
-  document.getElementById('nameModal').classList.remove('off');
-  setTimeout(function(){ document.getElementById('nameInput').focus(); }, 100);
-} else {
-  showProfile();
+function adminSetSunCoins() {
+  var username = (document.getElementById('adminSunUser').value || '').trim().toUpperCase();
+  var amount   = parseInt(document.getElementById('adminSunAmt').value);
+  var msgEl    = document.getElementById('adminSunMsg');
+  msgEl.style.color = '#ffd700'; msgEl.textContent = '';
+  if (!username) { msgEl.style.color='#ff4444'; msgEl.textContent='Username eingeben'; return; }
+  if (isNaN(amount) || amount < 0) { msgEl.style.color='#ff4444'; msgEl.textContent='Betrag eingeben'; return; }
+  if (!globalCh) { msgEl.style.color='#ff4444'; msgEl.textContent='Nicht verbunden'; return; }
+  globalCh.send({type:'broadcast', event:'setSunCoins', payload:{username:username, amount:amount}});
+  msgEl.textContent = '✓ '+username+' → '+amount+' ☀️';
+  document.getElementById('adminSunAmt').value = '';
 }
+
+function subscribeGlobal() {
+  if (!sb || globalCh) return;
+  globalCh = sb.channel('portal-global')
+    .on('broadcast', {event:'adminAnnounce'}, function(m) {
+      if (m.payload && m.payload.text) showPortalAnnouncement(m.payload.text);
+    })
+    .on('broadcast', {event:'adminImage'}, function(m) {
+      if (m.payload && m.payload.url) showAdminImage(m.payload.username, m.payload.url);
+    })
+    .on('broadcast', {event:'setSunCoins'}, function(m) {
+      if (!m.payload) return;
+      var me = (localStorage.getItem('authUser')||localStorage.getItem('playerName')||'').toUpperCase();
+      if (m.payload.username === me) {
+        localStorage.setItem('lt_coins', m.payload.amount);
+        showToastPortal('☀️ Sonnen Münzen: '+m.payload.amount);
+      }
+    })
+    .subscribe();
+}
+function adminPortalAnnounce() {
+  var inp  = document.getElementById('adminAnnounceInpPortal');
+  var text = inp ? inp.value.trim() : '';
+  if (!text) return;
+  if (inp) inp.value = '';
+  showPortalAnnouncement(text);
+  if (globalCh) globalCh.send({type:'broadcast', event:'adminAnnounce', payload:{text:text}});
+}
+
+// ── ADMIN PANEL ──────────────────────────────────────────────────
+var isPortalAdmin = localStorage.getItem('adminUnlocked') === 'true';
+
+function openAdminPanel() {
+  document.getElementById('adminOv').style.display = 'flex';
+  if (isPortalAdmin) {
+    document.getElementById('adminUnlockSec').style.display = 'none';
+    document.getElementById('adminToolsSec').style.display = 'flex';
+  } else {
+    document.getElementById('adminUnlockSec').style.display = 'block';
+    document.getElementById('adminToolsSec').style.display = 'none';
+    setTimeout(function(){ document.getElementById('adminCodeInp').focus(); }, 100);
+  }
+}
+function closeAdminPanel() {
+  document.getElementById('adminOv').style.display = 'none';
+}
+function tryAdminUnlock() {
+  var code  = document.getElementById('adminCodeInp').value;
+  var errEl = document.getElementById('adminCodeErr');
+  if (code === 'enzae67') {
+    isPortalAdmin = true;
+    localStorage.setItem('adminUnlocked', 'true');
+    document.getElementById('adminUnlockSec').style.display = 'none';
+    document.getElementById('adminToolsSec').style.display = 'flex';
+    errEl.textContent = '';
+  } else {
+    errEl.textContent = '✗ Falscher Code';
+    document.getElementById('adminCodeInp').value = '';
+  }
+}
+async function adminSetCoins() {
+  var username = (document.getElementById('adminCoinUser').value || '').trim().toUpperCase();
+  var amount   = parseInt(document.getElementById('adminCoinAmt').value);
+  var msgEl    = document.getElementById('adminCoinMsg');
+  msgEl.style.color = '#ffd700';
+  msgEl.textContent = '';
+  if (!username) { msgEl.style.color='#ff4444'; msgEl.textContent='Username eingeben'; return; }
+  if (isNaN(amount) || amount < 0) { msgEl.style.color='#ff4444'; msgEl.textContent='Betrag eingeben'; return; }
+  if (!sb) { msgEl.style.color='#ff4444'; msgEl.textContent='Keine DB'; return; }
+  msgEl.textContent = '...';
+  var upd = await sb.from('players').update({coins: amount}).eq('username', username);
+  if (upd.error) { msgEl.style.color='#ff4444'; msgEl.textContent='Spieler nicht gefunden'; return; }
+  msgEl.textContent = '✓ ' + username + ' → ' + amount + ' 🪙';
+  if (lbOpen) loadLb();
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────
+(async function boot(){
+  await tryAutoLogin();
+  subscribeGlobal();
+  if(!currentUser){
+    var existingName=localStorage.getItem('playerName');
+    if(!existingName){ document.getElementById('nameModal').classList.remove('off'); setTimeout(function(){document.getElementById('nameInput').focus();},100); }
+    else showGuestProfile();
+  }
+})();
 </script>
 </body>
 </html>
