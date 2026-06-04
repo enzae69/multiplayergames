@@ -500,77 +500,89 @@ function updateCam() {
 
 // ── SKY ───────────────────────────────────────────────────────────────────
 function drawSky(t) {
-  // Dark background
-  var bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0,   '#000004');
-  bg.addColorStop(0.5, '#020210');
-  bg.addColorStop(1,   '#050518');
-  ctx.fillStyle = bg;
+  // Very dark background
+  ctx.fillStyle = '#000008';
   ctx.fillRect(0, 0, W, H);
 
-  // Project 3D LED ceiling structure into screen space
-  // The structure sits high above the arena centre so it appears in the sky
-  var R = ARENA_R * 1.1;
-  var H3 = 14; // height above floor
-  var pulse = 0.8 + 0.2 * Math.sin(t * 0.6);
+  ctx.save();
+  var pulse = 0.88 + 0.12 * Math.sin(t * 0.55);
 
-  // Define ceiling hex as 3D world points (x, y, z)
-  var angles6 = [0,1,2,3,4,5].map(function(i){ return i*Math.PI/3; });
-  var outerPts = angles6.map(function(a){
-    return proj(Math.cos(a)*R, H3, Math.sin(a)*R);
-  });
-  var innerPts = angles6.map(function(a){
-    return proj(Math.cos(a)*R*0.45, H3, Math.sin(a)*R*0.45);
-  });
-  var centrePt = proj(0, H3, 0);
-
-  // Helper: draw a glow line by layering multiple semi-transparent strokes
-  // No shadowBlur — pure layering for iOS performance
-  function glowLine(p1, p2, r, g, b, bright) {
-    if (!p1 || !p2) return;
-    var a = bright * pulse;
-    ctx.lineCap = 'round';
-    // Wide soft halo
-    ctx.globalAlpha = 0.07 * a;
+  // Draw a glowing polygon outline using layered strokes (no shadowBlur for iOS)
+  function glowPoly(pts, r, g, b, alpha) {
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+    ctx.closePath();
+    // Wide halo
+    ctx.globalAlpha = 0.06 * alpha * pulse;
     ctx.strokeStyle = 'rgb('+r+','+g+','+b+')';
-    ctx.lineWidth = 14;
-    ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
-    // Medium
-    ctx.globalAlpha = 0.18 * a;
-    ctx.lineWidth = 6;
-    ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
-    // Core bright
-    ctx.globalAlpha = 0.9 * a;
-    ctx.lineWidth = 1.8;
-    ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+    ctx.lineWidth = 28; ctx.stroke();
+    // Mid glow
+    ctx.globalAlpha = 0.18 * alpha * pulse;
+    ctx.lineWidth = 10; ctx.stroke();
+    // Bright core
+    ctx.globalAlpha = 0.92 * alpha * pulse;
+    ctx.lineWidth = 2.2; ctx.stroke();
     ctx.globalAlpha = 1;
   }
 
-  // Outer hex edges
-  for (var i = 0; i < 6; i++) {
-    glowLine(outerPts[i], outerPts[(i+1)%6], 210, 235, 255, 1.0);
-  }
-  // Spokes outer→inner
-  for (var j = 0; j < 6; j++) {
-    glowLine(outerPts[j], innerPts[j], 160, 210, 255, 0.7);
-  }
-  // Inner hex edges
-  for (var k = 0; k < 6; k++) {
-    glowLine(innerPts[k], innerPts[(k+1)%6], 180, 225, 255, 0.85);
-  }
-  // Spokes inner→centre
-  for (var l = 0; l < 6; l++) {
-    glowLine(innerPts[l], centrePt, 200, 230, 255, 0.5);
+  // Bright dot at a corner
+  function dot(x, y, r, g, b) {
+    ctx.globalAlpha = 0.9 * pulse;
+    ctx.fillStyle = 'rgb('+r+','+g+','+b+')';
+    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
   }
 
-  // Bright dot at each vertex
-  outerPts.concat(innerPts).forEach(function(p){
-    if (!p) return;
-    ctx.globalAlpha = 0.85 * pulse;
-    ctx.fillStyle = '#daeeff';
-    ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill();
+  var cx = W * 0.5, cy = H * 0.34;
+  var pw = W * 0.42, ph = H * 0.32; // half-width and height of each panel
+
+  // LEFT angular panel (trapezoid leaning left — like in image)
+  var L = [
+    [cx - pw*1.65, cy - ph*0.55],  // far top-left
+    [cx - pw*0.06, cy - ph*0.82],  // top centre
+    [cx - pw*0.06, cy + ph*0.18],  // bottom centre
+    [cx - pw*1.65, cy + ph*0.45],  // far bottom-left
+  ];
+  // RIGHT angular panel (mirror)
+  var R2 = [
+    [cx + pw*0.06, cy - ph*0.82],  // top centre
+    [cx + pw*1.65, cy - ph*0.55],  // far top-right
+    [cx + pw*1.65, cy + ph*0.45],  // far bottom-right
+    [cx + pw*0.06, cy + ph*0.18],  // bottom centre
+  ];
+
+  // Dark panel fill so they look like physical panels
+  ctx.globalAlpha = 0.22;
+  ctx.fillStyle = '#060618';
+  ctx.beginPath();
+  ctx.moveTo(L[0][0],L[0][1]); L.forEach(function(p){ctx.lineTo(p[0],p[1]);}); ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(R2[0][0],R2[0][1]); R2.forEach(function(p){ctx.lineTo(p[0],p[1]);}); ctx.closePath(); ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Glowing edges — white/light-blue like LED strips
+  glowPoly(L,  210, 235, 255, 1.0);
+  glowPoly(R2, 210, 235, 255, 1.0);
+
+  // Inner diagonal accent lines inside each panel
+  function glowLine(x1,y1,x2,y2, r,g,b, alpha) {
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+    ctx.globalAlpha = 0.05 * alpha * pulse; ctx.lineWidth=18; ctx.strokeStyle='rgb('+r+','+g+','+b+')'; ctx.stroke();
+    ctx.globalAlpha = 0.14 * alpha * pulse; ctx.lineWidth=7; ctx.stroke();
+    ctx.globalAlpha = 0.75 * alpha * pulse; ctx.lineWidth=1.4; ctx.stroke();
     ctx.globalAlpha = 1;
-  });
+  }
+  // Centre seam connecting both panels
+  glowLine(cx-pw*0.06, cy-ph*0.82,  cx+pw*0.06, cy-ph*0.82,  220,240,255, 0.9); // top join
+  glowLine(cx-pw*0.06, cy+ph*0.18,  cx+pw*0.06, cy+ph*0.18,  220,240,255, 0.7); // bottom join
+
+  // Bright dots at all corners
+  var allPts = L.concat(R2);
+  allPts.forEach(function(p){ dot(p[0],p[1], 230,245,255); });
+
+  ctx.restore();
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────
