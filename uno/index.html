@@ -28,7 +28,27 @@ html,body{width:100%;height:100%;overflow:hidden;background:#07070f;color:#fff;f
 .bcyan{background:linear-gradient(135deg,#007a8a,#00c4d4);color:#05050f;box-shadow:0 0 18px rgba(0,245,255,.35)}
 .bgreen{background:linear-gradient(135deg,#1a8a1a,#39ff14);color:#05050f;box-shadow:0 0 18px rgba(57,255,20,.35)}
 .bghost{background:rgba(255,255,255,.07);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.12)}
+.bgold{background:linear-gradient(135deg,#7a4a00,#ffb300);color:#05050f;box-shadow:0 0 18px rgba(255,179,0,.35)}
 .berr{color:#ff006e;font-size:12px;text-align:center;min-height:14px;letter-spacing:1px}
+
+/* LEADERBOARD */
+#sLeaderboard::before{background:radial-gradient(ellipse at 50% 0%,rgba(255,179,0,.08) 0%,transparent 60%)}
+.lb-box{background:rgba(8,8,22,.99);border:2px solid rgba(255,179,0,.3);border-radius:22px;padding:22px 18px;width:min(440px,96vw);max-height:90vh;display:flex;flex-direction:column;gap:12px;box-shadow:0 0 50px rgba(255,179,0,.06)}
+.lb-title{font-family:'Russo One',sans-serif;font-size:22px;letter-spacing:5px;color:#ffb300;text-align:center;filter:drop-shadow(0 0 16px rgba(255,179,0,.5))}
+.lb-header{display:grid;grid-template-columns:44px 1fr 52px 52px;gap:6px;padding:6px 10px;font-family:'Russo One',sans-serif;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.3);border-bottom:1px solid rgba(255,255,255,.08)}
+.lb-content{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:5px;min-height:80px;max-height:calc(90vh - 220px);scrollbar-width:none}
+.lb-content::-webkit-scrollbar{display:none}
+.lb-row{display:grid;grid-template-columns:44px 1fr 52px 52px;gap:6px;padding:9px 10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);align-items:center}
+.lb-row:nth-child(1){background:rgba(255,179,0,.1);border-color:rgba(255,179,0,.25)}
+.lb-row:nth-child(2){background:rgba(180,180,180,.07);border-color:rgba(180,180,180,.18)}
+.lb-row:nth-child(3){background:rgba(180,80,20,.08);border-color:rgba(200,100,40,.18)}
+.lb-rank{font-family:'Russo One',sans-serif;font-size:18px;text-align:center}
+.lb-name{font-family:'Russo One',sans-serif;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
+.lb-wins{font-family:'Russo One',sans-serif;font-size:15px;color:#39ff14;text-align:center}
+.lb-wr{font-family:'Russo One',sans-serif;font-size:12px;color:rgba(255,255,255,.4);text-align:center}
+.lb-me .lb-name{color:#00f5ff}
+.lb-loading,.lb-empty,.lb-error{text-align:center;font-size:13px;color:rgba(255,255,255,.3);letter-spacing:2px;padding:24px;font-family:'Russo One',sans-serif}
+.lb-error{color:rgba(255,80,80,.5)}
 
 /* PLAYER CARD */
 .pcard{background:rgba(10,10,28,.96);border:2px solid rgba(227,38,54,.3);border-radius:14px;padding:13px 18px;width:min(320px,93vw);display:flex;align-items:center;gap:12px;box-shadow:0 0 24px rgba(227,38,54,.08)}
@@ -216,6 +236,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#07070f;color:#fff;f
       <button class="btn bcyan" id="joinBtn" style="width:auto;padding:12px 20px;font-size:13px">JOIN</button>
     </div>
   </div>
+  <button class="btn bgold" id="lbMenuBtn">🏆 BESTENLISTE</button>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center">
     <input class="nameinp" id="nameInp" maxlength="16" placeholder="NAME ÄNDERN…" autocomplete="off" spellcheck="false"/>
     <button class="btn bcyan" id="nameBtn" style="width:auto;padding:12px 16px;font-size:13px">OK</button>
@@ -278,6 +299,22 @@ html,body{width:100%;height:100%;overflow:hidden;background:#07070f;color:#fff;f
   </div>
 </div>
 
+<!-- ══ LEADERBOARD ══ -->
+<div id="sLeaderboard" class="screen off">
+  <div class="lb-box">
+    <div class="lb-title">🏆 BESTENLISTE</div>
+    <div class="lb-header">
+      <span style="text-align:center">#</span>
+      <span>SPIELER</span>
+      <span style="text-align:center">SIEGE</span>
+      <span style="text-align:center">WIN%</span>
+    </div>
+    <div id="lbContent" class="lb-content"><div class="lb-loading">Laden…</div></div>
+    <button class="btn bcyan" id="lbRefreshBtn" style="font-size:13px;padding:11px">↻ AKTUALISIEREN</button>
+    <button class="btn bghost" id="lbBackBtn" style="font-size:13px;padding:11px">← ZURÜCK</button>
+  </div>
+</div>
+
 <!-- ══ COLOR PICKER ══ -->
 <div id="colorPick" class="off">
   <div class="cp-title">FARBE WÄHLEN</div>
@@ -323,6 +360,8 @@ var botIds   = [];
 var selBots  = 1;
 var botTimer = null;
 var heartbeatTimer = null;
+var scoreSubmitted = false;
+var lbPrevScreen   = 'sMenu';
 
 // Track previous turn for flash effect
 var prevTurnId = null;
@@ -921,6 +960,57 @@ function saveName(){
   if(!name) return;
   myName=name; localStorage.setItem('playerName',myName);
   document.getElementById('pName').textContent=myName; showToast('Name: '+myName);
+}
+
+// ════ LEADERBOARD ════
+async function submitScore(playerName, won){
+  if(!sb||!playerName||playerName.startsWith('BOT')) return;
+  try {
+    var res=await sb.from('leaderboard').select('wins,games').eq('player_name',playerName).maybeSingle();
+    var ex=res.data;
+    if(ex){
+      await sb.from('leaderboard').update({wins:ex.wins+(won?1:0),games:ex.games+1,last_seen:new Date().toISOString()}).eq('player_name',playerName);
+    } else {
+      await sb.from('leaderboard').insert({player_name:playerName,wins:won?1:0,games:1,last_seen:new Date().toISOString()});
+    }
+  } catch(e){ console.log('Score submit error:',e); }
+}
+
+async function loadLeaderboard(){
+  var el=document.getElementById('lbContent');
+  el.innerHTML='<div class="lb-loading">Laden…</div>';
+  if(!sb){ el.innerHTML='<div class="lb-error">Keine Verbindung</div>'; return; }
+  try {
+    var res=await sb.from('leaderboard').select('player_name,wins,games').order('wins',{ascending:false}).limit(25);
+    if(res.error) throw res.error;
+    renderLeaderboard(res.data||[]);
+  } catch(e){
+    el.innerHTML='<div class="lb-error">Tabelle nicht verfügbar.<br><span style="font-size:10px;opacity:.6">Supabase-Tabelle einrichten nötig.</span></div>';
+  }
+}
+
+function renderLeaderboard(data){
+  var el=document.getElementById('lbContent');
+  if(!data||!data.length){ el.innerHTML='<div class="lb-empty">Noch keine Einträge — spiel los!</div>'; return; }
+  var medals=['🥇','🥈','🥉'];
+  var html='';
+  data.forEach(function(row,i){
+    var wr=row.games>0?Math.round(row.wins/row.games*100):0;
+    var isMe=row.player_name===myName;
+    html+='<div class="lb-row'+(isMe?' lb-me':'')+'">'
+      +'<div class="lb-rank">'+(i<3?medals[i]:i+1)+'</div>'
+      +'<div class="lb-name">'+(row.player_name||'?')+(isMe?' ◀':'')+'</div>'
+      +'<div class="lb-wins">'+row.wins+'</div>'
+      +'<div class="lb-wr">'+wr+'%</div>'
+      +'</div>';
+  });
+  el.innerHTML=html;
+}
+
+function showLeaderboard(prevScreen){
+  lbPrevScreen=prevScreen||'sMenu';
+  showScreen('sLeaderboard');
+  loadLeaderboard();
 }
 
 // ════ BOOT ════
