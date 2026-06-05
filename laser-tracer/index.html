@@ -146,6 +146,38 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
     <div class="ab-grid" id="abGrid"></div>
     <div class="ab-err" id="abErr"></div>
   </div>
+  <!-- Character Shop -->
+  <div class="ab-shop" style="border-color:rgba(0,245,255,0.3)">
+    <div class="ab-shop-head" style="color:#00f5ff">
+      <span>🧍 CHARACTERS</span>
+    </div>
+    <div class="ab-grid">
+      <div class="ab-card ab-eq" style="border-color:#00f5ff">
+        <div class="ab-icon">🧍</div>
+        <div class="ab-name">DEFAULT</div>
+        <div class="ab-desc">3D Mixamo Character</div>
+        <div style="font-size:9px;letter-spacing:1px;color:#39ff14;background:rgba(57,255,20,.1);border-radius:6px;padding:2px 8px">✓ AKTIV</div>
+      </div>
+      <div class="ab-card" style="opacity:0.45;cursor:default">
+        <div class="ab-icon">⚔️</div>
+        <div class="ab-name">WARRIOR</div>
+        <div class="ab-desc">Kommt bald</div>
+        <div style="font-size:9px;letter-spacing:1px;color:#ffd700;background:rgba(255,215,0,.1);border-radius:6px;padding:2px 8px">🔒 SOON</div>
+      </div>
+      <div class="ab-card" style="opacity:0.45;cursor:default">
+        <div class="ab-icon">🤖</div>
+        <div class="ab-name">ROBOT</div>
+        <div class="ab-desc">Kommt bald</div>
+        <div style="font-size:9px;letter-spacing:1px;color:#ffd700;background:rgba(255,215,0,.1);border-radius:6px;padding:2px 8px">🔒 SOON</div>
+      </div>
+      <div class="ab-card" style="opacity:0.45;cursor:default">
+        <div class="ab-icon">🧙</div>
+        <div class="ab-name">WIZARD</div>
+        <div class="ab-desc">Kommt bald</div>
+        <div style="font-size:9px;letter-spacing:1px;color:#ffd700;background:rgba(255,215,0,.1);border-radius:6px;padding:2px 8px">🔒 SOON</div>
+      </div>
+    </div>
+  </div>
 
   <a href="../menu.html" class="btn bghost" style="text-align:center;text-decoration:none;font-family:'Russo One',sans-serif;font-size:13px;padding:10px">← SPIELAUSWAHL</a>
   <div class="berr" id="menuErr"></div>
@@ -563,7 +595,11 @@ function render(t) {
       var p = peers[id];
       if (p.isDead) continue; // dead players are off the field
       var isWatching = (myDead && id === spectatingId);
-      drawChar(p.x||0, p.y||0, p.z||0, p.color||'#ff006e', p.name||'?', isWatching, p.wp||0, (p.y||0)>0.1);
+      if (window._charSys && window._charSys.ready) {
+        drawCharName(p.x||0, p.y||0, p.z||0, p.color||'#ff006e', p.name||'?', isWatching);
+      } else {
+        drawChar(p.x||0, p.y||0, p.z||0, p.color||'#ff006e', p.name||'?', isWatching, p.wp||0, (p.y||0)>0.1);
+      }
     }
   }
   // Draw self only when alive — skip if Three.js character is ready
@@ -722,6 +758,19 @@ function drawLegShape(hx, hy, fx, fy, hw, fw) {
   ctx.moveTo(hx+nx*hw, hy+ny*hw); ctx.lineTo(hx-nx*hw, hy-ny*hw);
   ctx.lineTo(fx-nx*fw, fy-ny*fw); ctx.lineTo(fx+nx*fw, fy+ny*fw);
   ctx.closePath(); ctx.fill();
+}
+
+function drawCharName(wx, wy, wz, color, name, isMe) {
+  var pTop = proj(wx, wy + 3.8, wz);
+  if (!pTop) return;
+  var sc = pTop.s;
+  var fs = Math.max(10, Math.min(18, sc * 0.34));
+  ctx.save();
+  ctx.font = 'bold ' + fs + 'px Exo\\ 2, sans-serif';
+  ctx.textAlign = 'center'; ctx.shadowBlur = 7; ctx.shadowColor = color;
+  ctx.fillStyle = isMe ? '#fff' : 'rgba(255,255,255,0.85)';
+  ctx.fillText(name, pTop.x, pTop.y);
+  ctx.restore();
 }
 
 // ── CHARACTER (Stumble Guys chibi style + walk/jump animation) ────────────
@@ -1148,6 +1197,8 @@ function renderRoomList() {
   Object.values(state).forEach(function(arr) {
     arr.forEach(function(p) { if (p.roomCode) rooms.push(p); });
   });
+  var now = Date.now();
+  rooms = rooms.filter(function(r){ return r.playerCount > 0 && (now - r.ts) < 180000; });
   rooms.sort(function(a,b){ return b.ts - a.ts; });
   if (rooms.length === 0) {
     el.innerHTML = '<div class="no-rooms-msg">KEINE ÖFFENTLICHEN RÄUME</div>';
@@ -1238,6 +1289,20 @@ function joinChannel() {
           // Already known: only refresh name — never wipe position or wins data
           peers[m.payload.id].name = m.payload.name;
         }
+      }
+    })
+    .on('broadcast',{event:'leave'},function(m){
+      if (!m.payload || m.payload.id === myId) return;
+      delete peers[m.payload.id];
+      updateRoomPresence();
+      // Refresh lobby list
+      var list = document.getElementById('plistHost');
+      if (list && Object.keys(peers).length >= 0) {
+        var slots = '<div class="pslot filled">' + progress.name + ' (DU)</div>';
+        Object.values(peers).forEach(function(p) {
+          if (p.name) slots += '<div class="pslot filled">' + escH(p.name) + '</div>';
+        });
+        list.innerHTML = slots;
       }
     })
     .on('broadcast',{event:'pos'},function(m){
@@ -1625,6 +1690,7 @@ function syncPos() {
   }});
 }
 function leaveRoom() {
+  if (roomCh) roomCh.send({type:'broadcast', event:'leave', payload:{id:myId, name:progress.name}});
   spectatingId = null;
   var sb=document.getElementById('spectateBar'); if(sb) sb.style.display='none';
   if (roomCh) {
@@ -1812,6 +1878,10 @@ window.addEventListener('DOMContentLoaded', function() {
   W = canvas.width  = window.innerWidth;
   H = canvas.height = window.innerHeight;
   window.addEventListener('resize', function(){ W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; });
+  window.addEventListener('beforeunload', function() {
+    if (roomCh) try { roomCh.send({type:'broadcast', event:'leave', payload:{id:myId, name:progress.name}}); } catch(e) {}
+    untrackRoom();
+  });
 
   var hd0 = Math.cos(camPitch)*CAM_DIST;
   camX = myX - Math.sin(camYaw)*hd0;
@@ -1851,6 +1921,7 @@ window.addEventListener('DOMContentLoaded', function() {
 <script type="module">
 import * as THREE from 'three';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import { SkeletonUtils } from 'three/addons/utils/SkeletonUtils.js';
 
 // Overlay canvas
 const oc = document.createElement('canvas');
@@ -1893,6 +1964,10 @@ let mixer = null;
 let actions = {}; // idle, walk, jump
 let currentAction = null;
 let charMesh = null;
+const peerChars = {};
+let baseFbxRef = null;
+let baseClips = {};
+const fbxOffset = new THREE.Vector3();
 
 function playAnim(key) {
   const next = actions[key];
@@ -1900,6 +1975,34 @@ function playAnim(key) {
   if (currentAction) currentAction.fadeOut(0.2);
   next.reset().fadeIn(0.2).play();
   currentAction = next;
+}
+
+function createPeerChar() {
+  const clone = SkeletonUtils.clone(baseFbxRef);
+  clone.position.copy(fbxOffset);
+  clone.scale.copy(baseFbxRef.scale);
+  clone.traverse(c => {
+    if (!c.isMesh) return;
+    c.castShadow = true;
+    [].concat(c.material).forEach(m => { m.roughness = 0.7; m.metalness = 0.1; });
+  });
+  const group = new THREE.Group();
+  group.add(clone);
+  scene.add(group);
+  const pmixer = new THREE.AnimationMixer(clone);
+  const acts = {};
+  if (baseClips.walk) { const wa = pmixer.clipAction(baseClips.walk); wa.timeScale = 0.75; acts.walk = wa; }
+  if (baseClips.idle) { acts.idle = pmixer.clipAction(baseClips.idle); }
+  if (baseClips.jump) { const ja = pmixer.clipAction(baseClips.jump); ja.setLoop(THREE.LoopOnce,1); ja.clampWhenFinished=true; acts.jump = ja; }
+  return { group, mixer: pmixer, acts, currentAction: null, prevX: 0, prevZ: 0, yaw: 0 };
+}
+
+function playPeerAnim(pc, key) {
+  const next = pc.acts[key];
+  if (!next || next === pc.currentAction) return;
+  if (pc.currentAction) pc.currentAction.fadeOut(0.2);
+  next.reset().fadeIn(0.2).play();
+  pc.currentAction = next;
 }
 
 function loadFBX(url) {
@@ -1933,6 +2036,8 @@ async function init() {
     scene.add(charGroup);
     charMesh = charGroup;
     mixer = new THREE.AnimationMixer(baseFbx);
+    baseFbxRef = baseFbx;
+    fbxOffset.copy(baseFbx.position);
 
     // Walk animation — dedicated Walk.fbx
     const walkFbx = await loadFBX('Walk.fbx');
@@ -1943,6 +2048,7 @@ async function init() {
       const walkAction = mixer.clipAction(clip);
       walkAction.timeScale = 0.75;
       actions.walk = walkAction;
+      baseClips.walk = clip;
     }
 
     // Idle
@@ -1951,6 +2057,7 @@ async function init() {
       const clip = idleFbx.animations[0];
       clip.tracks = clip.tracks.filter(t => !t.name.endsWith('.position'));
       actions.idle = mixer.clipAction(clip);
+      baseClips.idle = clip;
     }
 
     // Jump — dedicated Jumping.fbx
@@ -1962,6 +2069,7 @@ async function init() {
       ja.setLoop(THREE.LoopOnce, 1);
       ja.clampWhenFinished = true;
       actions.jump = ja;
+      baseClips.jump = clip;
     }
 
     playAnim('idle');
@@ -2013,6 +2121,36 @@ function update(alive) {
 
   mixer.update(dt);
   renderer.render(scene, camera);
+
+  // Peer characters
+  if (baseFbxRef) {
+    const livePeers = window.peers || {};
+    // Remove gone peers
+    Object.keys(peerChars).forEach(id => {
+      if (!livePeers[id]) { scene.remove(peerChars[id].group); delete peerChars[id]; }
+    });
+    // Update each peer
+    Object.keys(livePeers).forEach(id => {
+      const p = livePeers[id];
+      if (!p) return;
+      if (p.isDead) { if (peerChars[id]) peerChars[id].group.visible = false; return; }
+      if (!peerChars[id]) { peerChars[id] = createPeerChar(); playPeerAnim(peerChars[id], 'idle'); }
+      const pc = peerChars[id];
+      pc.group.visible = true;
+      const px = p.x || 0, py = p.y || 0, pz = p.z || 0;
+      const ddx = px - pc.prevX, ddz = pz - pc.prevZ;
+      const isMoving = Math.abs(ddx) > 0.001 || Math.abs(ddz) > 0.001;
+      if (isMoving) pc.yaw = Math.atan2(ddx, ddz);
+      pc.prevX = px; pc.prevZ = pz;
+      pc.group.position.set(px, py, pz);
+      pc.group.rotation.y = pc.yaw;
+      const inAir = py > 0.15;
+      if (inAir) { if (pc.currentAction !== pc.acts.jump) playPeerAnim(pc, 'jump'); }
+      else if (isMoving) { if (pc.currentAction !== pc.acts.walk) playPeerAnim(pc, 'walk'); }
+      else { if (pc.currentAction !== pc.acts.idle) playPeerAnim(pc, 'idle'); }
+      pc.mixer.update(dt);
+    });
+  }
 }
 
 init();
