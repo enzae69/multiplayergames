@@ -356,6 +356,7 @@ function connectChannel(){
     if(gs && !gs.players.find(x=>x.id===p.id)){
       gs.players.push({id:p.id, name:p.name, avatar:p.avatar, score:0});
       broadcastState();
+      updateUI(null);
     }
   });
 
