@@ -253,6 +253,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
   </div>
   <button class="btn bred" id="slistBtn">🌐 SERVER LISTE</button>
   <button class="btn bcyan" id="createBtn">🆕 ERSTELLEN</button>
+  <button class="btn bgold" id="botBtn">🤖 vs COMPUTER</button>
   <a href="../menu.html" class="btn bghost" style="font-family:'Russo One',sans-serif;font-size:13px;padding:10px;display:block">← SPIELAUSWAHL</a>
   <div class="berr" id="menuErr"></div>
 </div>
@@ -397,6 +398,8 @@ var pendingCard= null;
 var prevTurnId = null;
 var scoreSubmitted = false;
 var heartbeatTimer = null;
+var isSolo     = false;   // true when playing vs bots (no network)
+var botIds     = [];      // list of bot player IDs
 
 // Host-side deck/discard arrays
 var hDeck    = [];
@@ -590,10 +593,15 @@ function hostShoutUno(pid){
 function afterStateChange(){
   broadcastState();
   updateGameUI();
+  // Trigger bot turn if it's a bot's turn
+  if(isSolo && gs && gs.phase === 'playing'){
+    var cur = curPlayer();
+    if(cur && botIds.indexOf(cur.id) !== -1) scheduleBotTurn(cur.id);
+  }
 }
 
 function broadcastState(){
-  if(roomCh && gs) roomCh.send({type:'broadcast', event:'state', payload:{s:gs}});
+  if(!isSolo && roomCh && gs) roomCh.send({type:'broadcast', event:'state', payload:{s:gs}});
 }
 
 function startHeartbeat(){
@@ -717,14 +725,102 @@ function sendAction(payload){
   }
 }
 
+/* ══ SOLO / BOT GAME ══ */
+function startSoloGame(numBots){
+  if(!validateName()) return;
+  isSolo = true; isHost = true;
+  myId = myName + '_solo';
+  botIds = [];
+  lobby = {};
+  lobby[myId] = {id:myId, name:myName, ci:0};
+  var botNames = ['🤖 ROBO', '🤖 CYBER', '🤖 NOVA'];
+  for(var i = 0; i < numBots; i++){
+    var bid = 'bot_'+i;
+    botIds.push(bid);
+    lobby[bid] = {id:bid, name:botNames[i], ci:i+1};
+  }
+  showScreen('sGame');
+  hostInitGame();
+}
+
+function scheduleBotTurn(pid){
+  var delay = 900 + Math.random() * 700;
+  setTimeout(function(){
+    if(!gs || gs.phase !== 'playing') return;
+    var cur = curPlayer();
+    if(!cur || cur.id !== pid) return; // turn changed
+    botDoTurn(pid);
+  }, delay);
+}
+
+function botDoTurn(pid){
+  var hand = gs.hands[pid];
+  if(!hand) return;
+
+  // If pending draws: must stack or take them
+  if(gs.pendingDraws > 0){
+    var stackable = hand.filter(function(c){ return c.v==='draw2'||c.v==='wild4'; });
+    if(stackable.length > 0){
+      var sc = stackable[0];
+      var col = sc.c==='wild' ? botBestColor(hand) : null;
+      hostPlayCard(pid, sc.u, col);
+      return;
+    }
+    hostDrawCard(pid);
+    hostPassTurn(pid);
+    return;
+  }
+
+  var playable = hand.filter(function(c){ return canPlay(c, gs.topCard, gs.curColor); });
+  if(playable.length > 0){
+    var chosen = botChooseCard(playable, hand);
+    var chosenColor = chosen.c==='wild' ? botBestColor(hand.filter(function(c){return c.u!==chosen.u;})) : null;
+    // Call UNO if playing down to 1
+    if(hand.length === 2) gs.unoCalled = gs.unoCalled||{}, gs.unoCalled[pid] = true;
+    hostPlayCard(pid, chosen.u, chosenColor);
+  } else {
+    hostDrawCard(pid);
+    // Check the drawn card
+    var newCard = gs.hands[pid][gs.hands[pid].length-1];
+    if(newCard && canPlay(newCard, gs.topCard, gs.curColor)){
+      setTimeout(function(){
+        if(!gs||gs.phase!=='playing') return;
+        var cc = newCard.c==='wild' ? botBestColor(gs.hands[pid]) : null;
+        hostPlayCard(pid, newCard.u, cc);
+      }, 500);
+    } else {
+      hostPassTurn(pid);
+    }
+  }
+}
+
+function botChooseCard(playable, fullHand){
+  // Prefer non-wild cards; among them prefer action cards to pressure opponents
+  var nonWild = playable.filter(function(c){ return c.c !== 'wild'; });
+  var pool = nonWild.length > 0 ? nonWild : playable;
+  // Among pool pick action card if available, else pick highest number
+  var action = pool.filter(function(c){ return isNaN(c.v); });
+  if(action.length > 0) return action[Math.floor(Math.random()*action.length)];
+  // Pick numerically highest
+  pool.sort(function(a,b){ return parseInt(b.v)||0 - parseInt(a.v)||0; });
+  return pool[0];
+}
+
+function botBestColor(hand){
+  var counts = {red:0,blue:0,green:0,yellow:0};
+  hand.forEach(function(c){ if(counts[c.c]!==undefined) counts[c.c]++; });
+  return Object.keys(counts).reduce(function(a,b){ return counts[a]>=counts[b]?a:b; });
+}
+
 function leaveRoom(){
   clearInterval(heartbeatTimer);
   if(roomCh){
-    roomCh.send({type:'broadcast', event:'leave', payload:{id:myId, name:myName}});
+    if(!isSolo) roomCh.send({type:'broadcast', event:'leave', payload:{id:myId, name:myName}});
     roomCh.unsubscribe(); roomCh = null;
   }
   if(lobbyCh){ try{ lobbyCh.unsubscribe(); }catch(e){} lobbyCh = null; }
-  gs = null; myRoom = null; isHost = false; lobby = {}; pendingCard = null; prevTurnId = null;
+  gs = null; myRoom = null; isHost = false; isSolo = false; botIds = [];
+  lobby = {}; pendingCard = null; prevTurnId = null;
   showScreen('sMenu');
 }
 
@@ -1088,6 +1184,7 @@ window.addEventListener('load', function(){
 
     document.getElementById('slistBtn').addEventListener('click', showServerList);
     document.getElementById('createBtn').addEventListener('click', createRoom);
+    document.getElementById('botBtn').addEventListener('click', function(){ startSoloGame(1); });
     document.getElementById('slistBackBtn').addEventListener('click', function(){ clearInterval(lobbyListInterval); showScreen('sMenu'); });
     document.getElementById('joinCodeBtn').addEventListener('click', function(){ joinRoom(); });
     document.getElementById('joinCodeInp').addEventListener('keydown', function(e){ if(e.key==='Enter') joinRoom(); });
@@ -1103,7 +1200,8 @@ window.addEventListener('load', function(){
     document.getElementById('playAgainBtn').addEventListener('click', function(){
       if(!isHost) return;
       scoreSubmitted = false; prevTurnId = null;
-      hostInitGame(); startHeartbeat();
+      hostInitGame();
+      if(!isSolo) startHeartbeat();
     });
 
   }, 120);
