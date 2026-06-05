@@ -414,6 +414,7 @@ function saveSession(user){
   localStorage.setItem('authUser', user.username);
   localStorage.setItem('authHash', user.password_hash);
   localStorage.setItem('playerName', user.username);
+  localStorage.setItem('sessionVer', SESSION_VERSION);
   applyUserToUI(user);
 }
 
@@ -432,7 +433,15 @@ function applyUserToUI(user){
     +'<div class="ui-stats"><span>Level <b>'+lvl+'</b></span><span>XP <b>'+user.xp+'</b></span><span>🪙 <b>'+user.coins+'</b></span><span>Siege <b>'+user.wins+'</b></span></div>';
 }
 
+var SESSION_VERSION = '2';
+
 async function tryAutoLogin(){
+  if(localStorage.getItem('sessionVer') !== SESSION_VERSION){
+    localStorage.removeItem('authUser');
+    localStorage.removeItem('authHash');
+    localStorage.removeItem('sessionVer');
+    return;
+  }
   var u = localStorage.getItem('authUser'), h = localStorage.getItem('authHash');
   if(!sb||!u||!h) return;
   try {
