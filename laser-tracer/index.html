@@ -1921,7 +1921,7 @@ window.addEventListener('DOMContentLoaded', function() {
 <script type="module">
 import * as THREE from 'three';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
-import { SkeletonUtils } from 'three/addons/utils/SkeletonUtils.js';
+import { clone as skeletonClone } from 'three/addons/utils/SkeletonUtils.js';
 
 // Overlay canvas
 const oc = document.createElement('canvas');
@@ -1978,7 +1978,7 @@ function playAnim(key) {
 }
 
 function createPeerChar() {
-  const clone = SkeletonUtils.clone(baseFbxRef);
+  const clone = skeletonClone(baseFbxRef);
   clone.position.copy(fbxOffset);
   clone.scale.copy(baseFbxRef.scale);
   clone.traverse(c => {
