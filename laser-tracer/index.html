@@ -558,9 +558,11 @@ function render(t) {
       drawChar(p.x||0, p.y||0, p.z||0, p.color||'#ff006e', p.name||'?', isWatching, p.wp||0, (p.y||0)>0.1);
     }
   }
-  // Draw self only when alive
+  // Draw self only when alive — skip if Three.js character is ready
   if (!myDead) {
-    drawChar(myX, myY, myZ, getSkinColor(), progress.name, true, myWalkPhase, myY>0.1);
+    if (!window._charSys || !window._charSys.ready) {
+      drawChar(myX, myY, myZ, getSkinColor(), progress.name, true, myWalkPhase, myY>0.1);
+    }
   }
 }
 
@@ -1023,6 +1025,7 @@ function loop(ts) {
       }
     }
     render(ts/1000);
+    if (window._charSys && window._charSys.ready) window._charSys.update(!myDead);
     if (gameState === 'multi') {
       // Alive: 20/s   Dead: 1/2s keepalive so channel stays live + survivor keeps seeing body
       var interval = myDead ? 2000 : 50;
@@ -1835,6 +1838,161 @@ window.addEventListener('DOMContentLoaded', function() {
     } catch(e) {}
   }, 300);
 });
+</script>
+
+<script type="module">
+// Three.js FBX character overlay — renders on transparent canvas above game canvas
+const THREE_CDN = 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
+const FBX_CDN   = 'https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/loaders/FBXLoader.js';
+const ORBIT_CDN = 'https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/controls/OrbitControls.js';
+
+const THREE = await import(THREE_CDN);
+const { FBXLoader } = await import(FBX_CDN);
+
+// Overlay canvas
+const oc = document.createElement('canvas');
+oc.style.cssText = 'position:fixed;inset:0;width:100%!important;height:100%!important;z-index:1;pointer-events:none;';
+document.body.appendChild(oc);
+
+const renderer = new THREE.WebGLRenderer({ canvas: oc, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setClearColor(0x000000, 0);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 500);
+
+function syncSize() {
+  oc.width  = innerWidth;
+  oc.height = innerHeight;
+  renderer.setSize(innerWidth, innerHeight, false);
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+}
+syncSize();
+window.addEventListener('resize', syncSize);
+
+// Minimal lighting
+scene.add(new THREE.AmbientLight(0x8899ff, 0.8));
+const sun = new THREE.DirectionalLight(0xffffff, 2.5);
+sun.position.set(6, 12, 6);
+sun.castShadow = true;
+scene.add(sun);
+scene.add(Object.assign(new THREE.DirectionalLight(0x00f5ff, 0.4), { position: new THREE.Vector3(-4, 3, -4) }));
+
+const clock = new THREE.Clock();
+
+// Animation state
+let mixer = null;
+let actions = {}; // idle, walk, jump
+let currentAction = null;
+let charMesh = null;
+
+function playAnim(key) {
+  const next = actions[key];
+  if (!next || next === currentAction) return;
+  if (currentAction) currentAction.fadeOut(0.2);
+  next.reset().fadeIn(0.2).play();
+  currentAction = next;
+}
+
+function loadFBX(url) {
+  return new Promise((res, rej) => new FBXLoader().load(url, res, null, rej));
+}
+
+async function init() {
+  try {
+    const baseFbx = await loadFBX('Walking.fbx');
+
+    // Scale so character is ~2 game units tall
+    const box = new THREE.Box3().setFromObject(baseFbx);
+    const size = box.getSize(new THREE.Vector3());
+    const scale = 2 / Math.max(size.x, size.y, size.z);
+    baseFbx.scale.setScalar(scale);
+    new THREE.Box3().setFromObject(baseFbx).getSize(size);
+    baseFbx.position.y = 0; // feet at y=0
+    baseFbx.traverse(c => {
+      if (!c.isMesh) return;
+      c.castShadow = true;
+      [].concat(c.material).forEach(m => { m.roughness = 0.7; m.metalness = 0.1; });
+    });
+    scene.add(baseFbx);
+    charMesh = baseFbx;
+    mixer = new THREE.AnimationMixer(baseFbx);
+
+    // Walk animation from Walking.fbx — slowed down
+    if (baseFbx.animations[0]) {
+      const walkAction = mixer.clipAction(baseFbx.animations[0]);
+      walkAction.timeScale = 0.75;
+      actions.walk = walkAction;
+    }
+
+    // Idle
+    const idleFbx = await loadFBX('Idle.fbx');
+    if (idleFbx.animations[0]) actions.idle = mixer.clipAction(idleFbx.animations[0]);
+
+    // Jump (once, clamp)
+    const jumpFbx = await loadFBX('Jump.fbx');
+    if (jumpFbx.animations[0]) {
+      const ja = mixer.clipAction(jumpFbx.animations[0]);
+      ja.setLoop(THREE.LoopOnce, 1);
+      ja.clampWhenFinished = true;
+      actions.jump = ja;
+    }
+
+    playAnim('idle');
+    window._charSys = { ready: true, update };
+  } catch (e) {
+    console.warn('[CharSys] Failed to load FBX:', e);
+  }
+}
+
+function update(alive) {
+  if (!mixer || !charMesh) return;
+  const dt = clock.getDelta();
+
+  // Sync Three.js camera to match game camera (FOV=380 is half-height focal length)
+  const H = innerHeight;
+  const fovRad = 2 * Math.atan(H / (2 * 380));
+  camera.fov = fovRad * (180 / Math.PI);
+  camera.updateProjectionMatrix();
+
+  // Position camera to match game (camX/Y/Z are global game vars)
+  camera.position.set(window.camX || 0, window.camY || 0, window.camZ || 0);
+  camera.lookAt(
+    (window.watchX || 0),
+    (window.watchY || 0) + 3.5,
+    (window.watchZ || 0)
+  );
+
+  // Position + orient character
+  charMesh.position.set(window.myX || 0, window.myY || 0, window.myZ || 0);
+  charMesh.rotation.y = Math.PI - (window.myYaw || 0);
+
+  // Choose animation
+  const inAir = (window.myY || 0) > 0.15;
+  const moving = window.myIsMoving;
+
+  if (!alive) {
+    // dead — hide
+    charMesh.visible = false;
+  } else {
+    charMesh.visible = true;
+    if (inAir) {
+      if (currentAction !== actions.jump) playAnim('jump');
+    } else if (moving) {
+      if (currentAction !== actions.walk) playAnim('walk');
+    } else {
+      if (currentAction !== actions.idle) playAnim('idle');
+    }
+  }
+
+  mixer.update(dt);
+  renderer.render(scene, camera);
+}
+
+init();
 </script>
 </body>
 </html>
