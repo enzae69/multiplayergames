@@ -92,77 +92,107 @@ grid.material.opacity = 0.3;
 grid.material.transparent = true;
 scene.add(grid);
 
-// Load FBX
-let mixer, actions = [], currentAction = null;
+// ── ANIMATION SYSTEM ──
+let mixer, currentAction = null;
+const namedActions = {}; // { idle, walk, run, jump }
 const clock = new THREE.Clock();
 const status = document.getElementById('status');
 const prog = document.getElementById('progress');
 const progTxt = document.getElementById('progTxt');
 const animBtns = document.getElementById('animBtns');
 
-function playAnim(index) {
-  if (!actions.length) return;
-  if (currentAction) currentAction.fadeOut(0.3);
-  currentAction = actions[index];
-  currentAction.reset().fadeIn(0.3).play();
-  document.querySelectorAll('.anim-btn').forEach((b,i) => b.classList.toggle('active', i===index));
-  status.textContent = '▶ ' + currentAction.getClip().name;
+const ANIM_FILES = [
+  { file: 'Idle.fbx',    key: 'idle',  label: '🧍 IDLE' },
+  { file: 'Walking.fbx', key: 'walk',  label: '🚶 WALK' },
+  { file: 'Walking.fbx', key: 'run',   label: '🏃 RUN',  animIndex: 1 },
+  { file: 'Jump.fbx',    key: 'jump',  label: '🦘 JUMP' },
+];
+
+function playAnim(key) {
+  const next = namedActions[key];
+  if (!next) return;
+  if (currentAction && currentAction !== next) currentAction.fadeOut(0.25);
+  next.reset().fadeIn(0.25).play();
+  currentAction = next;
+  document.querySelectorAll('.anim-btn').forEach(b => b.classList.toggle('active', b.dataset.key===key));
+  status.textContent = '▶ ' + key.toUpperCase();
 }
 
-const loader = new FBXLoader();
-loader.load(
-  FBX_URL,
-  (fbx) => {
-    prog.style.display = 'none';
+function addAnimBtn(key, label) {
+  const btn = document.createElement('button');
+  btn.className = 'anim-btn';
+  btn.dataset.key = key;
+  btn.textContent = label;
+  btn.addEventListener('click', () => playAnim(key));
+  animBtns.appendChild(btn);
+}
 
-    const box = new THREE.Box3().setFromObject(fbx);
+function loadFBX(url) {
+  return new Promise((resolve, reject) => {
+    new FBXLoader().load(url, resolve, null, reject);
+  });
+}
+
+async function loadAll() {
+  try {
+    // Load base character (Walking.fbx has the mesh + skin)
+    progTxt.textContent = 'LADE CHARACTER...';
+    const baseFbx = await loadFBX('Walking.fbx');
+
+    // Setup character mesh
+    const box = new THREE.Box3().setFromObject(baseFbx);
     const size = box.getSize(new THREE.Vector3());
     const scale = 2 / Math.max(size.x, size.y, size.z);
-    fbx.scale.setScalar(scale);
-    box.setFromObject(fbx);
-    fbx.position.y = -box.min.y;
-
-    fbx.traverse(c => {
-      if (c.isMesh) {
-        c.castShadow = true;
-        c.receiveShadow = true;
-        if (c.material) {
-          [].concat(c.material).forEach(m => { m.roughness=0.7; m.metalness=0.1; });
-        }
-      }
+    baseFbx.scale.setScalar(scale);
+    box.setFromObject(baseFbx);
+    baseFbx.position.y = -box.min.y;
+    baseFbx.traverse(c => {
+      if (!c.isMesh) return;
+      c.castShadow = true; c.receiveShadow = true;
+      [].concat(c.material).forEach(m => { m.roughness=0.7; m.metalness=0.1; });
     });
-    scene.add(fbx);
+    scene.add(baseFbx);
+    mixer = new THREE.AnimationMixer(baseFbx);
 
-    if (fbx.animations.length > 0) {
-      mixer = new THREE.AnimationMixer(fbx);
-      actions = fbx.animations.map(clip => mixer.clipAction(clip));
+    // Walk + Run are inside Walking.fbx
+    if (baseFbx.animations[0]) namedActions['walk'] = mixer.clipAction(baseFbx.animations[0]);
+    if (baseFbx.animations[1]) namedActions['run']  = mixer.clipAction(baseFbx.animations[1]);
 
-      // Build buttons for each animation
-      fbx.animations.forEach((clip, i) => {
-        const btn = document.createElement('button');
-        btn.className = 'anim-btn' + (i===0?' active':'');
-        btn.textContent = clip.name;
-        btn.addEventListener('click', () => playAnim(i));
-        animBtns.appendChild(btn);
-      });
+    // Load Idle
+    progTxt.textContent = 'LADE IDLE...';
+    const idleFbx = await loadFBX('Idle.fbx');
+    if (idleFbx.animations[0]) namedActions['idle'] = mixer.clipAction(idleFbx.animations[0]);
 
-      currentAction = actions[0];
-      currentAction.play();
-      status.textContent = '▶ ' + fbx.animations[0].name + ' (' + fbx.animations.length + ' Anims)';
-    } else {
-      status.textContent = '✓ Geladen — keine Animationen';
+    // Load Jump
+    progTxt.textContent = 'LADE JUMP...';
+    const jumpFbx = await loadFBX('Jump.fbx');
+    if (jumpFbx.animations[0]) {
+      const jumpAction = mixer.clipAction(jumpFbx.animations[0]);
+      jumpAction.setLoop(THREE.LoopOnce, 1);
+      jumpAction.clampWhenFinished = true;
+      namedActions['jump'] = jumpAction;
     }
-  },
-  (e) => {
-    if (e.total) progTxt.textContent = 'LADE... ' + Math.round(e.loaded/e.total*100) + '%';
-  },
-  (err) => {
+
     prog.style.display = 'none';
-    status.textContent = '✗ FEHLER: ' + (err.message||err);
+
+    // Build buttons in order
+    [['idle','🧍 IDLE'],['walk','🚶 WALK'],['run','🏃 RUN'],['jump','🦘 JUMP']].forEach(([k,l]) => {
+      if (namedActions[k]) addAnimBtn(k, l);
+    });
+
+    // Start with idle
+    playAnim('idle');
+    status.textContent = '✓ Alle Animationen geladen';
+
+  } catch(err) {
+    prog.style.display = 'none';
+    status.textContent = '✗ ' + (err.message||err);
     status.style.color = '#ff4466';
     console.error(err);
   }
-);
+}
+
+loadAll();
 
 function animate() {
   requestAnimationFrame(animate);
