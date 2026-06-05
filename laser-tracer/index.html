@@ -1926,9 +1926,10 @@ async function init() {
     charMesh = baseFbx;
     mixer = new THREE.AnimationMixer(baseFbx);
 
-    // Walk animation from Walking.fbx — slowed down
-    if (baseFbx.animations[0]) {
-      const walkAction = mixer.clipAction(baseFbx.animations[0]);
+    // Walk animation — dedicated Walk.fbx
+    const walkFbx = await loadFBX('Walk.fbx');
+    if (walkFbx.animations[0]) {
+      const walkAction = mixer.clipAction(walkFbx.animations[0]);
       walkAction.timeScale = 0.75;
       actions.walk = walkAction;
     }
@@ -1937,8 +1938,8 @@ async function init() {
     const idleFbx = await loadFBX('Idle.fbx');
     if (idleFbx.animations[0]) actions.idle = mixer.clipAction(idleFbx.animations[0]);
 
-    // Jump (once, clamp)
-    const jumpFbx = await loadFBX('Jump.fbx');
+    // Jump — dedicated Jumping.fbx
+    const jumpFbx = await loadFBX('Jumping.fbx');
     if (jumpFbx.animations[0]) {
       const ja = mixer.clipAction(jumpFbx.animations[0]);
       ja.setLoop(THREE.LoopOnce, 1);
