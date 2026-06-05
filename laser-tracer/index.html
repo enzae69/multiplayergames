@@ -100,6 +100,14 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
 .vis-public{background:rgba(57,255,20,.1);color:#39ff14;border:1px solid rgba(57,255,20,.25)}
 .vis-private{background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.15)}
 </style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+  }
+}
+</script>
 </head>
 <body>
 <canvas id="c"></canvas>
@@ -1841,8 +1849,8 @@ window.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
-import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/loaders/FBXLoader.js';
+import * as THREE from 'three';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 
 // Overlay canvas
 const oc = document.createElement('canvas');
