@@ -153,7 +153,9 @@ async function loadAll() {
     progTxt.textContent = 'LADE WALK...';
     const walkFbx = await loadFBX('Walk.fbx');
     if (walkFbx.animations[0]) {
-      const wa = mixer.clipAction(walkFbx.animations[0]);
+      const clip = walkFbx.animations[0];
+      clip.tracks = clip.tracks.filter(t => !t.name.endsWith('.position'));
+      const wa = mixer.clipAction(clip);
       wa.timeScale = 0.75;
       namedActions['walk'] = wa;
     }
@@ -161,13 +163,19 @@ async function loadAll() {
     // Load Idle
     progTxt.textContent = 'LADE IDLE...';
     const idleFbx = await loadFBX('Idle.fbx');
-    if (idleFbx.animations[0]) namedActions['idle'] = mixer.clipAction(idleFbx.animations[0]);
+    if (idleFbx.animations[0]) {
+      const clip = idleFbx.animations[0];
+      clip.tracks = clip.tracks.filter(t => !t.name.endsWith('.position'));
+      namedActions['idle'] = mixer.clipAction(clip);
+    }
 
     // Load Jump
     progTxt.textContent = 'LADE JUMP...';
     const jumpFbx = await loadFBX('Jumping.fbx');
     if (jumpFbx.animations[0]) {
-      const jumpAction = mixer.clipAction(jumpFbx.animations[0]);
+      const clip = jumpFbx.animations[0];
+      clip.tracks = clip.tracks.filter(t => !t.name.endsWith('.position'));
+      const jumpAction = mixer.clipAction(clip);
       jumpAction.setLoop(THREE.LoopOnce, 1);
       jumpAction.clampWhenFinished = true;
       namedActions['jump'] = jumpAction;

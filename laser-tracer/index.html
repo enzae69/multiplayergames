@@ -1937,19 +1937,28 @@ async function init() {
     // Walk animation — dedicated Walk.fbx
     const walkFbx = await loadFBX('Walk.fbx');
     if (walkFbx.animations[0]) {
-      const walkAction = mixer.clipAction(walkFbx.animations[0]);
+      const clip = walkFbx.animations[0];
+      // Strip root motion — remove position tracks so animation plays in-place
+      clip.tracks = clip.tracks.filter(t => !t.name.endsWith('.position'));
+      const walkAction = mixer.clipAction(clip);
       walkAction.timeScale = 0.75;
       actions.walk = walkAction;
     }
 
     // Idle
     const idleFbx = await loadFBX('Idle.fbx');
-    if (idleFbx.animations[0]) actions.idle = mixer.clipAction(idleFbx.animations[0]);
+    if (idleFbx.animations[0]) {
+      const clip = idleFbx.animations[0];
+      clip.tracks = clip.tracks.filter(t => !t.name.endsWith('.position'));
+      actions.idle = mixer.clipAction(clip);
+    }
 
     // Jump — dedicated Jumping.fbx
     const jumpFbx = await loadFBX('Jumping.fbx');
     if (jumpFbx.animations[0]) {
-      const ja = mixer.clipAction(jumpFbx.animations[0]);
+      const clip = jumpFbx.animations[0];
+      clip.tracks = clip.tracks.filter(t => !t.name.endsWith('.position'));
+      const ja = mixer.clipAction(clip);
       ja.setLoop(THREE.LoopOnce, 1);
       ja.clampWhenFinished = true;
       actions.jump = ja;
