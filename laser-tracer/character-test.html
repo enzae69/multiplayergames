@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Character Test</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0a0a1a;overflow:hidden;font-family:monospace}
+  #info{position:fixed;top:14px;left:14px;z-index:10;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+  .badge{background:rgba(0,245,255,.12);border:1px solid rgba(0,245,255,.3);border-radius:8px;padding:6px 14px;color:#00f5ff;font-size:13px;letter-spacing:2px}
+  #status{background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 14px;color:rgba(255,255,255,.6);font-size:11px;letter-spacing:1px}
+  #progress{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#00f5ff;font-size:16px;letter-spacing:3px;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .spin{width:44px;height:44px;border:3px solid rgba(0,245,255,.2);border-top-color:#00f5ff;border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #hint{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.25);font-size:11px;letter-spacing:2px;white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="info">
+  <div class="badge">⚡ CHARACTER TEST</div>
+  <div id="status">Verbinde...</div>
+</div>
+<div id="progress">
+  <div class="spin"></div>
+  <div id="progTxt">LADE WALKING.FBX...</div>
+</div>
+<div id="hint">Ziehen = Kamera drehen · Pinch = Zoom</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const FBX_URL = 'https://github.com/enzae69/multiplayergames/releases/download/assets-v1/Walking.fbx';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050510);
+scene.fog = new THREE.FogExp2(0x050510, 0.04);
+
+const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 500);
+camera.position.set(0, 2, 6);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+
+// Lights
+scene.add(new THREE.AmbientLight(0x8899ff, 0.8));
+const sun = new THREE.DirectionalLight(0xffffff, 2.5);
+sun.position.set(6, 12, 6);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.near = 0.1;
+sun.shadow.camera.far = 60;
+sun.shadow.camera.top = sun.shadow.camera.right = 8;
+sun.shadow.camera.bottom = sun.shadow.camera.left = -8;
+scene.add(sun);
+const fill = new THREE.DirectionalLight(0x00f5ff, 0.4);
+fill.position.set(-4, 3, -4);
+scene.add(fill);
+
+// Ground
+const ground = new THREE.Mesh(
+  new THREE.CircleGeometry(12, 64),
+  new THREE.MeshStandardMaterial({ color: 0x0e0e2a, roughness: 0.9 })
+);
+ground.rotation.x = -Math.PI/2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// Grid
+const grid = new THREE.GridHelper(24, 24, 0x00f5ff, 0x0d0d28);
+grid.material.opacity = 0.3;
+grid.material.transparent = true;
+scene.add(grid);
+
+// Load FBX
+let mixer;
+const clock = new THREE.Clock();
+const status = document.getElementById('status');
+const prog = document.getElementById('progress');
+const progTxt = document.getElementById('progTxt');
+
+const loader = new FBXLoader();
+loader.load(
+  FBX_URL,
+  (fbx) => {
+    prog.style.display = 'none';
+
+    // Auto-scale: normalize size
+    const box = new THREE.Box3().setFromObject(fbx);
+    const size = box.getSize(new THREE.Vector3());
+    const scale = 2 / Math.max(size.x, size.y, size.z);
+    fbx.scale.setScalar(scale);
+
+    // Center on ground
+    box.setFromObject(fbx);
+    fbx.position.y = -box.min.y;
+
+    fbx.traverse(c => {
+      if (c.isMesh) {
+        c.castShadow = true;
+        c.receiveShadow = true;
+        if (c.material) {
+          const mats = Array.isArray(c.material) ? c.material : [c.material];
+          mats.forEach(m => { m.roughness = 0.7; m.metalness = 0.1; });
+        }
+      }
+    });
+    scene.add(fbx);
+
+    if (fbx.animations.length > 0) {
+      mixer = new THREE.AnimationMixer(fbx);
+      mixer.clipAction(fbx.animations[0]).play();
+      status.textContent = '✓ ' + fbx.animations[0].name + ' (' + fbx.animations.length + ' Anim)';
+    } else {
+      status.textContent = '✓ Geladen — keine Animation';
+    }
+  },
+  (e) => {
+    if (e.total) progTxt.textContent = 'LADE... ' + Math.round(e.loaded/e.total*100) + '%';
+  },
+  (err) => {
+    prog.style.display = 'none';
+    status.textContent = '✗ FEHLER: ' + (err.message||err);
+    status.style.color = '#ff4466';
+    console.error(err);
+  }
+);
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  if (mixer) mixer.update(dt);
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
