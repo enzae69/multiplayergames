@@ -238,6 +238,21 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 /* ══ TOAST ══ */
 .toast{position:fixed;top:22px;left:50%;transform:translateX(-50%);z-index:999;background:#D72027;border:2px solid rgba(255,255,255,.7);border-radius:12px;padding:10px 24px;font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:2px;color:#fff;white-space:nowrap;pointer-events:none;animation:toastin .3s ease;max-width:92vw;text-align:center;box-shadow:0 4px 0 #8a0010,0 8px 20px rgba(215,32,39,.5)}
 @keyframes toastin{from{opacity:0;top:10px}to{opacity:1;top:22px}}
+
+/* ══ ADMIN ══ */
+#adminBtn{position:fixed;bottom:16px;left:16px;z-index:90;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px 13px;font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:1px;color:rgba(255,255,255,.3);cursor:pointer;touch-action:manipulation;display:none}
+#adminBtn:active{opacity:.6;transform:scale(.95)}
+#adminPanel{position:fixed;inset:0;z-index:500;background:rgba(3,1,1,.97);display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px 16px;overflow-y:auto;backdrop-filter:blur(8px)}
+#adminPanel.open{display:flex}
+.ap-title{font-family:'Russo One',sans-serif;font-size:18px;letter-spacing:5px;color:#ff6060}
+.ap-box{background:rgba(15,4,4,.99);border:2px solid rgba(215,32,39,.3);border-radius:18px;padding:18px 16px;width:min(360px,95vw);display:flex;flex-direction:column;gap:12px}
+.ap-row{display:flex;align-items:center;gap:10px}
+.ap-name{flex:1;font-family:'Russo One',sans-serif;font-size:13px;color:#ff9999;letter-spacing:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ap-cur{font-size:11px;color:rgba(255,255,255,.3);letter-spacing:1px;min-width:38px;text-align:right}
+.ap-inp{width:60px;background:rgba(30,5,5,1);border:2px solid rgba(215,32,39,.4);color:#ff7777;font-family:'Russo One',sans-serif;font-size:16px;padding:6px 8px;border-radius:8px;outline:none;text-align:center;-moz-appearance:textfield}
+.ap-inp::-webkit-outer-spin-button,.ap-inp::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.ap-inp:focus{border-color:#D72027;box-shadow:0 0 10px rgba(215,32,39,.25)}
+.ap-bot{color:#88ccff!important}
 </style>
 </head>
 <body>
@@ -376,6 +391,19 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 <!-- ══ OVERLAYS ══ -->
 <div id="unoBtnWrap"><button id="unoBtn" onclick="shoutUno()">UNO!</button></div>
 <button id="passBtn" onclick="onPassTurn()">PASSEN ›</button>
+
+<!-- ══ ADMIN ══ -->
+<button id="adminBtn" onclick="openAdminPanel()">⚙ ADMIN</button>
+<div id="adminPanel">
+  <div class="ap-title">⚙ ADMIN PANEL</div>
+  <div class="ap-box">
+    <div id="apPlayerRows" style="display:flex;flex-direction:column;gap:10px"></div>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+    <button class="btn bred" onclick="adminApply()" style="width:auto;padding:12px 28px">ANWENDEN</button>
+    <button class="btn bghost" onclick="closeAdminPanel()" style="width:auto;padding:12px 22px">SCHLIEßEN</button>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script type="module">
@@ -833,6 +861,64 @@ function botBestColor(hand){
   return Object.keys(counts).reduce(function(a,b){ return counts[a]>=counts[b]?a:b; });
 }
 
+/* ══ ADMIN PANEL ══ */
+function openAdminPanel(){
+  if(!gs || gs.phase !== 'playing') return;
+  var rows = document.getElementById('apPlayerRows');
+  rows.innerHTML = '';
+  gs.players.forEach(function(p){
+    var isBot = botIds.indexOf(p.id) !== -1;
+    var cnt = (gs.hands[p.id]||[]).length;
+    var row = document.createElement('div');
+    row.className = 'ap-row';
+    row.innerHTML =
+      '<div class="ap-name'+(isBot?' ap-bot':'')+'">'+(isBot?'🤖 ':'')+escHtml(p.name)+'</div>'
+      +'<div class="ap-cur">'+cnt+' Karten</div>'
+      +'<input class="ap-inp" type="number" min="0" max="108" placeholder="'+cnt+'" data-pid="'+escHtml(p.id)+'">';
+    rows.appendChild(row);
+  });
+  document.getElementById('adminPanel').classList.add('open');
+}
+
+function closeAdminPanel(){
+  document.getElementById('adminPanel').classList.remove('open');
+}
+
+function adminApply(){
+  if(!gs || gs.phase !== 'playing') return;
+  var inputs = document.querySelectorAll('#apPlayerRows .ap-inp');
+  var changed = false;
+  inputs.forEach(function(inp){
+    var raw = inp.value.trim();
+    if(raw === '') return;
+    var target = Math.max(0, Math.min(108, parseInt(raw,10)));
+    if(isNaN(target)) return;
+    var pid = inp.dataset.pid;
+    var hand = gs.hands[pid];
+    if(!hand) return;
+    var cur = hand.length;
+    if(target === cur) return;
+    if(target < cur){
+      // Remove cards from start (keep the most recent drawn)
+      hand.splice(0, cur - target);
+    } else {
+      // Deal extra cards from deck
+      for(var i = 0; i < target - cur; i++){
+        if(hDeck.length === 0) hostReshuffle();
+        if(hDeck.length > 0) hand.push(hDeck.pop());
+      }
+      gs.deckCount = hDeck.length;
+    }
+    changed = true;
+  });
+  if(changed){
+    gs.lastAction = 'Admin: Karten angepasst';
+    afterStateChange();
+    showToast('Admin: Karten angepasst!');
+  }
+  closeAdminPanel();
+}
+
 function leaveRoom(){
   clearInterval(heartbeatTimer);
   if(roomCh){
@@ -1145,6 +1231,9 @@ var SCREENS = ['sMenu','sServerList','sLobby','sGame','sWinner'];
 function showScreen(id){
   SCREENS.forEach(function(s){ document.getElementById(s).classList.toggle('off', s!==id); });
   if(id !== 'sServerList') clearInterval(lobbyListInterval);
+  // Show admin button only when host is in an active game
+  document.getElementById('adminBtn').style.display = (id === 'sGame' && isHost) ? 'block' : 'none';
+  if(id !== 'sGame') closeAdminPanel();
 }
 
 /* ══════════════════════════════════════════════════════
