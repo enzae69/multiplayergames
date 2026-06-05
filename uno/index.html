@@ -524,9 +524,13 @@ function hostForceDraw(pid, amount){
 }
 
 function hostReshuffle(){
-  if(hDiscard.length <= 1) return;
-  var keep = hDiscard.pop();
-  hDeck = shuffle(hDiscard); hDiscard = [keep]; gs.deckCount = hDeck.length;
+  if(hDiscard.length > 1){
+    var keep = hDiscard.pop();
+    hDeck = shuffle(hDiscard); hDiscard = [keep];
+  } else {
+    hDeck = shuffle(buildDeck());
+  }
+  gs.deckCount = hDeck.length;
 }
 
 // Called at the start of every action: if someone had 1 card and didn't press UNO, penalise them
