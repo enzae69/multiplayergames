@@ -1913,7 +1913,7 @@ async function init() {
     // Scale so character is ~2 game units tall
     const sizeVec = new THREE.Vector3();
     new THREE.Box3().setFromObject(baseFbx).getSize(sizeVec);
-    const scale = 2 / Math.max(sizeVec.x, sizeVec.y, sizeVec.z);
+    const scale = 3.2 / Math.max(sizeVec.x, sizeVec.y, sizeVec.z);
     baseFbx.scale.setScalar(scale);
 
     // Center mesh: horizontal center + feet at y=0
