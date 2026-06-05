@@ -49,6 +49,11 @@
   .badge-hot{background:rgba(255,0,110,.15);color:#ff006e;border:1px solid rgba(255,0,110,.3)}
   .game-players{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:1px}
 
+  /* ── ONLINE COUNTER ── */
+  #onlineBadge{position:fixed;top:14px;left:14px;z-index:300;display:flex;align-items:center;gap:5px;background:rgba(10,10,31,.85);border:1px solid rgba(57,255,20,.25);border-radius:20px;padding:5px 11px;font-family:'Russo One',sans-serif;font-size:11px;color:rgba(255,255,255,.5);letter-spacing:1px;pointer-events:none;backdrop-filter:blur(4px)}
+  #onlineDot{width:7px;height:7px;border-radius:50%;background:#39ff14;box-shadow:0 0 6px #39ff14;flex-shrink:0;animation:onlinePulse 2s ease-in-out infinite}
+  @keyframes onlinePulse{0%,100%{opacity:1}50%{opacity:.4}}
+
   /* ── LEADERBOARD PANEL ── */
   #lbToggle{position:fixed;top:14px;right:14px;z-index:300;font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:1px;padding:9px 14px;border:none;border-radius:12px;cursor:pointer;background:linear-gradient(135deg,#7a4a00,#ffb300);color:#000;box-shadow:0 4px 18px rgba(255,179,0,.4);touch-action:manipulation;transition:transform .15s;display:flex;align-items:center;gap:6px;white-space:nowrap}
   #lbToggle:active{transform:scale(.93)}
@@ -168,6 +173,9 @@
 </style>
 </head>
 <body>
+
+<!-- ── ONLINE BADGE ── -->
+<div id="onlineBadge"><div id="onlineDot"></div><span id="onlineCnt">1</span> ONLINE</div>
 
 <!-- ── LB TOGGLE ── -->
 <button id="lbToggle" onclick="toggleLb()">🏆 TOP <span class="lb-c" id="lbCount">200</span></button>
@@ -882,10 +890,23 @@ async function adminSetCoins() {
   if (lbOpen) loadLb();
 }
 
+// ── ONLINE PRESENCE ───────────────────────────────────────────────
+function initOnlineCounter(){
+  if(!sb) return;
+  var ch = sb.channel('portal_online_v1', {config:{presence:{key: 'u_'+Math.random().toString(36).slice(2)}}});
+  ch.on('presence',{event:'sync'},function(){
+    var cnt = Object.keys(ch.presenceState()).length;
+    document.getElementById('onlineCnt').textContent = cnt || 1;
+  }).subscribe(function(s){
+    if(s==='SUBSCRIBED') ch.track({t: Date.now()});
+  });
+}
+
 // ── BOOT ──────────────────────────────────────────────────────────
 (async function boot(){
   await tryAutoLogin();
   subscribeGlobal();
+  initOnlineCounter();
   if(!currentUser){
     var existingName=localStorage.getItem('playerName');
     if(!existingName){ document.getElementById('nameModal').classList.remove('off'); setTimeout(function(){document.getElementById('nameInput').focus();},100); }
