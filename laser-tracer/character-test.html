@@ -134,12 +134,13 @@ async function loadAll() {
     const baseFbx = await loadFBX('Walking.fbx');
 
     // Setup character mesh
-    const box = new THREE.Box3().setFromObject(baseFbx);
-    const size = box.getSize(new THREE.Vector3());
-    const scale = 2 / Math.max(size.x, size.y, size.z);
+    const sizeVec = new THREE.Vector3();
+    new THREE.Box3().setFromObject(baseFbx).getSize(sizeVec);
+    const scale = 2 / Math.max(sizeVec.x, sizeVec.y, sizeVec.z);
     baseFbx.scale.setScalar(scale);
-    box.setFromObject(baseFbx);
-    baseFbx.position.y = -box.min.y;
+    const box2 = new THREE.Box3().setFromObject(baseFbx);
+    const center = box2.getCenter(new THREE.Vector3());
+    baseFbx.position.set(-center.x, -box2.min.y, -center.z);
     baseFbx.traverse(c => {
       if (!c.isMesh) return;
       c.castShadow = true; c.receiveShadow = true;

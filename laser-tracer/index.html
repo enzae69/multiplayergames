@@ -1911,19 +1911,27 @@ async function init() {
     const baseFbx = await loadFBX('Walking.fbx');
 
     // Scale so character is ~2 game units tall
-    const box = new THREE.Box3().setFromObject(baseFbx);
-    const size = box.getSize(new THREE.Vector3());
-    const scale = 2 / Math.max(size.x, size.y, size.z);
+    const sizeVec = new THREE.Vector3();
+    new THREE.Box3().setFromObject(baseFbx).getSize(sizeVec);
+    const scale = 2 / Math.max(sizeVec.x, sizeVec.y, sizeVec.z);
     baseFbx.scale.setScalar(scale);
-    new THREE.Box3().setFromObject(baseFbx).getSize(size);
-    baseFbx.position.y = 0; // feet at y=0
+
+    // Center mesh: horizontal center + feet at y=0
+    const box2 = new THREE.Box3().setFromObject(baseFbx);
+    const center = box2.getCenter(new THREE.Vector3());
+    baseFbx.position.set(-center.x, -box2.min.y, -center.z);
+
     baseFbx.traverse(c => {
       if (!c.isMesh) return;
       c.castShadow = true;
       [].concat(c.material).forEach(m => { m.roughness = 0.7; m.metalness = 0.1; });
     });
-    scene.add(baseFbx);
-    charMesh = baseFbx;
+
+    // Wrap in group so game position = group position, mesh stays centered inside
+    const charGroup = new THREE.Group();
+    charGroup.add(baseFbx);
+    scene.add(charGroup);
+    charMesh = charGroup;
     mixer = new THREE.AnimationMixer(baseFbx);
 
     // Walk animation — dedicated Walk.fbx
@@ -1974,7 +1982,7 @@ function update(alive) {
 
   // Position + orient character
   charMesh.position.set(window.myX || 0, window.myY || 0, window.myZ || 0);
-  charMesh.rotation.y = Math.PI - (window.myYaw || 0);
+  charMesh.rotation.y = window.myYaw || 0;
 
   // Choose animation
   const inAir = (window.myY || 0) > 0.15;
