@@ -1326,5 +1326,13 @@ window.addEventListener('load', function(){
   }, 120);
 });
 </script>
+<script>
+(function(){
+  if(typeof supabase==='undefined') return;
+  var _c=supabase.createClient('https://ozvyymrqibpyqccgszlz.supabase.co','sb_publishable_30WmZF8d8h_rUSrTGtBwnQ_Kn9gquwL');
+  var _ch=_c.channel('global_online_v1',{config:{presence:{key:'u_'+Math.random().toString(36).slice(2)}}});
+  _ch.on('presence',{event:'sync'},function(){}).subscribe(function(s){ if(s==='SUBSCRIBED') _ch.track({g:'uno',t:Date.now()}); });
+})();
+</script>
 </body>
 </html>

@@ -901,7 +901,7 @@ async function adminSetCoins() {
 // ── ONLINE PRESENCE ───────────────────────────────────────────────
 function initOnlineCounter(){
   if(!sb) return;
-  var ch = sb.channel('portal_online_v1', {config:{presence:{key: 'u_'+Math.random().toString(36).slice(2)}}});
+  var ch = sb.channel('global_online_v1', {config:{presence:{key: 'u_'+Math.random().toString(36).slice(2)}}});
   ch.on('presence',{event:'sync'},function(){
     var cnt = Object.keys(ch.presenceState()).length;
     document.getElementById('onlineCnt').textContent = cnt || 1;

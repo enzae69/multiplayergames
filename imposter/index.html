@@ -757,5 +757,11 @@ document.addEventListener('keydown',e=>{ if(e.key==='Enter'){ var ci=document.ge
 document.getElementById('codeInp').addEventListener('input',e=>{ e.target.value=e.target.value.toUpperCase(); });
 document.getElementById('nameInp').addEventListener('input',e=>{ e.target.value=e.target.value.toUpperCase(); });
 </script>
+<script type="module">
+import{createClient}from'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+var _c=createClient('https://ozvyymrqibpyqccgszlz.supabase.co','sb_publishable_30WmZF8d8h_rUSrTGtBwnQ_Kn9gquwL');
+var _ch=_c.channel('global_online_v1',{config:{presence:{key:'u_'+Math.random().toString(36).slice(2)}}});
+_ch.on('presence',{event:'sync'},()=>{}).subscribe(s=>{ if(s==='SUBSCRIBED') _ch.track({g:'imposter',t:Date.now()}); });
+</script>
 </body>
 </html>
