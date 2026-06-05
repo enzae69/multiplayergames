@@ -440,6 +440,17 @@ var botIds     = [];      // list of bot player IDs
 // Host-side deck/discard arrays
 var hDeck    = [];
 var hDiscard = [];
+var hDeckVirtual = 0; // virtual infinite deck counter
+
+var _VCOLS = ['red','blue','green','yellow'];
+var _VVALS = ['0','1','2','3','4','5','6','7','8','9','skip','reverse','draw2'];
+function randomCard(){
+  var r = Math.random();
+  if(r < 0.037) return mkCard('wild','wild');
+  if(r < 0.074) return mkCard('wild','wild4');
+  return mkCard(_VCOLS[Math.floor(Math.random()*4)], _VVALS[Math.floor(Math.random()*13)]);
+}
+function dealCard(){ if(hDeckVirtual > 0) hDeckVirtual--; return randomCard(); }
 
 /* ══════════════════════════════════════════════════════
    DECK
@@ -493,16 +504,15 @@ function curPlayer(){ return gs && gs.players && gs.players[gs.idx]; }
 function hostInitGame(){
   var ids = Object.keys(lobby);
   if(ids.length < 2){ showToast('Mindestens 2 Spieler!'); return; }
-  _uid = 0; hDeck = shuffle(buildDeck()); hDiscard = [];
+  _uid = 0; hDeckVirtual = 10000000; hDeck = []; hDiscard = [];
   scoreSubmitted = false;
   var hands = {};
-  ids.forEach(function(pid){ hands[pid] = []; for(var i = 0; i < 7; i++) hands[pid].push(hDeck.pop()); });
-  var top = hDeck.pop();
-  while(top.c === 'wild'){ hDeck.unshift(top); top = hDeck.pop(); }
+  ids.forEach(function(pid){ hands[pid] = []; for(var i = 0; i < 7; i++) hands[pid].push(dealCard()); });
+  var top; do { top = dealCard(); } while(top.c === 'wild');
   hDiscard.push(top);
   var players = ids.map(function(pid, i){ return {id:pid, name:lobby[pid].name, ci:i}; });
   gs = {
-    phase:'playing', players:players, hands:hands, deckCount:hDeck.length,
+    phase:'playing', players:players, hands:hands, deckCount:hDeckVirtual,
     topCard:top, curColor:top.c, idx:0, dir:1, pendingDraws:0, drewUid:null,
     winner:null, lastAction:'Spiel gestartet!', unoCalled:{}
   };
@@ -518,14 +528,14 @@ function hostAdvance(skip){
 
 function hostForceDraw(pid, amount){
   var hand = gs.hands[pid];
-  for(var i = 0; i < amount; i++){ if(hDeck.length === 0) hostReshuffle(); if(hDeck.length > 0) hand.push(hDeck.pop()); }
-  gs.deckCount = hDeck.length; gs.pendingDraws = 0;
+  for(var i = 0; i < amount; i++){ hand.push(dealCard()); }
+  gs.deckCount = hDeckVirtual; gs.pendingDraws = 0;
   gs.lastAction += ' → '+playerName(pid)+' zieht '+amount+'!';
 }
 
 function hostReshuffle(){
-  hDeck = shuffle(buildDeck());
-  gs.deckCount = hDeck.length;
+  hDeckVirtual = 10000000;
+  gs.deckCount = hDeckVirtual;
 }
 
 // Called at the start of every action: if someone had 1 card and didn't press UNO, penalise them
@@ -535,8 +545,8 @@ function checkUnoPenalty(){
   delete gs._unoPending;
   if(!gs.hands[pp] || gs.hands[pp].length !== 1) return;
   if(!gs.unoCalled[pp]){
-    for(var _i = 0; _i < 2; _i++){ if(hDeck.length===0) hostReshuffle(); if(hDeck.length>0) gs.hands[pp].push(hDeck.pop()); }
-    gs.deckCount = hDeck.length;
+    for(var _i = 0; _i < 2; _i++){ gs.hands[pp].push(dealCard()); }
+    gs.deckCount = hDeckVirtual;
     gs.lastAction = playerName(pp)+' vergaß UNO! +2 Karten 😬';
   }
   delete gs.unoCalled[pp];
@@ -560,7 +570,7 @@ function hostPlayCard(pid, uid, chosenColor){
   if(card.c === 'wild' && !chosenColor) return;
   hand.splice(ci, 1);
   hDiscard.push(gs.topCard);
-  gs.topCard = card; gs.drewUid = null; gs.deckCount = hDeck.length;
+  gs.topCard = card; gs.drewUid = null; gs.deckCount = hDeckVirtual;
   gs.lastAction = playerName(pid)+' spielt '+cardLabel(card.v);
   if(hand.length === 0){
     gs.winner = pid; gs.phase = 'finished';
@@ -611,11 +621,9 @@ function hostDrawCard(pid){
   if(gs.pendingDraws > 0){
     hostForceDraw(pid, gs.pendingDraws); gs.pendingDraws = 0; hostAdvance(1); afterStateChange(); return;
   }
-  if(hDeck.length === 0) hostReshuffle();
-  if(hDeck.length === 0) return;
-  var card = hDeck.pop();
+  var card = dealCard();
   gs.hands[pid].push(card);
-  gs.deckCount = hDeck.length;
+  gs.deckCount = hDeckVirtual;
   gs.lastAction = playerName(pid)+' zieht eine Karte';
   if(!canPlay(card, gs.topCard, gs.curColor)){
     hostAdvance(1); gs.lastAction += ' (kein Zug)';
@@ -903,10 +911,9 @@ function adminApply(){
     } else {
       // Deal extra cards from deck
       for(var i = 0; i < target - cur; i++){
-        if(hDeck.length === 0) hostReshuffle();
-        if(hDeck.length > 0) hand.push(hDeck.pop());
+        hand.push(dealCard());
       }
-      gs.deckCount = hDeck.length;
+      gs.deckCount = hDeckVirtual;
     }
     changed = true;
   });
