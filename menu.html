@@ -853,7 +853,7 @@ function adminPortalAnnounce() {
 }
 
 // ── ADMIN PANEL ──────────────────────────────────────────────────
-var isPortalAdmin = localStorage.getItem('adminUnlocked') === 'true';
+var isPortalAdmin = false;
 
 function openAdminPanel() {
   document.getElementById('adminOv').style.display = 'flex';
@@ -874,7 +874,6 @@ function tryAdminUnlock() {
   var errEl = document.getElementById('adminCodeErr');
   if (code === 'niggabitch') {
     isPortalAdmin = true;
-    localStorage.setItem('adminUnlocked', 'true');
     document.getElementById('adminUnlockSec').style.display = 'none';
     document.getElementById('adminToolsSec').style.display = 'flex';
     errEl.textContent = '';
