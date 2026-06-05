@@ -76,6 +76,29 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
 .ab-count{font-family:'Russo One',sans-serif;font-size:14px;color:#bf00ff}
 .ab-cost{font-family:'Russo One',sans-serif;font-size:10px;color:#ffd700}
 .ab-err{font-family:'Russo One',sans-serif;font-size:10px;color:#ff4444;text-align:center;min-height:12px;letter-spacing:1px}
+
+/* ── SERVER LIST ── */
+.slist-box{background:rgba(10,10,31,.97);border:2px solid rgba(0,245,255,.3);border-radius:16px;padding:18px 16px;width:min(400px,95vw);max-height:82vh;overflow-y:auto;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;scrollbar-color:rgba(0,245,255,.2) transparent}
+.slist-title{font-family:'Russo One',sans-serif;font-size:16px;color:#00f5ff;text-align:center;letter-spacing:3px}
+.slist-sep{height:1px;background:rgba(255,255,255,.06)}
+.slist-label{font-family:'Russo One',sans-serif;font-size:9px;letter-spacing:4px;color:rgba(255,255,255,.22);text-align:center}
+.room-card{background:rgba(15,15,42,1);border:1px solid rgba(0,245,255,.12);border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;transition:border-color .15s}
+.room-card.lobby-card:active{transform:scale(.98)}
+.room-card.playing{opacity:.55}
+.rc-host{font-family:'Russo One',sans-serif;font-size:14px;color:#00f5ff;letter-spacing:1px}
+.rc-code{font-size:10px;color:rgba(255,255,255,.28);letter-spacing:3px;margin-top:2px}
+.rc-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.rc-players{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:1px;white-space:nowrap}
+.rc-badge{font-family:'Russo One',sans-serif;font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.st-lobby{background:rgba(57,255,20,.1);color:#39ff14;border:1px solid rgba(57,255,20,.2)}
+.st-playing{background:rgba(255,140,0,.1);color:#ff8c00;border:1px solid rgba(255,140,0,.2)}
+.rc-joinbtn{width:auto!important;padding:7px 14px!important;font-size:12px!important;flex-shrink:0}
+.no-rooms-msg{text-align:center;color:rgba(255,255,255,.22);padding:28px 0;font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:3px}
+.private-join-row{display:flex;gap:8px;align-items:center}
+.private-join-row .jinp{flex:1;font-size:18px;letter-spacing:6px}
+.lobby-vis-badge{font-family:'Russo One',sans-serif;font-size:9px;letter-spacing:2px;padding:3px 10px;border-radius:6px;text-align:center;margin-bottom:4px;align-self:center}
+.vis-public{background:rgba(57,255,20,.1);color:#39ff14;border:1px solid rgba(57,255,20,.25)}
+.vis-private{background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.15)}
 </style>
 </head>
 <body>
@@ -96,11 +119,10 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
   <button class="btn bgreen" id="soloBtn">🎯 SOLO ÜBEN</button>
   <button class="btn bcyan" id="multiBtn">⚔️ MULTIPLAYER</button>
   <div class="multibtns" id="multibtns">
-    <button class="btn bcyan" id="createBtn" style="font-size:13px;padding:11px">+ RAUM ERSTELLEN</button>
-    <button class="btn bghost" id="joinShowBtn" style="font-size:13px;padding:11px">🔍 RAUM BEITRETEN</button>
-    <div class="joinrow" id="joinRow">
-      <input class="jinp" id="joinInput" maxlength="4" placeholder="CODE" autocomplete="off" spellcheck="false"/>
-      <button class="btn bcyan" id="joinBtn" style="width:auto;padding:11px 18px;font-size:13px">JOIN</button>
+    <button class="btn bcyan" onclick="showServerList()" style="font-size:13px;padding:11px">🌐 SERVER LISTE</button>
+    <div style="display:flex;gap:8px;width:min(300px,90vw)">
+      <button class="btn bcyan" onclick="createRoom(true)" style="flex:1;font-size:11px;padding:10px;letter-spacing:1px">🌐 ÖFFENTLICH</button>
+      <button class="btn bghost" onclick="createRoom(false)" style="flex:1;font-size:11px;padding:10px;letter-spacing:1px">🔒 PRIVAT</button>
     </div>
   </div>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center">
@@ -177,6 +199,25 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
   </div>
 </div>
 
+<!-- SERVER LIST -->
+<div id="sServerList" class="screen solid off">
+  <div class="slist-box">
+    <div class="slist-title">🌐 SERVER LISTE</div>
+    <div class="slist-label">PRIVAT BEITRETEN</div>
+    <div class="private-join-row">
+      <input class="jinp" id="slPrivCode" maxlength="4" placeholder="CODE" autocomplete="off" spellcheck="false">
+      <button class="btn bcyan rc-joinbtn" onclick="joinByCode(document.getElementById('slPrivCode').value)">🔑 JOIN</button>
+    </div>
+    <div class="slist-sep"></div>
+    <div class="slist-label">ÖFFENTLICHE RÄUME</div>
+    <div id="roomListEl"><div class="no-rooms-msg">LADE...</div></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn bghost" onclick="refreshRooms()" style="flex:1;font-size:12px;padding:10px">↻ AKTUALISIEREN</button>
+      <button class="btn bghost" onclick="showScreen('sMenu')" style="flex:1;font-size:12px;padding:10px">← ZURÜCK</button>
+    </div>
+  </div>
+</div>
+
 <!-- RESULT -->
 <div id="sResult" class="screen solid off">
   <div class="rsbox">
@@ -193,6 +234,7 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
 <div id="sLobby" class="screen solid off">
   <div class="lbox">
     <div class="ltitle">LOBBY</div>
+    <div id="lobbyVisBadge" class="lobby-vis-badge vis-private">🔒 PRIVAT</div>
     <div class="codebig" id="codeVal" onclick="copyCode()">----</div>
     <div style="font-size:10px;color:rgba(255,255,255,.3);letter-spacing:2px;text-align:center;margin-bottom:10px">TIPPE ZUM KOPIEREN</div>
     <div class="plist" id="plistHost"></div>
@@ -266,6 +308,8 @@ var myDead = false, lastSyncTime = 0;
 var sb = null, myRoom = null, myId = null, peers = {}, isHost = false;
 var roomCh = null;
 var globalCh = null;
+var lobbyPresenceCh = null;
+var roomIsPublic = false;
 var totalRounds = 5, roundNum = 1, myWins = 0, roundEndActive = false;
 var rng = Math.random; // overridden in multiplayer with seeded RNG
 
@@ -1040,15 +1084,112 @@ function updateHUD() {
 }
 
 // ── MULTIPLAYER ───────────────────────────────────────────────────────────
+
+function initLobbyPresence() {
+  if (lobbyPresenceCh) return;
+  lobbyPresenceCh = sb.channel('lt_lobby_v2');
+  lobbyPresenceCh
+    .on('presence', {event:'sync'}, function() {
+      var el = document.getElementById('roomListEl');
+      if (el) renderRoomList();
+    })
+    .subscribe();
+}
+
+function trackRoom(status) {
+  if (!lobbyPresenceCh || !roomIsPublic) return;
+  lobbyPresenceCh.track({
+    roomCode: myRoom,
+    hostName: progress.name,
+    playerCount: Object.keys(peers).length + 1,
+    status: status || 'lobby',
+    ts: Date.now()
+  });
+}
+
+function untrackRoom() {
+  if (lobbyPresenceCh && roomIsPublic) lobbyPresenceCh.untrack();
+}
+
+function updateRoomPresence() {
+  if (isHost && roomIsPublic) trackRoom('lobby');
+}
+
+function showServerList() {
+  if (!sb) { document.getElementById('menuErr').textContent = 'Warte kurz...'; return; }
+  initLobbyPresence();
+  showScreen('sServerList');
+  refreshRooms();
+}
+
+function refreshRooms() {
+  var el = document.getElementById('roomListEl');
+  if (!el) return;
+  if (!lobbyPresenceCh) { el.innerHTML = '<div class="no-rooms-msg">VERBINDE...</div>'; initLobbyPresence(); return; }
+  renderRoomList();
+}
+
+function renderRoomList() {
+  var el = document.getElementById('roomListEl');
+  if (!el) return;
+  var state = lobbyPresenceCh ? lobbyPresenceCh.presenceState() : {};
+  var rooms = [];
+  Object.values(state).forEach(function(arr) {
+    arr.forEach(function(p) { if (p.roomCode) rooms.push(p); });
+  });
+  rooms.sort(function(a,b){ return b.ts - a.ts; });
+  if (rooms.length === 0) {
+    el.innerHTML = '<div class="no-rooms-msg">KEINE ÖFFENTLICHEN RÄUME</div>';
+    return;
+  }
+  el.innerHTML = '';
+  rooms.forEach(function(room) {
+    var isPlaying = room.status !== 'lobby';
+    var card = document.createElement('div');
+    card.className = 'room-card' + (isPlaying ? ' playing' : ' lobby-card');
+    card.innerHTML =
+      '<div>'+
+        '<div class="rc-host">'+escH(room.hostName)+'</div>'+
+        '<div class="rc-code">#'+room.roomCode+'</div>'+
+      '</div>'+
+      '<div class="rc-right">'+
+        '<div class="rc-players">'+room.playerCount+' 👤</div>'+
+        '<div class="rc-badge '+(isPlaying?'st-playing':'st-lobby')+'">'+(isPlaying?'LÄUFT':'LOBBY')+'</div>'+
+        (!isPlaying ? '<button class="btn bcyan rc-joinbtn" onclick="joinByCode(\''+room.roomCode+'\')">JOIN</button>' : '')+
+      '</div>';
+    el.appendChild(card);
+  });
+}
+
+function joinByCode(code) {
+  if (!code) { code = (document.getElementById('slPrivCode')||{}).value||''; }
+  code = (code||'').trim().toUpperCase();
+  if (code.length < 3) { document.getElementById('menuErr').textContent = 'Code ungültig!'; return; }
+  peers = {}; myWins = 0; roundNum = 1;
+  myRoom = code; myId = progress.name+'_'+Date.now(); isHost = false; roomIsPublic = false;
+  document.getElementById('codeVal').textContent = code;
+  document.getElementById('plistHost').innerHTML = '<div class="pslot filled">'+progress.name+' (DU)</div>';
+  document.getElementById('roundPicker').style.display = 'none';
+  document.getElementById('roundInfo').style.display = 'block';
+  document.getElementById('roundInfo').textContent = 'Warte auf Host...';
+  document.getElementById('startBtn').style.display = 'none';
+  var vb = document.getElementById('lobbyVisBadge');
+  if (vb) { vb.textContent = '🔑 PRIVAT BEIGETRETEN'; vb.className='lobby-vis-badge vis-private'; }
+  showScreen('sLobby'); joinChannel();
+}
+
+function escH(s){ var d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
 function toggleMulti() {
   var el = document.getElementById('multibtns');
   if (el) el.classList.toggle('show');
   if (!sb) document.getElementById('menuErr').textContent = 'Multiplayer verbindet...';
 }
-function createRoom() {
+function createRoom(isPublic) {
   if (!sb) { document.getElementById('menuErr').textContent = 'Warte kurz...'; return; }
   var code = Math.random().toString(36).substr(2,4).toUpperCase();
   peers = {}; myWins = 0; roundNum = 1;
+  roomIsPublic = !!isPublic;
   myRoom=code; myId=progress.name+'_'+Date.now(); isHost=true;
   totalRounds=5; setRounds(5);
   document.getElementById('codeVal').textContent = code;
@@ -1056,21 +1197,14 @@ function createRoom() {
   document.getElementById('roundPicker').style.display = 'block';
   document.getElementById('roundInfo').style.display = 'none';
   document.getElementById('startBtn').style.display = '';
-  showScreen('sLobby'); joinChannel();
-}
-function joinRoom() {
-  if (!sb) { document.getElementById('menuErr').textContent = 'Warte kurz...'; return; }
-  var code = (document.getElementById('joinInput').value||'').trim().toUpperCase();
-  if (code.length < 3) return;
-  peers = {}; myWins = 0; roundNum = 1;
-  myRoom=code; myId=progress.name+'_'+Date.now(); isHost=false;
-  document.getElementById('codeVal').textContent = code;
-  document.getElementById('plistHost').innerHTML = '<div class="pslot filled">'+progress.name+' (DU)</div>';
-  document.getElementById('roundPicker').style.display = 'none';
-  document.getElementById('roundInfo').style.display = 'block';
-  document.getElementById('roundInfo').textContent = 'Warte auf Host...';
-  document.getElementById('startBtn').style.display = 'none';
-  showScreen('sLobby'); joinChannel();
+  var vb = document.getElementById('lobbyVisBadge');
+  if (vb) {
+    if (isPublic) { vb.textContent='🌐 ÖFFENTLICH'; vb.className='lobby-vis-badge vis-public'; }
+    else { vb.textContent='🔒 PRIVAT'; vb.className='lobby-vis-badge vis-private'; }
+  }
+  showScreen('sLobby');
+  if (roomIsPublic) { initLobbyPresence(); }
+  joinChannel();
 }
 function copyCode() {
   var v = document.getElementById('codeVal').textContent;
@@ -1088,6 +1222,7 @@ function joinChannel() {
           if (list) list.innerHTML += '<div class="pslot filled">'+m.payload.name+'</div>';
           peers[m.payload.id] = {id:m.payload.id, name:m.payload.name, wins:0};
           if (roomCh) roomCh.send({type:'broadcast',event:'join',payload:{id:myId,name:progress.name}});
+          updateRoomPresence();
         } else {
           // Already known: only refresh name — never wipe position or wins data
           peers[m.payload.id].name = m.payload.name;
@@ -1149,7 +1284,7 @@ function joinChannel() {
     .on('broadcast',{event:'hostLeft'},function(m){
       if (!isHost) {
         if (roomCh) { roomCh.unsubscribe(); roomCh=null; }
-        myRoom=null; peers={}; isHost=false; gameState='menu';
+        myRoom=null; peers={}; isHost=false; gameState='menu'; roomIsPublic=false;
         roundNum=1; myWins=0; roundEndActive=false;
         var hr=document.getElementById('hudRound'); if(hr) hr.style.display='none';
         showScreen('sMenu');
@@ -1199,6 +1334,7 @@ function joinChannel() {
     .subscribe();
   setTimeout(function(){
     if (roomCh) roomCh.send({type:'broadcast',event:'join',payload:{id:myId,name:progress.name}});
+    if (isHost) trackRoom('lobby');
   }, 500);
 }
 function setRounds(n) {
@@ -1211,6 +1347,7 @@ function setRounds(n) {
 }
 function startMulti() {
   if (!isHost) return;
+  trackRoom('playing');
   roundNum = 1; myWins = 0;
   Object.keys(peers).forEach(function(id){ peers[id].wins = 0; });
   var plist = [{id:myId,name:progress.name,wins:0}].concat(
@@ -1490,7 +1627,8 @@ function leaveRoom() {
     }
     roomCh.unsubscribe(); roomCh=null;
   }
-  myRoom=null; peers={}; isHost=false; gameState='menu';
+  untrackRoom();
+  myRoom=null; peers={}; isHost=false; gameState='menu'; roomIsPublic=false;
   roundNum=1; myWins=0; roundEndActive=false;
   var hr=document.getElementById('hudRound'); if(hr) hr.style.display='none';
   showScreen('sMenu');
@@ -1644,11 +1782,10 @@ window.onerror = function(msg, src, line) {
 window.addEventListener('DOMContentLoaded', function() {
   document.getElementById('soloBtn').addEventListener('click',    startSolo);
   document.getElementById('multiBtn').addEventListener('click',   toggleMulti);
-  document.getElementById('createBtn').addEventListener('click',  createRoom);
-  document.getElementById('joinShowBtn').addEventListener('click',function(){ document.getElementById('joinRow').classList.add('show'); });
-  document.getElementById('joinBtn').addEventListener('click',    joinRoom);
   document.getElementById('nameBtn').addEventListener('click',    changeName);
   document.getElementById('nameInp').addEventListener('keydown',  function(e){ if(e.key==='Enter') changeName(); });
+  document.getElementById('slPrivCode').addEventListener('keydown', function(e){ if(e.key==='Enter') joinByCode(this.value); });
+  document.getElementById('slPrivCode').addEventListener('input', function(e){ e.target.value=e.target.value.toUpperCase(); });
   document.getElementById('startBtn').addEventListener('click',   startMulti);
   document.getElementById('leaveBtn').addEventListener('click',   leaveRoom);
   document.getElementById('retryBtn').addEventListener('click',   startSolo);
