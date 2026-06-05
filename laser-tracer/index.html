@@ -1199,6 +1199,10 @@ function renderRoomList() {
   });
   var now = Date.now();
   rooms = rooms.filter(function(r){ return r.playerCount > 0 && (now - r.ts) < 180000; });
+  // Deduplicate by roomCode – keep newest entry per code
+  var roomMap = {};
+  rooms.forEach(function(r){ if(!roomMap[r.roomCode] || r.ts > roomMap[r.roomCode].ts) roomMap[r.roomCode] = r; });
+  rooms = Object.values(roomMap);
   rooms.sort(function(a,b){ return b.ts - a.ts; });
   if (rooms.length === 0) {
     el.innerHTML = '<div class="no-rooms-msg">KEINE ÖFFENTLICHEN RÄUME</div>';
