@@ -1841,13 +1841,8 @@ window.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script type="module">
-// Three.js FBX character overlay — renders on transparent canvas above game canvas
-const THREE_CDN = 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
-const FBX_CDN   = 'https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/loaders/FBXLoader.js';
-const ORBIT_CDN = 'https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/controls/OrbitControls.js';
-
-const THREE = await import(THREE_CDN);
-const { FBXLoader } = await import(FBX_CDN);
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
+import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/loaders/FBXLoader.js';
 
 // Overlay canvas
 const oc = document.createElement('canvas');
@@ -1879,7 +1874,9 @@ const sun = new THREE.DirectionalLight(0xffffff, 2.5);
 sun.position.set(6, 12, 6);
 sun.castShadow = true;
 scene.add(sun);
-scene.add(Object.assign(new THREE.DirectionalLight(0x00f5ff, 0.4), { position: new THREE.Vector3(-4, 3, -4) }));
+const fill = new THREE.DirectionalLight(0x00f5ff, 0.4);
+fill.position.set(-4, 3, -4);
+scene.add(fill);
 
 const clock = new THREE.Clock();
 
