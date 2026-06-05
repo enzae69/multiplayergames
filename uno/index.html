@@ -524,12 +524,7 @@ function hostForceDraw(pid, amount){
 }
 
 function hostReshuffle(){
-  if(hDiscard.length > 1){
-    var keep = hDiscard.pop();
-    hDeck = shuffle(hDiscard); hDiscard = [keep];
-  } else {
-    hDeck = shuffle(buildDeck());
-  }
+  hDeck = shuffle(buildDeck());
   gs.deckCount = hDeck.length;
 }
 
