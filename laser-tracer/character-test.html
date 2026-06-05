@@ -23,7 +23,7 @@
 </div>
 <div id="progress">
   <div class="spin"></div>
-  <div id="progTxt">LADE WALKING.FBX...</div>
+  <div id="progTxt">LADE CHARACTER...</div>
 </div>
 <div id="animBtns"></div>
 <div id="hint">Ziehen = Kamera drehen · Pinch = Zoom</div>
@@ -101,12 +101,6 @@ const prog = document.getElementById('progress');
 const progTxt = document.getElementById('progTxt');
 const animBtns = document.getElementById('animBtns');
 
-const ANIM_FILES = [
-  { file: 'Idle.fbx',    key: 'idle',  label: '🧍 IDLE' },
-  { file: 'Walking.fbx', key: 'walk',  label: '🚶 WALK' },
-  { file: 'Walking.fbx', key: 'run',   label: '🏃 RUN',  animIndex: 1 },
-  { file: 'Jump.fbx',    key: 'jump',  label: '🦘 JUMP' },
-];
 
 function playAnim(key) {
   const next = namedActions[key];
@@ -154,9 +148,14 @@ async function loadAll() {
     scene.add(baseFbx);
     mixer = new THREE.AnimationMixer(baseFbx);
 
-    // Walk + Run are inside Walking.fbx
-    if (baseFbx.animations[0]) namedActions['walk'] = mixer.clipAction(baseFbx.animations[0]);
-    if (baseFbx.animations[1]) namedActions['run']  = mixer.clipAction(baseFbx.animations[1]);
+    // Load Walk
+    progTxt.textContent = 'LADE WALK...';
+    const walkFbx = await loadFBX('Walk.fbx');
+    if (walkFbx.animations[0]) {
+      const wa = mixer.clipAction(walkFbx.animations[0]);
+      wa.timeScale = 0.75;
+      namedActions['walk'] = wa;
+    }
 
     // Load Idle
     progTxt.textContent = 'LADE IDLE...';
@@ -165,7 +164,7 @@ async function loadAll() {
 
     // Load Jump
     progTxt.textContent = 'LADE JUMP...';
-    const jumpFbx = await loadFBX('Jump.fbx');
+    const jumpFbx = await loadFBX('Jumping.fbx');
     if (jumpFbx.animations[0]) {
       const jumpAction = mixer.clipAction(jumpFbx.animations[0]);
       jumpAction.setLoop(THREE.LoopOnce, 1);
@@ -176,7 +175,7 @@ async function loadAll() {
     prog.style.display = 'none';
 
     // Build buttons in order
-    [['idle','🧍 IDLE'],['walk','🚶 WALK'],['run','🏃 RUN'],['jump','🦘 JUMP']].forEach(([k,l]) => {
+    [['idle','🧍 IDLE'],['walk','🚶 WALK'],['jump','🦘 JUMP']].forEach(([k,l]) => {
       if (namedActions[k]) addAnimBtn(k, l);
     });
 
