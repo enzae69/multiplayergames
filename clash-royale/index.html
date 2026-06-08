@@ -1310,7 +1310,7 @@ function startBattle(){
 
   state.battleActive = true;
   state.elixir = 5; state.elixirF = 5;
-  B.eElixirF = 5;
+  B.eElixirF = 5; B.eElixir = 5;
   battleHand = MY_DECK.slice(0,4);
   battleNext = MY_DECK.slice();
 
@@ -1399,10 +1399,10 @@ function battleLoop(now){
 
   // Elixir regen (double in last 60s)
   var rate = B.time <= 60 ? 0.71 : 0.36; // elixir per second
-  state.elixirF = (state.elixirF||state.elixir) + rate*dt;
+  state.elixirF += rate*dt;
   if(state.elixirF > 10) state.elixirF = 10;
   if(Math.floor(state.elixirF) !== state.elixir){ state.elixir = Math.floor(state.elixirF); renderElixir(); }
-  B.eElixirF = (B.eElixirF||B.eElixir) + rate*dt;
+  B.eElixirF += rate*dt;
   if(B.eElixirF > 10) B.eElixirF = 10;
   B.eElixir = Math.floor(B.eElixirF);
 
