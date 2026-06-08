@@ -248,6 +248,7 @@ body{
   animation:legendarySheen 3s linear infinite;
 }
 @keyframes legendarySheen{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
+.card.locked-card{opacity:.75;cursor:default}
 
 .card-emoji{font-size:28px;margin-bottom:3px;position:relative;z-index:1}
 .card-name{font-size:9px;font-weight:700;letter-spacing:.5px;text-align:center;line-height:1.2;color:#fff;position:relative;z-index:1}
@@ -1010,52 +1011,55 @@ body{
 // ── DATA ──────────────────────────────────────────────────────────
 var CARDS = {
   legendary:[
-    {emoji:'🐉',name:'Baby Dragon',elixir:4,lvl:12},
-    {emoji:'🧙',name:'Wizard King',elixir:5,lvl:10},
-    {emoji:'⚡',name:'Sparky',elixir:6,lvl:9},
-    {emoji:'🪄',name:'Magic Archer',elixir:4,lvl:11},
+    {emoji:'🐉',name:'Baby Dragon',  elixir:4,lvl:12, arena:4},
+    {emoji:'🧙',name:'Wizard King',  elixir:5,lvl:10, arena:7},
+    {emoji:'⚡',name:'Sparky',       elixir:6,lvl:9,  arena:6},
+    {emoji:'🪄',name:'Magic Archer', elixir:4,lvl:11, arena:5},
   ],
   epic:[
-    {emoji:'🧟',name:'Golem',elixir:8,lvl:7},
-    {emoji:'🔥',name:'Fireball',elixir:4,lvl:8},
-    {emoji:'💀',name:'Witch',elixir:5,lvl:7},
-    {emoji:'🦹',name:'Dark Prince',elixir:4,lvl:8},
-    {emoji:'🔮',name:'Goblin Barrel',elixir:3,lvl:8},
-    {emoji:'🧱',name:'X-Bow',elixir:6,lvl:7},
+    {emoji:'🧟',name:'Golem',         elixir:8,lvl:7, arena:6},
+    {emoji:'🔥',name:'Fireball',      elixir:4,lvl:8, arena:3},
+    {emoji:'💀',name:'Witch',         elixir:5,lvl:7, arena:5},
+    {emoji:'🦹',name:'Dark Prince',   elixir:4,lvl:8, arena:4},
+    {emoji:'🔮',name:'Goblin Barrel', elixir:3,lvl:8, arena:3},
+    {emoji:'🧱',name:'X-Bow',         elixir:6,lvl:7, arena:6},
   ],
   rare:[
-    {emoji:'🎯',name:'Enzae Pimmelshot',elixir:4,lvl:10},
-    {emoji:'🏇',name:'Matafaka Rider',elixir:4,lvl:11},
-    {emoji:'🪖',name:'Mini P.E.K.K.A',elixir:4,lvl:11},
-    {emoji:'💣',name:'Royal Giant',elixir:6,lvl:10},
-    {emoji:'🛡️',name:'Valkyrie',elixir:4,lvl:11},
-    {emoji:'🏚️',name:'Furnace',elixir:4,lvl:10},
-    {emoji:'⚙️',name:'Cannon',elixir:3,lvl:11},
-    {emoji:'🎈',name:'Balloon',elixir:5,lvl:10},
+    {emoji:'🎯',name:'Enzae Pimmelshot',elixir:4,lvl:10, arena:1},
+    {emoji:'🏇',name:'Matafaka Rider',  elixir:4,lvl:11, arena:2},
+    {emoji:'🪖',name:'Mini P.E.K.K.A',  elixir:4,lvl:11, arena:3},
+    {emoji:'💣',name:'Royal Giant',     elixir:6,lvl:10, arena:7},
+    {emoji:'🛡️',name:'Valkyrie',        elixir:4,lvl:11, arena:4},
+    {emoji:'🏚️',name:'Furnace',         elixir:4,lvl:10, arena:5},
+    {emoji:'⚙️',name:'Cannon',          elixir:3,lvl:11, arena:2},
+    {emoji:'🎈',name:'Balloon',         elixir:5,lvl:10, arena:5},
   ],
   common:[
-    {emoji:'⚔️',name:'Knight',elixir:3,lvl:13},
-    {emoji:'🏹',name:'Archers',elixir:3,lvl:13},
-    {emoji:'💥',name:'Arrows',elixir:3,lvl:13},
-    {emoji:'👺',name:'Goblins',elixir:2,lvl:13},
-    {emoji:'👷',name:'Barbarians',elixir:5,lvl:13},
-    {emoji:'🐊',name:'Skeleton Army',elixir:3,lvl:13},
-    {emoji:'💦',name:'Ice Spirit',elixir:1,lvl:13},
-    {emoji:'🔧',name:'Tesla',elixir:4,lvl:13},
-    {emoji:'💨',name:'Zap',elixir:2,lvl:13},
-    {emoji:'🎯',name:'Mortar',elixir:4,lvl:13},
+    {emoji:'⚔️',name:'Knight',       elixir:3,lvl:13, arena:0},
+    {emoji:'🏹',name:'Archers',      elixir:3,lvl:13, arena:0},
+    {emoji:'💥',name:'Arrows',       elixir:3,lvl:13, arena:0},
+    {emoji:'👺',name:'Goblins',      elixir:2,lvl:13, arena:0},
+    {emoji:'👷',name:'Barbarians',   elixir:5,lvl:13, arena:1},
+    {emoji:'🐊',name:'Skeleton Army',elixir:3,lvl:13, arena:2},
+    {emoji:'💦',name:'Ice Spirit',   elixir:1,lvl:13, arena:3},
+    {emoji:'🔧',name:'Tesla',        elixir:4,lvl:13, arena:4},
+    {emoji:'💨',name:'Zap',          elixir:2,lvl:13, arena:1},
+    {emoji:'🎯',name:'Mortar',       elixir:4,lvl:13, arena:5},
   ]
 };
 
+// Giant lives in TROOP_STATS but also needs to be pickable — add it as a rare
+// (already in TROOP_STATS, we just reference it through deck; no CARDS entry needed)
+
 var MY_DECK = [
-  {emoji:'🏇',name:'Matafaka Rider',elixir:4,rarity:'rare'},
+  {emoji:'⚔️',name:'Knight',      elixir:3,rarity:'common'},
+  {emoji:'🏹',name:'Archers',     elixir:3,rarity:'common'},
+  {emoji:'💥',name:'Arrows',      elixir:3,rarity:'common'},
+  {emoji:'👺',name:'Goblins',     elixir:2,rarity:'common'},
   {emoji:'🎯',name:'Enzae Pimmelshot',elixir:4,rarity:'rare'},
-  {emoji:'💥',name:'Fireball',elixir:4,rarity:'epic'},
-  {emoji:'⚔️',name:'Knight',elixir:3,rarity:'common'},
-  {emoji:'💣',name:'Zap',elixir:2,rarity:'common'},
-  {emoji:'🐉',name:'Baby Dragon',elixir:4,rarity:'legendary'},
-  {emoji:'🏹',name:'Archers',elixir:3,rarity:'common'},
-  {emoji:'🎈',name:'Balloon',elixir:5,rarity:'rare'},
+  {emoji:'💨',name:'Zap',         elixir:2,rarity:'common'},
+  {emoji:'👷',name:'Barbarians',  elixir:5,rarity:'common'},
+  {emoji:'🏇',name:'Matafaka Rider',elixir:4,rarity:'rare'},
 ];
 
 var CLAN_MEMBERS = [
@@ -1150,15 +1154,38 @@ function goHome(){
 }
 
 // ── CARDS ─────────────────────────────────────────────────────────
+function getPlayerArena(){
+  var idx = 0;
+  for(var i = 0; i < TROPHY_MILESTONES.length; i++){
+    if(state.trophies >= TROPHY_MILESTONES[i].req) idx = i;
+    else break;
+  }
+  return idx; // 0 = Training Camp, 1 = Goblin Stadium, …
+}
+
+function isCardUnlocked(card){
+  var arenaNeeded = (card.arena !== undefined) ? card.arena : 0;
+  return getPlayerArena() >= arenaNeeded;
+}
+
 function buildCard(c, rarity){
   var rarityNames = {legendary:'LEGENDARY',epic:'EPIC',rare:'RARE',common:'COMMON'};
   var badgeClass  = 'badge-'+rarity;
-  return '<div class="card '+rarity+'" onclick="showToast(\''+c.emoji+' '+c.name+'\')">'
+  var unlocked    = isCardUnlocked(c);
+  var lockOverlay = unlocked ? '' :
+    '<div style="position:absolute;inset:0;background:rgba(0,0,0,.55);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">'
+    +'<span style="font-size:22px;color:#e74c3c;font-weight:900">✕</span>'
+    +'<span style="font-size:8px;color:#fff;font-weight:700;text-align:center;line-height:1.2">Arena '+(c.arena||0)+'</span>'
+    +'</div>';
+  return '<div class="card '+rarity+(unlocked?'':' locked-card')+'" style="position:relative" onclick="showToast(\''+(unlocked?c.emoji+' '+c.name:'🔒 Arena '+(c.arena||0)+' benötigt!')+'\')">'
     +'<div class="card-elixir">'+c.elixir+'</div>'
-    +'<div class="card-emoji">'+c.emoji+'</div>'
+    +'<div class="card-emoji" style="'+(unlocked?'':'filter:grayscale(1);opacity:.4')+'">'+c.emoji+'</div>'
     +'<div class="card-name">'+c.name+'</div>'
-    +'<div class="card-level">LVL '+c.lvl+'</div>'
+    +'<div class="card-level">'+(unlocked?'LVL '+c.lvl:'🔒')+'</div>'
     +'<div class="card-rarity-badge '+badgeClass+'">'+rarityNames[rarity]+'</div>'
+    +lockOverlay
+    +'</div>';
+}
     +'</div>';
 }
 
@@ -1317,12 +1344,43 @@ var TROOP_STATS = {
 };
 function statFor(name){ return TROOP_STATS[name] || {hp:500,dmg:70,range:22,speed:45,atk:1.2,count:1}; }
 
-var ENEMY_DECK = [
-  {emoji:'🦣',name:'Giant',elixir:5},      {emoji:'🎯',name:'Enzae Pimmelshot',elixir:4},
-  {emoji:'⚔️',name:'Knight',elixir:3},     {emoji:'🏹',name:'Archers',elixir:3},
-  {emoji:'💥',name:'Fireball',elixir:4},   {emoji:'🐉',name:'Baby Dragon',elixir:4},
-  {emoji:'🐊',name:'Skeleton Army',elixir:3},{emoji:'🏇',name:'Matafaka Rider',elixir:4},
+// All possible enemy cards with arena unlock level — pool grows per arena
+var ALL_ENEMY_CARDS = [
+  {emoji:'⚔️',name:'Knight',         elixir:3, arena:0},
+  {emoji:'🏹',name:'Archers',         elixir:3, arena:0},
+  {emoji:'💥',name:'Arrows',          elixir:3, arena:0},
+  {emoji:'👺',name:'Goblins',         elixir:2, arena:0},
+  {emoji:'🎯',name:'Enzae Pimmelshot',elixir:4, arena:1},
+  {emoji:'💨',name:'Zap',             elixir:2, arena:1},
+  {emoji:'👷',name:'Barbarians',      elixir:5, arena:1},
+  {emoji:'🏇',name:'Matafaka Rider',  elixir:4, arena:2},
+  {emoji:'🐊',name:'Skeleton Army',   elixir:3, arena:2},
+  {emoji:'⚙️',name:'Cannon',          elixir:3, arena:2},
+  {emoji:'🔥',name:'Fireball',        elixir:4, arena:3},
+  {emoji:'🔮',name:'Goblin Barrel',   elixir:3, arena:3},
+  {emoji:'💦',name:'Ice Spirit',      elixir:1, arena:3},
+  {emoji:'🐉',name:'Baby Dragon',     elixir:4, arena:4},
+  {emoji:'🦹',name:'Dark Prince',     elixir:4, arena:4},
+  {emoji:'🔧',name:'Tesla',           elixir:4, arena:4},
+  {emoji:'🪄',name:'Magic Archer',    elixir:4, arena:5},
+  {emoji:'💀',name:'Witch',           elixir:5, arena:5},
+  {emoji:'🎈',name:'Balloon',         elixir:5, arena:5},
+  {emoji:'🧟',name:'Golem',           elixir:8, arena:6},
+  {emoji:'🧱',name:'X-Bow',           elixir:6, arena:6},
+  {emoji:'⚡',name:'Sparky',          elixir:6, arena:6},
+  {emoji:'🧙',name:'Wizard King',     elixir:5, arena:7},
+  {emoji:'💣',name:'Royal Giant',     elixir:6, arena:7},
+  {emoji:'🦣',name:'Giant',           elixir:5, arena:3},
 ];
+
+function buildEnemyDeck(arenaIdx){
+  // Only use cards available up to the bot's arena
+  var pool = ALL_ENEMY_CARDS.filter(function(c){ return c.arena <= arenaIdx; });
+  // Shuffle and pick 8
+  pool = pool.slice().sort(function(){ return Math.random()-0.5; });
+  // Ensure at least some cheap cards and some fighters
+  return pool.slice(0, Math.min(8, pool.length));
+}
 
 // Engine state
 var B = null; // battle object
@@ -1343,14 +1401,22 @@ function startBattle(){
   var riverTop = H * 0.47, riverBot = H * 0.53;
   var laneL = W * 0.27, laneR = W * 0.73;
 
+  var botArena = Math.min(getPlayerArena(), TROPHY_MILESTONES.length - 1);
+  var botScale = 1 + botArena * 0.08; // each arena: +8% hp/dmg for enemy towers
+
   // Build towers: side 'p' (player, bottom) / 'e' (enemy, top)
   function tower(side, kind, x, y){
     var king = kind === 'king';
+    var isEnemy = side === 'e';
+    var baseHp  = king ? 3200 : 1700;
+    var baseDmg = king ? 60 : 55;
+    var hp  = isEnemy ? Math.round(baseHp  * botScale) : baseHp;
+    var dmg = isEnemy ? Math.round(baseDmg * botScale) : baseDmg;
     return {
       side:side, kind:kind, x:x, y:y,
-      hp: king ? 3200 : 1700, maxhp: king ? 3200 : 1700,
-      range: king ? 130 : 145, dmg: king ? 60 : 55, atk:0.8, cd:0,
-      r:26, dead:false, active: king ? false : true // king activates when a crown falls or it's hit
+      hp:hp, maxhp:hp,
+      range: king ? 130 : 145, dmg:dmg, atk:0.8, cd:0,
+      r:26, dead:false, active: king ? false : true
     };
   }
   var towers = [
@@ -1378,9 +1444,9 @@ function startBattle(){
   B.eElixirF = 5; B.eElixir = 5;
   battleHand = MY_DECK.slice(0,4);
   battleNext = MY_DECK.slice();
-  var eShuffle = ENEMY_DECK.slice().sort(function(){ return Math.random()-0.5; });
-  eBattleHand = eShuffle.slice(0,4);
-  eBattleNext = eShuffle.slice();
+  var eDeck = buildEnemyDeck(botArena);
+  eBattleHand = eDeck.slice(0,4);
+  eBattleNext = eDeck.slice();
 
   renderElixir(); renderBattleHand(); updateTimer();
   updateCrowns();
@@ -1440,11 +1506,14 @@ function deployTroop(side, card, st, x, y){
   for(var i=0;i<n;i++){
     var ox = (n>1) ? (i - (n-1)/2) * 16 : 0;
     var oy = (n>3) ? ((i%2)*14 - 7) : 0;
+    var uScale = (side === 'e') ? (1 + Math.min(getPlayerArena(), TROPHY_MILESTONES.length-1) * 0.07) : 1;
+    var uHp  = Math.round(st.hp  * uScale);
+    var uDmg = Math.round(st.dmg * uScale);
     B.units.push({
       uid: ++_uidSeq,
       side:side, name:card.name, emoji:card.emoji,
       x: clamp(x+ox, 14, B.W-14), y: clamp(y+oy, 14, B.H-14),
-      hp: st.hp, maxhp: st.hp, dmg: st.dmg, range: st.range,
+      hp: uHp, maxhp: uHp, dmg: uDmg, range: st.range,
       speed: st.speed, atk: st.atk, cd: 0.3,
       fly: !!st.fly, air: !!st.air, bld: !!st.bld, splash: st.splash||0,
       building: !!st.building, life: st.life||0, spawns: st.spawns||null, spawnCd:3,
@@ -1929,6 +1998,7 @@ function syncTopBar(){
   document.getElementById('trophiesVal').textContent=state.trophies.toLocaleString().replace(/,/g,'.');
   document.getElementById('goldVal').textContent=state.gold.toLocaleString().replace(/,/g,'.');
   document.getElementById('gemsVal').textContent=state.gems.toLocaleString().replace(/,/g,'.');
+  renderCards(); // refresh lock/unlock state based on current trophies
   saveProgress();
 }
 
@@ -2040,14 +2110,26 @@ function renderPickGrid(){
     var grid = document.createElement('div');
     grid.className = 'de-grid';
     group.forEach(function(card){
-      var inD = !!inDeck[card.name];
-      var full = draftDeck.length >= 8;
+      var inD     = !!inDeck[card.name];
+      var full    = draftDeck.length >= 8;
+      var locked  = !isCardUnlocked(card);
       var div = document.createElement('div');
-      div.className = 'de-card '+r + (inD?' selected':'') + ((!inD && full)?' disabled-card':'');
+      div.style.position = 'relative';
+      div.className = 'de-card '+r
+        + (inD ? ' selected' : '')
+        + ((!inD && (full || locked)) ? ' disabled-card' : '');
       div.innerHTML = '<div class="de-elixir">'+card.elixir+'</div>'
-        +'<div class="de-emoji">'+card.emoji+'</div>'
-        +'<div class="de-name">'+card.name+'</div>';
-      if(!inD && !full){
+        +'<div class="de-emoji" style="'+(locked?'filter:grayscale(1);opacity:.4':'')+'">'+card.emoji+'</div>'
+        +'<div class="de-name">'+card.name+'</div>'
+        +(locked
+          ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,.55);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center">'
+            +'<span style="font-size:18px;color:#e74c3c;font-weight:900">✕</span>'
+            +'<span style="font-size:8px;color:#fff;font-weight:700">Arena '+(card.arena||0)+'</span>'
+            +'</div>'
+          : '');
+      if(locked){
+        div.onclick = function(){ showToast('🔒 Arena '+(card.arena||0)+' benötigt!'); };
+      } else if(!inD && !full){
         div.onclick = function(){
           draftDeck.push(card);
           renderDraftStrip(); renderPickGrid();
