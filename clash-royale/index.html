@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Clash Royale</title>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"}}
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Supermercado+One&family=Exo+2:wght@400;700;900&display=swap');
 
@@ -919,7 +922,8 @@ body{
 
     <!-- Canvas arena -->
     <div class="battle-field" id="battleField" style="position:relative;flex:1;overflow:hidden;background:#0a1a06">
-      <canvas id="battleCanvas" style="position:absolute;inset:0;width:100%;height:100%;touch-action:none"></canvas>
+      <canvas id="battleCanvas" style="position:absolute;inset:0;width:100%;height:100%;touch-action:none;z-index:1"></canvas>
+      <canvas id="battleGL" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2"></canvas>
       <div id="crownTracker" style="position:absolute;top:6px;left:50%;transform:translateX(-50%);display:flex;gap:30px;font-size:13px;font-weight:900;pointer-events:none;z-index:5;text-shadow:0 1px 4px #000">
         <span style="color:#ff6b6b">👑 <span id="enemyCrowns">0</span></span>
         <span style="color:#6bd1ff">👑 <span id="playerCrowns">0</span></span>
@@ -987,8 +991,8 @@ var CARDS = {
     {emoji:'🧱',name:'X-Bow',elixir:6,lvl:7},
   ],
   rare:[
-    {emoji:'🏹',name:'Musketeer',elixir:4,lvl:10},
-    {emoji:'🐷',name:'Hog Rider',elixir:4,lvl:11},
+    {emoji:'🎯',name:'Enzae Pimmelshot',elixir:4,lvl:10},
+    {emoji:'🏇',name:'Matafaka Rider',elixir:4,lvl:11},
     {emoji:'🪖',name:'Mini P.E.K.K.A',elixir:4,lvl:11},
     {emoji:'💣',name:'Royal Giant',elixir:6,lvl:10},
     {emoji:'🛡️',name:'Valkyrie',elixir:4,lvl:11},
@@ -1011,8 +1015,8 @@ var CARDS = {
 };
 
 var MY_DECK = [
-  {emoji:'🐷',name:'Hog Rider',elixir:4,rarity:'rare'},
-  {emoji:'🏹',name:'Musketeer',elixir:4,rarity:'rare'},
+  {emoji:'🏇',name:'Matafaka Rider',elixir:4,rarity:'rare'},
+  {emoji:'🎯',name:'Enzae Pimmelshot',elixir:4,rarity:'rare'},
   {emoji:'💥',name:'Fireball',elixir:4,rarity:'epic'},
   {emoji:'⚔️',name:'Knight',elixir:3,rarity:'common'},
   {emoji:'💣',name:'Zap',elixir:2,rarity:'common'},
@@ -1220,8 +1224,8 @@ function closeChestOv(){
 // bld(targets only buildings), spell, radius(spell), building(is a building), life(s)
 var TROOP_STATS = {
   'Knight':        {hp:680, dmg:75,  range:20,  speed:42, atk:1.1, count:1, air:false},
-  'Hog Rider':     {hp:800, dmg:130, range:22,  speed:95, atk:1.5, count:1, bld:true},
-  'Musketeer':     {hp:340, dmg:95,  range:120, speed:42, atk:1.0, count:1, air:true},
+  'Matafaka Rider':{hp:800, dmg:130, range:22,  speed:95, atk:1.5, count:1, bld:true},
+  'Enzae Pimmelshot':{hp:340, dmg:95,range:120, speed:42, atk:1.0, count:1, air:true},
   'Archers':       {hp:120, dmg:40,  range:105, speed:42, atk:0.9, count:2, air:true},
   'Baby Dragon':   {hp:820, dmg:80,  range:95,  speed:55, atk:1.5, count:1, fly:true, air:true, splash:34},
   'Balloon':       {hp:1050,dmg:420, range:24,  speed:42, atk:2.8, count:1, fly:true, bld:true, splash:40},
@@ -1253,10 +1257,10 @@ var TROOP_STATS = {
 function statFor(name){ return TROOP_STATS[name] || {hp:500,dmg:70,range:22,speed:45,atk:1.2,count:1}; }
 
 var ENEMY_DECK = [
-  {emoji:'🦣',name:'Giant'},      {emoji:'🏹',name:'Musketeer'},
+  {emoji:'🦣',name:'Giant'},      {emoji:'🎯',name:'Enzae Pimmelshot'},
   {emoji:'⚔️',name:'Knight'},     {emoji:'🏹',name:'Archers'},
   {emoji:'💥',name:'Fireball'},   {emoji:'🐉',name:'Baby Dragon'},
-  {emoji:'🐊',name:'Skeleton Army'},{emoji:'🐷',name:'Hog Rider'},
+  {emoji:'🐊',name:'Skeleton Army'},{emoji:'🏇',name:'Matafaka Rider'},
 ];
 
 // Engine state
@@ -1317,6 +1321,9 @@ function startBattle(){
   renderElixir(); renderBattleHand(); updateTimer();
   updateCrowns();
 
+  // Init 3D overlay
+  if(window.CR3D) window.CR3D.start(W, H);
+
   // Pointer deploy
   canvas.onpointerdown = onArenaTap;
 
@@ -1354,12 +1361,14 @@ function onArenaTap(e){
   renderBattleHand();
 }
 
+var _uidSeq = 0;
 function deployTroop(side, card, st, x, y){
   var n = st.count || 1;
   for(var i=0;i<n;i++){
     var ox = (n>1) ? (i - (n-1)/2) * 16 : 0;
     var oy = (n>3) ? ((i%2)*14 - 7) : 0;
     B.units.push({
+      uid: ++_uidSeq,
       side:side, name:card.name, emoji:card.emoji,
       x: clamp(x+ox, 14, B.W-14), y: clamp(y+oy, 14, B.H-14),
       hp: st.hp, maxhp: st.hp, dmg: st.dmg, range: st.range,
@@ -1367,6 +1376,7 @@ function deployTroop(side, card, st, x, y){
       fly: !!st.fly, air: !!st.air, bld: !!st.bld, splash: st.splash||0,
       building: !!st.building, life: st.life||0, spawns: st.spawns||null, spawnCd:3,
       r: (st.count>4?7:11), target:null, dead:false,
+      vx:0, vy:0,
     });
   }
   spawnFx(x, y, side==='p' ? '#6bd1ff' : '#ff6b6b');
@@ -1416,6 +1426,7 @@ function battleLoop(now){
   updateFx(dt);
 
   drawBattle();
+  if(window.CR3D) window.CR3D.update(dt, B.units, B.W, B.H);
   B.raf = requestAnimationFrame(battleLoop);
 }
 
@@ -1524,9 +1535,10 @@ function moveUnit(u, tgt, dt){
   }
   var dx=gx-u.x, dy=gy-u.y, d=Math.hypot(dx,dy);
   if(d>0.5){
-    u.x += dx/d * u.speed * dt;
-    u.y += dy/d * u.speed * dt;
-  }
+    u.vx = dx/d * u.speed; u.vy = dy/d * u.speed;
+    u.x += u.vx * dt;
+    u.y += u.vy * dt;
+  } else { u.vx=0; u.vy=0; }
 }
 
 // ── TOWERS ────────────────────────────────────────────────────────
@@ -1626,7 +1638,7 @@ function enemyPlay(){
 }
 // elixir cost lookup for enemy cards (matches main deck costs by name)
 function MY_DECK_ELIX(card){
-  var byName={Giant:5,Musketeer:4,Knight:3,Archers:3,Fireball:4,'Baby Dragon':4,'Skeleton Army':3,'Hog Rider':4};
+  var byName={Giant:5,'Enzae Pimmelshot':4,Knight:3,Archers:3,Fireball:4,'Baby Dragon':4,'Skeleton Army':3,'Matafaka Rider':4};
   return byName[card.name] || 4;
 }
 
@@ -1700,19 +1712,24 @@ function drawTower(c,t){
   }
 }
 
+var CR3D_NAMES = {'Matafaka Rider':1,'Giant':1,'Enzae Pimmelshot':1};
+
 function drawUnit(c,u){
-  // body circle
-  c.fillStyle = u.side==='p' ? 'rgba(40,120,220,.85)' : 'rgba(200,50,50,.85)';
-  c.beginPath(); c.arc(u.x,u.y,u.r+3,0,7); c.fill();
-  c.strokeStyle = u.side==='p' ? '#6bd1ff' : '#ff8c8c'; c.lineWidth=2; c.stroke();
-  if(u.fly){ c.strokeStyle='rgba(255,255,255,.35)'; c.beginPath(); c.arc(u.x,u.y,u.r+6,0,7); c.stroke(); }
-  c.font=(u.r*1.7)+'px serif'; c.textAlign='center';
-  c.fillText(u.emoji, u.x, u.y+u.r*0.6);
-  // hp bar
+  var is3D = CR3D_NAMES[u.name] && window.CR3D && window.CR3D.ready;
+  if(!is3D){
+    // 2D fallback: body circle + emoji
+    c.fillStyle = u.side==='p' ? 'rgba(40,120,220,.85)' : 'rgba(200,50,50,.85)';
+    c.beginPath(); c.arc(u.x,u.y,u.r+3,0,7); c.fill();
+    c.strokeStyle = u.side==='p' ? '#6bd1ff' : '#ff8c8c'; c.lineWidth=2; c.stroke();
+    if(u.fly){ c.strokeStyle='rgba(255,255,255,.35)'; c.beginPath(); c.arc(u.x,u.y,u.r+6,0,7); c.stroke(); }
+    c.font=(u.r*1.7)+'px serif'; c.textAlign='center';
+    c.fillText(u.emoji, u.x, u.y+u.r*0.6);
+  }
+  // hp bar always visible
   if(u.hp < u.maxhp){
-    var bw=u.r*2.2, bx=u.x-bw/2, by=u.y-u.r-7;
-    c.fillStyle='rgba(0,0,0,.6)'; c.fillRect(bx,by,bw,3);
-    c.fillStyle=u.side==='p'?'#2ecc71':'#e74c3c'; c.fillRect(bx,by,bw*Math.max(0,u.hp/u.maxhp),3);
+    var bw=(is3D?30:u.r*2.2), bx=u.x-bw/2, by=u.y-(is3D?40:u.r+7);
+    c.fillStyle='rgba(0,0,0,.7)'; c.fillRect(bx,by,bw,4);
+    c.fillStyle=u.side==='p'?'#2ecc71':'#e74c3c'; c.fillRect(bx,by,bw*Math.max(0,u.hp/u.maxhp),4);
   }
 }
 
@@ -1824,6 +1841,7 @@ function finishBattle(surrender){
 
 function leaveBattle(){
   document.getElementById('battleResultOv').style.display='none';
+  if(window.CR3D) window.CR3D.stop();
   B=null;
   switchNav(document.querySelectorAll('.bottom-nav')[0].querySelector('.nav-item'), 'homeScreen');
 }
@@ -1868,6 +1886,173 @@ function init(){
 }
 
 init();
+</script>
+
+<!-- ════ THREE.JS 3D CHARACTER OVERLAY ════ -->
+<script type="module">
+import * as THREE from 'three';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import { clone as skeletonClone } from 'three/addons/utils/SkeletonUtils.js';
+
+var BSCALE = 0.09;
+
+var CHAR_DEFS = {
+  'Matafaka Rider':    { url:'https://github.com/enzae69/multiplayergames/releases/download/Matafakarider/character.fbx',  targetH:28 },
+  'Giant':             { url:'https://github.com/enzae69/multiplayergames/releases/download/Giant/character.2.fbx',        targetH:38 },
+  'Enzae Pimmelshot':  { url:'https://github.com/enzae69/multiplayergames/releases/download/enzae/character.3.fbx',        targetH:25 },
+};
+
+var renderer=null, scene=null, camera=null, clock=null;
+var baseModels = {};
+var runClip = null;
+var instances = new Map();
+var glCanvas = document.getElementById('battleGL');
+var _ready = false;
+
+function loadFBX(url) {
+  return new Promise((res,rej) => new FBXLoader().load(url, res, null, rej));
+}
+
+function prepareModel(fbx, targetH) {
+  var box = new THREE.Box3().setFromObject(fbx);
+  var size = new THREE.Vector3(); box.getSize(size);
+  var sc = targetH / Math.max(size.x, size.y, size.z);
+  fbx.scale.setScalar(sc);
+  box.setFromObject(fbx);
+  var ctr = box.getCenter(new THREE.Vector3());
+  fbx.position.set(-ctr.x, -box.min.y, -ctr.z);
+  fbx.traverse(c => {
+    if(!c.isMesh) return;
+    c.castShadow = true;
+    [].concat(c.material).forEach(m => { m.roughness=0.75; m.metalness=0.05; });
+  });
+}
+
+async function loadAll() {
+  // Load run animation from enzae char
+  try {
+    var rf = await loadFBX(CHAR_DEFS['Enzae Pimmelshot'].url);
+    if(rf.animations && rf.animations[0]){
+      runClip = rf.animations[0].clone();
+      runClip.tracks = runClip.tracks.filter(t => !t.name.match(/Hips\.position/i));
+    }
+  } catch(e){ console.warn('[CR3D] run anim failed',e); }
+
+  for(var name of Object.keys(CHAR_DEFS)){
+    var def = CHAR_DEFS[name];
+    try {
+      var fbx = await loadFBX(def.url);
+      prepareModel(fbx, def.targetH);
+      var grp = new THREE.Group(); grp.add(fbx);
+      var ownClip = null;
+      if(fbx.animations && fbx.animations[0]){
+        ownClip = fbx.animations[0].clone();
+        ownClip.tracks = ownClip.tracks.filter(t => !t.name.match(/Hips\.position/i));
+      }
+      baseModels[name] = { grp, fbx, clip: runClip || ownClip };
+    } catch(e){ console.warn('[CR3D] failed to load',name,e); }
+  }
+  _ready = true;
+  if(window.CR3D) window.CR3D.ready = true;
+  console.log('[CR3D] models ready');
+}
+
+function initScene(W, H) {
+  var dpr = Math.min(window.devicePixelRatio||1, 2);
+  glCanvas.width = W*dpr; glCanvas.height = H*dpr;
+  glCanvas.style.width = W+'px'; glCanvas.style.height = H+'px';
+
+  if(!renderer){
+    renderer = new THREE.WebGLRenderer({canvas:glCanvas, alpha:true, antialias:true});
+    renderer.setPixelRatio(dpr);
+    renderer.setClearColor(0,0);
+    renderer.shadowMap.enabled = true;
+  }
+  renderer.setSize(W, H);
+
+  scene = new THREE.Scene();
+  clock = new THREE.Clock();
+
+  var wW=W*BSCALE, wH=H*BSCALE, asp=W/H;
+  var fH=wH*0.55, fW=fH*asp;
+  camera = new THREE.OrthographicCamera(-fW, fW, fH, -fH, 0.1, 2000);
+  camera.position.set(0, wH*0.65, wH*0.5);
+  camera.lookAt(0, 0, 0);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 1.6));
+  var sun = new THREE.DirectionalLight(0xffffff, 2.2);
+  sun.position.set(wW*0.3, wH, wH*0.5); scene.add(sun);
+  var fill = new THREE.DirectionalLight(0x88ccff, 0.5);
+  fill.position.set(-wW*0.3, wH*0.3, -wH*0.3); scene.add(fill);
+
+  instances.clear();
+}
+
+function c2w(cx, cy, W, H){
+  return new THREE.Vector3((cx-W/2)*BSCALE, 0, (cy-H/2)*BSCALE);
+}
+
+function spawnInst(u, W, H){
+  var def = baseModels[u.name]; if(!def) return null;
+  var cloned = skeletonClone(def.grp);
+  cloned.position.copy(c2w(u.x,u.y,W,H));
+  cloned.rotation.y = u.side==='p' ? Math.PI : 0;
+  scene.add(cloned);
+  var inner = cloned.children[0];
+  var mixer = new THREE.AnimationMixer(inner||cloned);
+  var action = null;
+  if(def.clip){ action = mixer.clipAction(def.clip); action.play(); }
+  return {grp:cloned, mixer, action, px:u.x, py:u.y};
+}
+
+window.CR3D = {
+  ready: false,
+
+  start(W, H){
+    initScene(W, H);
+    this.ready = _ready;
+  },
+
+  update(dt, units, W, H){
+    if(!_ready || !scene) return;
+    this.ready = true;
+    var alive = new Set();
+
+    for(var u of units){
+      if(u.hp<=0 || !CHAR_DEFS[u.name]) continue;
+      alive.add(u.uid);
+      var inst = instances.get(u.uid);
+      if(!inst){ inst=spawnInst(u,W,H); if(inst) instances.set(u.uid,inst); else continue; }
+
+      inst.grp.position.copy(c2w(u.x,u.y,W,H));
+
+      // Rotate toward movement direction
+      var dx=u.x-inst.px, dy=u.y-inst.py;
+      if(Math.abs(dx)+Math.abs(dy)>0.4) inst.grp.rotation.y = Math.atan2(dx,dy);
+      inst.px=u.x; inst.py=u.y;
+
+      inst.mixer.update(dt);
+    }
+
+    // Cleanup dead
+    for(var [uid,inst] of instances){
+      if(!alive.has(uid)){
+        scene.remove(inst.grp); inst.mixer.stopAllAction(); instances.delete(uid);
+      }
+    }
+
+    if(renderer && camera) renderer.render(scene, camera);
+  },
+
+  stop(){
+    instances.forEach(inst=>{ if(scene) scene.remove(inst.grp); inst.mixer.stopAllAction(); });
+    instances.clear();
+    this.ready = false;
+    if(renderer){ renderer.clear(); }
+  }
+};
+
+loadAll();
 </script>
 </body>
 </html>
