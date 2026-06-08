@@ -173,6 +173,9 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .ucard.playable:active{transform:translateY(-18px) scale(1.1)!important;transition:transform .07s}
 .ucard.dim{opacity:.35;cursor:default}
 
+/* Flying card animation when a card is played */
+.flying-card{position:fixed;z-index:300;pointer-events:none;transition:transform .42s cubic-bezier(.22,.61,.36,1),opacity .42s ease;will-change:transform,opacity}
+
 /* ══ HAND FANS ══ */
 .hand-cards{display:flex;align-items:flex-end;justify-content:center;flex-wrap:nowrap;overflow:visible;padding:4px 2px;position:relative;min-height:96px}
 .hand-cards .ucard{margin-left:-20px}
@@ -432,6 +435,7 @@ var gs         = null;    // game state (authoritative on host)
 var lobby      = {};      // {pid: {id,name,ci}}
 var pendingCard= null;
 var prevTurnId = null;
+var lastTopUid = null;     // track topCard to animate plays
 var scoreSubmitted = false;
 var heartbeatTimer = null;
 var isSolo     = false;   // true when playing vs bots (no network)
@@ -1075,6 +1079,64 @@ function updateLobbyUI(){
 ══════════════════════════════════════════════════════ */
 
 /* Build a UNO card DOM element */
+/* Get the screen rectangle for a player's hand area (where their card comes from) */
+function getPlayerSourceRect(pid){
+  if(pid === myId){
+    var h = document.getElementById('handEl');
+    if(h) return h.getBoundingClientRect();
+  }
+  // opponent: figure out which zone they sit in
+  var zones = getZoneAssignment();
+  var map = {};
+  if(zones.top)   map[zones.top.id]   = 'handTop';
+  if(zones.left)  map[zones.left.id]  = 'handLeft';
+  if(zones.right) map[zones.right.id] = 'handRight';
+  var elId = map[pid];
+  if(elId){ var z = document.getElementById(elId); if(z) return z.getBoundingClientRect(); }
+  // fallback: draw pile
+  var dp = document.getElementById('drawPileEl');
+  return dp ? dp.getBoundingClientRect() : null;
+}
+
+/* Animate a card sliding from the player who played it onto the discard pile */
+function animateCardPlay(card, fromPid, hex, discEl){
+  var src = getPlayerSourceRect(fromPid);
+  var dst = discEl.getBoundingClientRect();
+  if(!src || !dst || !dst.width) return;
+
+  // hide the real top card briefly so the flying one "lands" into it
+  discEl.style.visibility = 'hidden';
+
+  var fly = buildCardEl(card, false, true);
+  fly.classList.remove('dim');
+  fly.classList.add('flying-card');
+  fly.style.boxShadow = '0 0 32px '+hex+', 0 10px 26px rgba(0,0,0,.7)';
+
+  var startX = src.left + src.width/2;
+  var startY = src.top  + src.height/2;
+  var endX   = dst.left + dst.width/2;
+  var endY   = dst.top  + dst.height/2;
+
+  // position centered at source
+  fly.style.left = '0px';
+  fly.style.top  = '0px';
+  fly.style.transform = 'translate('+(startX - dst.width/2)+'px,'+(startY - dst.height/2)+'px) scale(.7) rotate(-12deg)';
+  fly.style.opacity = '0.4';
+  document.body.appendChild(fly);
+
+  // force reflow then animate to discard
+  fly.getBoundingClientRect();
+  requestAnimationFrame(function(){
+    fly.style.transform = 'translate('+(endX - dst.width/2)+'px,'+(endY - dst.height/2)+'px) scale(1) rotate(0deg)';
+    fly.style.opacity = '1';
+  });
+
+  setTimeout(function(){
+    discEl.style.visibility = 'visible';
+    if(fly.parentNode) fly.parentNode.removeChild(fly);
+  }, 440);
+}
+
 function buildCardEl(card, playable, large){
   var el = document.createElement('div');
   var lbl = cardLabel(card.v);
@@ -1133,6 +1195,7 @@ function renderOpponentZone(zoneId, lblId, handId, player, active){
 
 function updateGameUI(){
   if(!gs) return;
+  var playedByPid = prevTurnId; // who was on turn before this render (= who just played)
 
   if(gs.phase === 'finished'){
     stopHeartbeat();
@@ -1187,7 +1250,13 @@ function updateGameUI(){
   dpEl.style.pointerEvents = isMyTurn ? 'auto' : 'none';
 
   // Discard pile
-  var discEl = document.getElementById('discardEl'); discEl.innerHTML = '';
+  var discEl = document.getElementById('discardEl');
+  // Detect a newly played card → animate it flying onto the pile
+  var topUid = gs.topCard ? gs.topCard.u : null;
+  var isNewPlay = (topUid && topUid !== lastTopUid && lastTopUid !== null);
+  var whoPlayed = playedByPid; // the player who was on turn before this update
+  lastTopUid = topUid;
+  discEl.innerHTML = '';
   if(gs.topCard){
     var tc = buildCardEl(gs.topCard, false, true);
     tc.classList.remove('dim');
@@ -1197,6 +1266,7 @@ function updateGameUI(){
       tc.style.outlineOffset = '2px';
     }
     discEl.appendChild(tc);
+    if(isNewPlay) animateCardPlay(gs.topCard, whoPlayed, hex, discEl);
   }
 
   // Opponents
