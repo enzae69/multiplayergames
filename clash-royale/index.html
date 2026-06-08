@@ -1444,7 +1444,7 @@ function battleLoop(now){
   var rate = B.time <= 60 ? 0.71 : 0.36; // elixir per second
   state.elixirF += rate*dt;
   if(state.elixirF > 10) state.elixirF = 10;
-  if(Math.floor(state.elixirF) !== state.elixir){ state.elixir = Math.floor(state.elixirF); renderElixir(); }
+  if(Math.floor(state.elixirF) !== state.elixir){ state.elixir = Math.floor(state.elixirF); renderElixir(); renderBattleHand(); }
   B.eElixirF += rate*dt;
   if(B.eElixirF > 10) B.eElixirF = 10;
   B.eElixir = Math.floor(B.eElixirF);
@@ -1808,8 +1808,7 @@ function renderBattleHand(){
 }
 function selectCard(i){
   if(!B||B.over) return;
-  var c=battleHand[i];
-  if(state.elixir < c.elixir){ showToast('💜 Nicht genug Elixir!'); return; }
+  // Always allow picking up a card; elixir is only checked when deploying.
   B.selected = (B.selected===i) ? -1 : i;
   renderBattleHand();
 }
