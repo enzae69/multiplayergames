@@ -1507,8 +1507,7 @@ function startBattle(){
   battleHand = MY_DECK.slice(0,4);
   battleNext = MY_DECK.slice();
   var eDeck = buildEnemyDeck(botArena);
-  eBattleHand = eDeck.slice(0,4);
-  eBattleNext = eDeck.slice();
+  eBuildQueue(eDeck);
 
   renderElixir(); renderBattleHand(); updateTimer();
   updateCrowns();
@@ -1524,7 +1523,22 @@ function startBattle(){
 }
 
 var battleHand = [], battleNext = [];
-var eBattleHand = [], eBattleNext = [];
+var eBattleHand = [], eBattleNext = [], eBattleQueue = [], eBattleQueueIdx = 0;
+
+function eBuildQueue(deck){
+  // Shuffle deck into a queue, hand = first 4 slots
+  eBattleQueue = deck.slice().sort(function(){ return Math.random()-0.5; });
+  eBattleQueueIdx = 4; // next card to draw is index 4
+  eBattleHand = eBattleQueue.slice(0, 4);
+}
+
+function enemyRotateHand(idx){
+  // Put played card at end of queue
+  eBattleQueue.push(eBattleHand[idx]);
+  // Replace that hand slot with the next card in queue
+  eBattleHand[idx] = eBattleQueue[eBattleQueueIdx % eBattleQueue.length];
+  eBattleQueueIdx++;
+}
 
 // ── DEPLOY ────────────────────────────────────────────────────────
 function onArenaTap(e){
@@ -1813,13 +1827,6 @@ function updateFx(dt){
 }
 
 // ── ENEMY AI ──────────────────────────────────────────────────────
-function enemyRotateHand(idx){
-  var played = eBattleHand[idx];
-  eBattleNext = eBattleNext.filter(function(c){ return c !== played; });
-  eBattleNext.push(played);
-  eBattleHand = eBattleNext.slice(0, 4);
-}
-
 function enemyPlay(){
   // find an affordable card in hand
   var idxList = [];
