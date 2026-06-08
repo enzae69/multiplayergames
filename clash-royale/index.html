@@ -548,6 +548,36 @@ body{
   font-size:16px;color:var(--cr-gold);
 }
 
+/* ── DECK EDITOR OVERLAY ── */
+#deckEditOv{position:fixed;inset:0;z-index:600;background:rgba(5,5,20,.98);display:none;flex-direction:column;overflow:hidden}
+#deckEditOv.show{display:flex}
+.de-header{padding:12px 14px;background:rgba(0,0,0,.5);border-bottom:2px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.de-title{font-size:18px;font-weight:900;letter-spacing:2px;flex:1;color:#fff}
+.de-count{font-size:13px;font-weight:700;color:rgba(255,255,255,.5)}
+.de-save-btn{background:linear-gradient(135deg,var(--cr-gold),var(--cr-gold2));border:none;border-radius:10px;padding:8px 18px;font-size:13px;font-weight:900;color:#3d1a00;letter-spacing:1px;cursor:pointer}
+.de-save-btn:disabled{opacity:.4;cursor:default}
+.de-deck-strip{display:flex;gap:5px;padding:8px 12px;background:rgba(0,0,0,.4);flex-shrink:0;min-height:72px;align-items:center;flex-wrap:wrap}
+.de-slot{width:48px;height:60px;border-radius:8px;border:2px dashed rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;position:relative;background:rgba(255,255,255,.04);flex-shrink:0}
+.de-slot.filled{border-style:solid;border-color:rgba(255,255,255,.3);background:linear-gradient(145deg,#1a1a4a,#0a0a2e)}
+.de-slot .de-slot-elixir{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,#8e44ad,#c39bd3);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;color:#fff}
+.de-slot .de-slot-x{position:absolute;top:1px;right:2px;font-size:9px;color:rgba(255,100,100,.7);font-weight:900;line-height:1}
+.de-scroll{flex:1;overflow-y:auto;padding:10px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.2) transparent}
+.de-section{font-size:10px;letter-spacing:3px;color:rgba(255,255,255,.35);font-weight:700;margin:6px 0 6px;text-transform:uppercase}
+.de-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:12px}
+.de-card{border-radius:10px;border:2px solid;padding:7px 4px 5px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:transform .12s;position:relative;overflow:hidden}
+.de-card:active{transform:scale(.9)}
+.de-card.selected{box-shadow:0 0 0 3px var(--cr-gold);opacity:1}
+.de-card.disabled-card{opacity:.35;cursor:default}
+.de-card.common{border-color:rgba(150,150,150,.4);background:linear-gradient(145deg,#1e1e2e,#0e0e1e)}
+.de-card.rare{border-color:rgba(30,130,255,.6);background:linear-gradient(145deg,#0e1a40,#060e28)}
+.de-card.epic{border-color:rgba(160,50,220,.6);background:linear-gradient(145deg,#1e0a3a,#0e0520)}
+.de-card.legendary{border-color:rgba(255,200,0,.7);background:linear-gradient(145deg,#2a1a00,#160e00)}
+.de-card .de-elixir{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#8e44ad,#c39bd3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff}
+.de-card .de-emoji{font-size:26px}
+.de-card .de-name{font-size:8px;font-weight:700;color:rgba(255,255,255,.8);text-align:center;line-height:1.2}
+.de-avg{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.5);padding:0 12px 8px;flex-shrink:0}
+.de-avg-circle{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#8e44ad,#c39bd3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;border:2px solid rgba(255,255,255,.3)}
+
 /* ── TOAST ── */
 .cr-toast{
   position:fixed;top:70px;left:50%;transform:translateX(-50%);
@@ -586,7 +616,7 @@ body{
       <span class="res-val" id="goldVal">999 999</span>
       <span class="plus-btn">+</span>
     </div>
-    <div class="trophy-box">🏆 <span id="trophiesVal">6 400</span></div>
+    <div class="trophy-box">🏆 <span id="trophiesVal">0</span></div>
     <button class="settings-btn" onclick="showToast('⚙️ Einstellungen')">⚙️</button>
   </div>
 
@@ -628,7 +658,7 @@ body{
       BATTLE
       <span class="swords">⚔️</span>
     </button>
-    <div class="next-chest-hint">Nächste Truhe: 3 Siege</div>
+    <div class="next-chest-hint">🏕️ Training Camp • 0 Trophäen</div>
   </div>
 
   <!-- BOTTOM NAV -->
@@ -666,7 +696,10 @@ body{
   <div class="cards-scroll">
     <!-- Deck -->
     <div class="deck-area">
-      <div class="deck-label">MEIN DECK</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="deck-label" style="margin-bottom:0">MEIN DECK</div>
+        <button onclick="openDeckEditor()" style="background:linear-gradient(135deg,var(--cr-gold),var(--cr-gold2));border:none;border-radius:8px;padding:5px 12px;font-size:11px;font-weight:900;color:#3d1a00;cursor:pointer;letter-spacing:1px">✏️ BEARBEITEN</button>
+      </div>
       <div class="deck-grid" id="deckGrid"></div>
       <div class="elixir-avg">
         <div class="elixir-circle" id="deckElixirAvg">3.5</div>
@@ -966,7 +999,7 @@ body{
   <div class="tr-header">
     <button class="tr-close" onclick="closeTrophyRoad()">✕</button>
     <div class="tr-title">🏆 TROPHY ROAD</div>
-    <div class="tr-my-trophies">🏆 <span id="trCurrentTrophies">6 400</span></div>
+    <div class="tr-my-trophies">🏆 <span id="trCurrentTrophies">0</span></div>
   </div>
   <div class="tr-scroll" id="trScroll"></div>
 </div>
@@ -1054,7 +1087,7 @@ var TROPHY_MILESTONES = [
 var state = {
   gems: 9999,
   gold: 999999,
-  trophies: 6400,
+  trophies: 0,
   elixir: 0,
   battleTime: 180,
   battleActive: false,
@@ -1882,6 +1915,109 @@ function showToast(msg){
 }
 
 // ── INIT ──────────────────────────────────────────────────────────
+// ── DECK EDITOR ────────────────────────────────────────────────────
+var draftDeck = []; // cards currently selected in editor
+
+// Flat list of ALL cards (for picker)
+function allCardsList(){
+  var list = [];
+  ['legendary','epic','rare','common'].forEach(function(r){
+    CARDS[r].forEach(function(c){ list.push({emoji:c.emoji,name:c.name,elixir:c.elixir,rarity:r}); });
+  });
+  return list;
+}
+
+function openDeckEditor(){
+  draftDeck = MY_DECK.slice(); // copy current deck
+  document.getElementById('deckEditOv').classList.add('show');
+  renderDraftStrip();
+  renderPickGrid();
+}
+
+function closeDeckEditor(){
+  document.getElementById('deckEditOv').classList.remove('show');
+}
+
+function saveDeck(){
+  if(draftDeck.length !== 8){ showToast('Genau 8 Karten wählen!'); return; }
+  MY_DECK = draftDeck.slice();
+  renderCards(); // refresh cards screen deck preview
+  closeDeckEditor();
+  showToast('✅ Deck gespeichert!');
+}
+
+function renderDraftStrip(){
+  var strip = document.getElementById('deDeckStrip');
+  strip.innerHTML = '';
+  for(var i=0;i<8;i++){
+    var card = draftDeck[i];
+    var slot = document.createElement('div');
+    slot.className = 'de-slot' + (card ? ' filled' : '');
+    if(card){
+      var idx = i;
+      slot.innerHTML = '<div class="de-slot-elixir">'+card.elixir+'</div>'
+        + '<span style="font-size:22px">'+card.emoji+'</span>'
+        + '<div class="de-slot-x" data-i="'+i+'">✕</div>';
+      slot.querySelector('.de-slot-x').onclick = function(e){
+        e.stopPropagation();
+        draftDeck.splice(parseInt(this.dataset.i),1);
+        renderDraftStrip(); renderPickGrid();
+      };
+    } else {
+      slot.innerHTML = '<span style="font-size:20px;color:rgba(255,255,255,.15)">+</span>';
+    }
+    strip.appendChild(slot);
+  }
+  // Count + avg
+  document.getElementById('deCount').textContent = draftDeck.length;
+  var avg = draftDeck.length ? (draftDeck.reduce(function(s,c){return s+c.elixir;},0)/draftDeck.length).toFixed(1) : '0';
+  document.getElementById('deAvgCircle').textContent = avg;
+  var btn = document.getElementById('deSaveBtn');
+  btn.disabled = draftDeck.length !== 8;
+}
+
+function renderPickGrid(){
+  var scroll = document.getElementById('deScroll');
+  scroll.innerHTML = '';
+  var all = allCardsList();
+  var inDeck = {};
+  draftDeck.forEach(function(c){ inDeck[c.name] = true; });
+
+  ['legendary','epic','rare','common'].forEach(function(r){
+    var group = all.filter(function(c){ return c.rarity===r; });
+    if(!group.length) return;
+    var lbl = document.createElement('div');
+    lbl.className = 'de-section';
+    lbl.textContent = r.toUpperCase();
+    scroll.appendChild(lbl);
+    var grid = document.createElement('div');
+    grid.className = 'de-grid';
+    group.forEach(function(card){
+      var inD = !!inDeck[card.name];
+      var full = draftDeck.length >= 8;
+      var div = document.createElement('div');
+      div.className = 'de-card '+r + (inD?' selected':'') + ((!inD && full)?' disabled-card':'');
+      div.innerHTML = '<div class="de-elixir">'+card.elixir+'</div>'
+        +'<div class="de-emoji">'+card.emoji+'</div>'
+        +'<div class="de-name">'+card.name+'</div>';
+      if(!inD && !full){
+        div.onclick = function(){
+          draftDeck.push(card);
+          renderDraftStrip(); renderPickGrid();
+        };
+      } else if(inD){
+        div.onclick = function(){
+          var idx = draftDeck.findIndex(function(c){ return c.name===card.name; });
+          if(idx>=0) draftDeck.splice(idx,1);
+          renderDraftStrip(); renderPickGrid();
+        };
+      }
+      grid.appendChild(div);
+    });
+    scroll.appendChild(grid);
+  });
+}
+
 function init(){
   renderCards();
   renderClan();
@@ -1889,6 +2025,21 @@ function init(){
 
 init();
 </script>
+
+<!-- ════ DECK EDITOR OVERLAY ════ -->
+<div id="deckEditOv">
+  <div class="de-header">
+    <button onclick="closeDeckEditor()" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;line-height:1">←</button>
+    <div class="de-title">DECK BEARBEITEN</div>
+    <div class="de-count"><span id="deCount">0</span>/8</div>
+    <button class="de-save-btn" id="deSaveBtn" onclick="saveDeck()" disabled>SPEICHERN</button>
+  </div>
+  <!-- current deck slots -->
+  <div class="de-deck-strip" id="deDeckStrip"></div>
+  <div class="de-avg"><div class="de-avg-circle" id="deAvgCircle">0</div><span>Ø Elixir</span></div>
+  <!-- all cards to pick from -->
+  <div class="de-scroll" id="deScroll"></div>
+</div>
 
 <!-- ════ THREE.JS 3D CHARACTER OVERLAY ════ -->
 <script type="module">
