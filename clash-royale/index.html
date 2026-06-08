@@ -1715,7 +1715,8 @@ function drawTower(c,t){
 var CR3D_NAMES = {'Matafaka Rider':1,'Giant':1,'Enzae Pimmelshot':1};
 
 function drawUnit(c,u){
-  var is3D = CR3D_NAMES[u.name] && window.CR3D && window.CR3D.ready;
+  // Only suppress emoji if there's actually a live 3D instance for this unit
+  var is3D = CR3D_NAMES[u.name] && window.CR3D && window.CR3D.hasInstance(u.uid);
   if(!is3D){
     // 2D fallback: body circle + emoji
     c.fillStyle = u.side==='p' ? 'rgba(40,120,220,.85)' : 'rgba(200,50,50,.85)';
@@ -1953,9 +1954,9 @@ async function loadAll() {
       baseModels[name] = { grp, fbx, clip: runClip || ownClip };
     } catch(e){ console.warn('[CR3D] failed to load',name,e); }
   }
-  _ready = true;
-  if(window.CR3D) window.CR3D.ready = true;
-  console.log('[CR3D] models ready');
+  _ready = Object.keys(baseModels).length > 0;
+  if(window.CR3D) window.CR3D.ready = _ready;
+  console.log('[CR3D] models ready:', Object.keys(baseModels));
 }
 
 function initScene(W, H) {
@@ -2045,6 +2046,8 @@ window.CR3D = {
 
     if(renderer && camera) renderer.render(scene, camera);
   },
+
+  hasInstance(uid){ return instances.has(uid); },
 
   stop(){
     instances.forEach(inst=>{ if(scene) scene.remove(inst.grp); inst.mixer.stopAllAction(); });
