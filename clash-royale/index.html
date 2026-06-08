@@ -1343,7 +1343,7 @@ function onArenaTap(e){
     return;
   }
 
-  state.elixir -= card.elixir; renderElixir();
+  state.elixir -= card.elixir; state.elixirF -= card.elixir; renderElixir();
 
   if(st.spell){ castSpell('p', st, x, y, card.emoji); }
   else { deployTroop('p', card, st, x, y); }
