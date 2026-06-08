@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Clash Royale</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Supermercado+One&family=Exo+2:wght@400;700;900&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+
+:root{
+  --cr-blue:#1a3a6b;
+  --cr-blue2:#0f2548;
+  --cr-gold:#f5c518;
+  --cr-gold2:#e8a400;
+  --cr-orange:#e67e22;
+  --cr-green:#27ae60;
+  --cr-red:#c0392b;
+  --cr-purple:#8e44ad;
+  --cr-sky:#87ceeb;
+}
+
+body{
+  background:var(--cr-blue2);
+  font-family:'Exo 2',sans-serif;
+  min-height:100vh;
+  overflow:hidden;
+  position:relative;
+  color:#fff;
+}
+
+/* ── SCREENS ── */
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;transition:transform .35s cubic-bezier(.4,0,.2,1);overflow:hidden}
+.screen.off{transform:translateX(100%)}
+
+/* ── HOME SCREEN ── */
+#homeScreen{
+  background:linear-gradient(180deg,#2c7aff 0%,#1a3a8f 30%,#0d2660 70%,#050f2a 100%);
+}
+
+/* ── ANIMATED SKY ── */
+.sky-bg{
+  position:absolute;inset:0;overflow:hidden;pointer-events:none;
+}
+.cloud{
+  position:absolute;background:rgba(255,255,255,.18);border-radius:50px;
+  animation:cloudMove 20s linear infinite;
+}
+.cloud:nth-child(1){width:120px;height:30px;top:8%;left:-15%;animation-duration:25s}
+.cloud:nth-child(2){width:80px;height:20px;top:15%;left:-10%;animation-duration:18s;animation-delay:-8s}
+.cloud:nth-child(3){width:100px;height:25px;top:5%;left:-20%;animation-duration:22s;animation-delay:-12s}
+@keyframes cloudMove{0%{left:-20%}100%{left:110%}}
+
+/* ── TOP BAR ── */
+.top-bar{
+  display:flex;align-items:center;gap:6px;
+  padding:10px 10px 6px;
+  position:relative;z-index:10;flex-shrink:0;
+}
+.top-resource{
+  display:flex;align-items:center;gap:4px;
+  background:rgba(0,0,0,.45);border:2px solid rgba(255,255,255,.25);
+  border-radius:20px;padding:5px 10px 5px 6px;
+  font-family:'Exo 2',sans-serif;font-weight:900;font-size:14px;
+  flex:1;min-width:0;
+}
+.top-resource .icon{font-size:18px;flex-shrink:0}
+.res-val{color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plus-btn{
+  width:22px;height:22px;background:var(--cr-gold);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:900;color:#000;flex-shrink:0;margin-left:2px;
+  border:2px solid var(--cr-gold2);cursor:pointer;
+}
+
+.trophy-box{
+  display:flex;align-items:center;gap:5px;
+  background:rgba(0,0,0,.45);border:2px solid rgba(255,200,0,.4);
+  border-radius:20px;padding:5px 12px;
+  font-weight:900;font-size:14px;color:var(--cr-gold);
+  white-space:nowrap;
+}
+
+.settings-btn{
+  width:36px;height:36px;background:rgba(0,0,0,.4);border:2px solid rgba(255,255,255,.2);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:18px;cursor:pointer;flex-shrink:0;
+}
+
+/* ── CASTLE / ARENA ── */
+.arena-zone{
+  flex:1;position:relative;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+
+.arena-ground{
+  position:absolute;bottom:0;left:0;right:0;height:55%;
+  background:linear-gradient(180deg,#2d5a1b 0%,#1e3d12 40%,#0a1a06 100%);
+  border-radius:60% 60% 0 0 / 20% 20% 0 0;
+}
+.arena-ground::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0,rgba(255,255,255,.03) 1px,transparent 1px,transparent 40px);
+  border-radius:inherit;
+}
+
+.castle{
+  position:absolute;bottom:40%;font-size:80px;
+  filter:drop-shadow(0 8px 20px rgba(0,0,0,.8));
+  animation:castleFloat 4s ease-in-out infinite;
+  cursor:pointer;
+}
+@keyframes castleFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+.castle-hp{
+  position:absolute;bottom:calc(40% + 85px);
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  pointer-events:none;
+}
+.hp-bar-bg{width:80px;height:8px;background:rgba(0,0,0,.5);border-radius:4px;border:1px solid rgba(255,255,255,.2)}
+.hp-bar-fill{height:100%;background:linear-gradient(90deg,#e74c3c,#27ae60);border-radius:4px;width:78%}
+.hp-text{font-size:10px;font-weight:700;color:#fff;text-shadow:0 1px 3px #000}
+
+/* ── CHESTS ── */
+.chests-row{
+  display:flex;gap:8px;justify-content:center;
+  padding:0 16px 6px;position:relative;z-index:10;flex-shrink:0;
+}
+.chest-slot{
+  width:60px;height:60px;
+  background:rgba(0,0,0,.45);border:2px solid rgba(255,255,255,.18);
+  border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:transform .15s;position:relative;overflow:hidden;
+  gap:2px;
+}
+.chest-slot:active{transform:scale(.93)}
+.chest-slot.locked{border-color:rgba(255,255,255,.1)}
+.chest-slot .chest-icon{font-size:26px}
+.chest-slot .chest-timer{font-size:8px;color:rgba(255,255,255,.6);letter-spacing:.5px}
+.chest-slot.silver{border-color:rgba(180,180,200,.5);background:rgba(150,150,170,.12)}
+.chest-slot.gold{border-color:rgba(255,200,0,.6);background:rgba(255,180,0,.12)}
+.chest-slot.magical{border-color:rgba(180,80,255,.7);background:rgba(160,60,220,.15)}
+.chest-slot.giant{border-color:rgba(255,100,0,.6);background:rgba(200,80,0,.15)}
+.chest-slot .open-ring{
+  position:absolute;inset:-2px;border-radius:12px;
+  border:3px solid transparent;
+  animation:openRing 1.5s linear infinite;
+}
+@keyframes openRing{
+  0%{border-top-color:var(--cr-gold);border-right-color:transparent;border-bottom-color:transparent;border-left-color:transparent}
+  25%{border-top-color:var(--cr-gold);border-right-color:var(--cr-gold);border-bottom-color:transparent;border-left-color:transparent}
+  50%{border-top-color:var(--cr-gold);border-right-color:var(--cr-gold);border-bottom-color:var(--cr-gold);border-left-color:transparent}
+  75%,100%{border-color:var(--cr-gold)}
+}
+
+/* ── BATTLE BUTTON ── */
+.battle-btn-wrap{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:8px 16px 0;position:relative;z-index:10;flex-shrink:0;
+}
+.battle-btn{
+  width:100%;max-width:300px;
+  background:linear-gradient(180deg,#f5c518 0%,#e8a400 50%,#c47800 100%);
+  border:none;border-radius:16px;padding:16px 0 12px;
+  font-family:'Exo 2',sans-serif;font-size:26px;font-weight:900;
+  letter-spacing:2px;color:#3d1a00;
+  cursor:pointer;
+  box-shadow:0 6px 0 #8a5000,0 8px 20px rgba(0,0,0,.5);
+  transition:transform .12s,box-shadow .12s;
+  position:relative;overflow:hidden;
+  text-transform:uppercase;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+}
+.battle-btn::before{
+  content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
+  animation:btnShine 2.5s ease-in-out infinite;
+}
+@keyframes btnShine{0%,60%{left:-100%}100%{left:150%}}
+.battle-btn:active{transform:translateY(4px);box-shadow:0 2px 0 #8a5000,0 3px 10px rgba(0,0,0,.5)}
+.battle-btn .swords{font-size:28px}
+
+.next-chest-hint{font-size:10px;color:rgba(255,255,255,.5);letter-spacing:1px}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{
+  display:flex;background:rgba(0,0,0,.7);
+  border-top:2px solid rgba(255,255,255,.1);
+  position:relative;z-index:10;flex-shrink:0;
+  backdrop-filter:blur(4px);
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:8px 4px 10px;cursor:pointer;
+  transition:background .15s;
+  position:relative;
+}
+.nav-item:active{background:rgba(255,255,255,.08)}
+.nav-item.active{background:rgba(255,255,255,.06)}
+.nav-item.active::after{
+  content:'';position:absolute;top:0;left:20%;right:20%;height:3px;
+  background:var(--cr-gold);border-radius:0 0 4px 4px;
+}
+.nav-icon{font-size:24px}
+.nav-label{font-size:9px;letter-spacing:.5px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase}
+.nav-item.active .nav-label{color:var(--cr-gold)}
+
+/* ── CARDS SCREEN ── */
+#cardsScreen{background:linear-gradient(180deg,#1a2a5a 0%,#0d1a3a 100%)}
+.cards-header{
+  padding:14px 16px 10px;
+  background:rgba(0,0,0,.4);border-bottom:2px solid rgba(255,255,255,.1);
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+.screen-title{font-size:20px;font-weight:900;letter-spacing:2px;flex:1;color:#fff}
+.cards-scroll{flex:1;overflow-y:auto;padding:12px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.2) transparent}
+.cards-scroll::-webkit-scrollbar{width:3px}
+.cards-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:3px}
+
+.cards-section-title{
+  font-size:11px;letter-spacing:3px;color:rgba(255,255,255,.4);
+  margin:8px 0 8px;font-weight:700;text-transform:uppercase;
+}
+.cards-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;
+}
+
+.card{
+  background:linear-gradient(145deg,#1a1a4a,#0a0a2e);
+  border:2px solid;border-radius:10px;
+  display:flex;flex-direction:column;align-items:center;
+  padding:8px 4px 6px;cursor:pointer;
+  transition:transform .15s;
+  position:relative;overflow:hidden;
+}
+.card:active{transform:scale(.93)}
+.card.common{border-color:rgba(150,150,150,.5);background:linear-gradient(145deg,#1e1e2e,#0e0e1e)}
+.card.rare{border-color:rgba(30,130,255,.7);background:linear-gradient(145deg,#0e1a40,#060e28)}
+.card.epic{border-color:rgba(160,50,220,.7);background:linear-gradient(145deg,#1e0a3a,#0e0520)}
+.card.legendary{border-color:rgba(255,200,0,.8);background:linear-gradient(145deg,#2a1a00,#160e00)}
+.card.legendary::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,transparent 40%,rgba(255,200,0,.1) 50%,transparent 60%);
+  animation:legendarySheen 3s linear infinite;
+}
+@keyframes legendarySheen{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
+
+.card-emoji{font-size:28px;margin-bottom:3px;position:relative;z-index:1}
+.card-name{font-size:9px;font-weight:700;letter-spacing:.5px;text-align:center;line-height:1.2;color:#fff;position:relative;z-index:1}
+.card-elixir{
+  position:absolute;top:3px;left:3px;
+  width:18px;height:18px;border-radius:50%;
+  background:linear-gradient(135deg,#8e44ad,#c39bd3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:900;color:#fff;
+  border:1px solid rgba(255,255,255,.3);
+}
+.card-level{
+  margin-top:4px;background:rgba(255,255,255,.1);border-radius:4px;
+  padding:1px 6px;font-size:9px;font-weight:700;color:rgba(255,255,255,.7);
+  position:relative;z-index:1;
+}
+.card-rarity-badge{
+  font-size:7px;letter-spacing:1px;margin-top:2px;
+  padding:1px 5px;border-radius:3px;font-weight:700;
+  position:relative;z-index:1;
+}
+.badge-common{background:rgba(150,150,150,.2);color:#aaa}
+.badge-rare{background:rgba(30,130,255,.25);color:#5af}
+.badge-epic{background:rgba(160,50,220,.25);color:#c47de8}
+.badge-legendary{background:rgba(255,200,0,.25);color:var(--cr-gold)}
+
+/* ── DECK SECTION ── */
+.deck-area{
+  background:rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.1);
+  border-radius:14px;padding:10px;margin-bottom:12px;
+}
+.deck-label{font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.4);margin-bottom:8px;font-weight:700}
+.deck-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.elixir-avg{
+  margin-top:8px;display:flex;align-items:center;gap:6px;
+  font-size:12px;color:rgba(255,255,255,.6);
+}
+.elixir-circle{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,#8e44ad,#c39bd3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:900;color:#fff;
+  border:2px solid rgba(255,255,255,.3);
+}
+
+/* ── SHOP SCREEN ── */
+#shopScreen{background:linear-gradient(180deg,#1a0a2e 0%,#0d0518 100%)}
+.shop-scroll{flex:1;overflow-y:auto;padding:12px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.2) transparent}
+
+.shop-offer{
+  border-radius:14px;padding:14px;margin-bottom:12px;
+  display:flex;align-items:center;gap:12px;
+  cursor:pointer;border:2px solid;transition:transform .15s;
+  position:relative;overflow:hidden;
+}
+.shop-offer:active{transform:scale(.97)}
+.shop-offer.gems{
+  background:linear-gradient(135deg,#1a003a,#4a0080);
+  border-color:rgba(200,100,255,.5);
+}
+.shop-offer.gold{
+  background:linear-gradient(135deg,#2a1a00,#6a3a00);
+  border-color:rgba(255,200,0,.5);
+}
+.shop-offer.special{
+  background:linear-gradient(135deg,#001a3a,#003a80);
+  border-color:rgba(0,150,255,.5);
+}
+.offer-icon{font-size:44px;flex-shrink:0}
+.offer-info{flex:1;min-width:0}
+.offer-name{font-size:14px;font-weight:900;letter-spacing:1px}
+.offer-desc{font-size:11px;color:rgba(255,255,255,.55);margin-top:2px}
+.offer-price{
+  background:var(--cr-gold);color:#3d1a00;
+  border-radius:10px;padding:6px 12px;
+  font-weight:900;font-size:14px;white-space:nowrap;
+  border:2px solid var(--cr-gold2);flex-shrink:0;
+}
+.offer-badge{
+  position:absolute;top:8px;right:8px;
+  background:#e74c3c;color:#fff;border-radius:6px;
+  font-size:9px;font-weight:700;letter-spacing:1px;padding:2px 6px;
+}
+
+/* ── CLAN SCREEN ── */
+#clanScreen{background:linear-gradient(180deg,#0a2010 0%,#050f07 100%)}
+.clan-scroll{flex:1;overflow-y:auto;padding:12px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.2) transparent}
+
+.clan-banner{
+  border-radius:14px;overflow:hidden;margin-bottom:12px;
+  background:linear-gradient(135deg,#1a4a1a,#0a2a0a);
+  border:2px solid rgba(100,200,100,.3);
+  padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;
+}
+.clan-emblem{font-size:60px}
+.clan-name{font-size:20px;font-weight:900;letter-spacing:2px;color:var(--cr-gold)}
+.clan-tag{font-size:12px;color:rgba(255,255,255,.4);letter-spacing:3px}
+.clan-stats{display:flex;gap:16px;margin-top:4px}
+.clan-stat{display:flex;flex-direction:column;align-items:center;gap:2px}
+.clan-stat-val{font-size:18px;font-weight:900;color:#fff}
+.clan-stat-lbl{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:1px}
+
+.members-list{display:flex;flex-direction:column;gap:6px}
+.member-row{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;padding:8px 12px;
+  cursor:pointer;
+}
+.member-rank{font-size:18px;width:30px;text-align:center;flex-shrink:0}
+.member-info{flex:1;min-width:0}
+.member-name{font-size:13px;font-weight:700;color:#fff}
+.member-role{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:1px}
+.member-trophies{display:flex;align-items:center;gap:3px;font-weight:700;color:var(--cr-gold);font-size:13px}
+
+/* ── EVENTS SCREEN ── */
+#eventsScreen{background:linear-gradient(180deg,#1a0a00 0%,#0d0500 100%)}
+.events-scroll{flex:1;overflow-y:auto;padding:12px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.2) transparent}
+.event-card{
+  border-radius:14px;margin-bottom:12px;overflow:hidden;
+  border:2px solid;cursor:pointer;transition:transform .15s;
+}
+.event-card:active{transform:scale(.98)}
+.event-header{padding:12px 14px;display:flex;align-items:center;gap:10px}
+.event-body{padding:0 14px 12px}
+.event-icon{font-size:36px}
+.event-name{font-size:16px;font-weight:900;letter-spacing:1px}
+.event-time{font-size:10px;opacity:.6;margin-top:2px}
+.event-desc{font-size:12px;color:rgba(255,255,255,.6);margin-bottom:8px}
+.event-reward{display:flex;gap:8px;font-size:12px}
+.reward-item{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.08);border-radius:8px;padding:4px 8px;font-weight:700}
+.event-join-btn{
+  background:linear-gradient(135deg,var(--cr-gold),var(--cr-gold2));
+  border:none;border-radius:8px;padding:8px 16px;
+  font-weight:900;font-size:13px;color:#3d1a00;letter-spacing:1px;cursor:pointer;
+  transition:transform .12s;
+}
+.event-join-btn:active{transform:scale(.94)}
+
+/* ── BATTLE SCREEN ── */
+#battleScreen{
+  background:linear-gradient(180deg,#1a2a0a 0%,#0d1a06 50%,#050f03 100%);
+  overflow:hidden;
+}
+.battle-arena{flex:1;position:relative;display:flex;flex-direction:column}
+.battle-timer{
+  position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,.7);border:2px solid rgba(255,255,255,.2);
+  border-radius:20px;padding:6px 20px;
+  font-size:22px;font-weight:900;color:#fff;letter-spacing:3px;
+  z-index:10;
+}
+.battle-timer.urgent{color:#e74c3c;animation:timerPulse .5s ease-in-out infinite}
+@keyframes timerPulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.1)}}
+
+.battle-field{
+  flex:1;display:flex;flex-direction:column;position:relative;
+}
+.battle-half{flex:1;position:relative;overflow:hidden}
+.battle-half.enemy{
+  background:linear-gradient(180deg,#1a0a0a 0%,#2d1515 100%);
+  border-bottom:3px solid rgba(255,100,100,.4);
+}
+.battle-half.player{
+  background:linear-gradient(180deg,#0a1a0a 0%,#152d15 100%);
+  border-top:3px solid rgba(100,255,100,.4);
+}
+
+.battle-tower{
+  position:absolute;bottom:10px;
+  width:50px;height:65px;display:flex;flex-direction:column;align-items:center;
+  gap:2px;
+}
+.tower-icon{font-size:36px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.8))}
+.tower-hp-bar{width:44px;height:6px;background:rgba(0,0,0,.5);border-radius:3px;border:1px solid rgba(255,255,255,.15)}
+.tower-hp-fill{height:100%;border-radius:3px}
+.battle-tower.ally .tower-hp-fill{background:linear-gradient(90deg,#27ae60,#2ecc71)}
+.battle-tower.enemy-t .tower-hp-fill{background:linear-gradient(90deg,#c0392b,#e74c3c)}
+
+.enemy-king{left:50%;transform:translateX(-50%)}
+.tower-left-e{left:12px}
+.tower-right-e{right:12px}
+.tower-left-a{left:12px}
+.tower-right-a{right:12px}
+.player-king{left:50%;transform:translateX(-50%)}
+
+.battle-road{
+  position:absolute;left:50%;transform:translateX(-50%);
+  width:50px;top:0;bottom:0;
+  background:rgba(100,80,40,.3);border-left:2px solid rgba(255,255,255,.05);border-right:2px solid rgba(255,255,255,.05);
+}
+
+/* Troops moving on field */
+.troop{
+  position:absolute;font-size:22px;
+  animation:troopMove 3s linear;
+  pointer-events:none;z-index:5;
+}
+@keyframes troopMove{
+  0%{transform:translateY(0);opacity:1}
+  90%{transform:translateY(var(--dist));opacity:1}
+  100%{transform:translateY(var(--dist));opacity:0}
+}
+
+.elixir-bar-wrap{
+  background:rgba(0,0,0,.5);padding:8px 12px;display:flex;align-items:center;gap:8px;flex-shrink:0;
+}
+.elixir-label{font-size:14px;font-weight:900;color:#c39bd3;flex-shrink:0}
+.elixir-track{display:flex;gap:3px;flex:1}
+.elixir-pip{
+  flex:1;height:16px;border-radius:4px;border:1px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.06);transition:background .3s;
+}
+.elixir-pip.filled{background:linear-gradient(180deg,#c39bd3,#8e44ad)}
+
+.battle-hand{
+  display:flex;gap:6px;padding:6px 10px 8px;
+  background:rgba(0,0,0,.6);justify-content:center;align-items:flex-end;flex-shrink:0;
+}
+.hand-card{
+  width:55px;background:linear-gradient(145deg,#1a1a4a,#0a0a2e);
+  border:2px solid rgba(255,255,255,.25);border-radius:8px;
+  display:flex;flex-direction:column;align-items:center;
+  padding:6px 3px 4px;cursor:pointer;transition:transform .12s;
+  position:relative;
+}
+.hand-card:active{transform:scale(.9) translateY(-6px)}
+.hand-card.next-card{transform:scale(.8);opacity:.7;border-color:rgba(255,255,255,.15)}
+.hand-card .hc-elixir{
+  position:absolute;top:2px;left:2px;
+  width:15px;height:15px;border-radius:50%;
+  background:linear-gradient(135deg,#8e44ad,#c39bd3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:900;color:#fff;
+}
+.hand-card .hc-emoji{font-size:22px}
+.hand-card .hc-name{font-size:7px;text-align:center;color:rgba(255,255,255,.7);font-weight:700;margin-top:2px}
+
+/* ── CHEST OPEN ANIMATION ── */
+#chestOpenOv{
+  position:fixed;inset:0;z-index:1000;
+  background:rgba(0,0,0,.95);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+}
+#chestOpenOv.show{display:flex;animation:ovIn .3s ease}
+@keyframes ovIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+.chest-open-icon{font-size:100px;animation:chestBounce .5s ease-in-out infinite alternate}
+@keyframes chestBounce{from{transform:scale(1) rotate(-3deg)}to{transform:scale(1.1) rotate(3deg)}}
+.chest-open-title{font-size:24px;font-weight:900;letter-spacing:3px;color:var(--cr-gold)}
+.chest-reward-grid{display:grid;grid-template-columns:repeat(3,80px);gap:10px}
+.chest-reward-item{
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);
+  border-radius:12px;padding:12px 8px;
+}
+.chest-reward-item .ri-emoji{font-size:30px}
+.chest-reward-item .ri-val{font-size:13px;font-weight:900;color:var(--cr-gold)}
+.chest-reward-item .ri-lbl{font-size:9px;color:rgba(255,255,255,.5);letter-spacing:1px}
+.chest-close-btn{
+  background:linear-gradient(135deg,var(--cr-gold),var(--cr-gold2));
+  border:none;border-radius:12px;padding:12px 40px;
+  font-size:16px;font-weight:900;color:#3d1a00;letter-spacing:2px;cursor:pointer;
+}
+
+/* ── TROPHY ROAD ── */
+#trophyRoadOv{
+  position:fixed;inset:0;z-index:900;
+  background:rgba(0,0,0,.92);
+  display:none;flex-direction:column;overflow:hidden;
+}
+#trophyRoadOv.show{display:flex;animation:ovIn .3s ease}
+.tr-header{padding:16px;display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.5);flex-shrink:0}
+.tr-close{font-size:24px;cursor:pointer;color:rgba(255,255,255,.5);background:none;border:none;line-height:1}
+.tr-title{font-size:20px;font-weight:900;letter-spacing:3px;color:var(--cr-gold);flex:1}
+.tr-my-trophies{display:flex;align-items:center;gap:5px;font-size:16px;font-weight:700;color:var(--cr-gold)}
+.tr-scroll{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.tr-milestone{
+  display:flex;align-items:center;gap:12px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;padding:12px 14px;position:relative;
+}
+.tr-milestone.reached{border-color:rgba(255,200,0,.4);background:rgba(255,200,0,.06)}
+.tr-milestone.current{
+  border-color:var(--cr-gold);background:rgba(255,200,0,.1);
+  box-shadow:0 0 20px rgba(255,200,0,.2);
+}
+.tr-trophy-req{
+  background:rgba(0,0,0,.4);border-radius:8px;padding:4px 10px;
+  font-size:13px;font-weight:700;color:var(--cr-gold);white-space:nowrap;
+  display:flex;align-items:center;gap:4px;flex-shrink:0;
+}
+.tr-arena-info{flex:1}
+.tr-arena-name{font-size:14px;font-weight:900;color:#fff}
+.tr-arena-desc{font-size:10px;color:rgba(255,255,255,.4);margin-top:2px}
+.tr-arena-icon{font-size:32px;flex-shrink:0}
+.tr-checkmark{
+  position:absolute;top:8px;right:10px;
+  font-size:16px;color:var(--cr-gold);
+}
+
+/* ── TOAST ── */
+.cr-toast{
+  position:fixed;top:70px;left:50%;transform:translateX(-50%);
+  z-index:9999;background:rgba(0,0,0,.9);border:2px solid rgba(255,200,0,.5);
+  border-radius:12px;padding:10px 20px;
+  font-size:13px;font-weight:700;color:var(--cr-gold);letter-spacing:1px;
+  text-align:center;white-space:nowrap;pointer-events:none;
+  animation:toastSlide .3s ease;
+}
+@keyframes toastSlide{from{transform:translateX(-50%) translateY(-20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════ HOME SCREEN ════════════════════════════════════ -->
+<div class="screen" id="homeScreen">
+  <div class="sky-bg">
+    <div class="cloud"></div>
+    <div class="cloud"></div>
+    <div class="cloud"></div>
+  </div>
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="top-resource">
+      <span class="icon">💎</span>
+      <span class="res-val" id="gemsVal">9 999</span>
+      <span class="plus-btn">+</span>
+    </div>
+    <div class="top-resource">
+      <span class="icon">🪙</span>
+      <span class="res-val" id="goldVal">999 999</span>
+      <span class="plus-btn">+</span>
+    </div>
+    <div class="trophy-box">🏆 <span id="trophiesVal">6 400</span></div>
+    <button class="settings-btn" onclick="showToast('⚙️ Einstellungen')">⚙️</button>
+  </div>
+
+  <!-- ARENA -->
+  <div class="arena-zone">
+    <div class="arena-ground"></div>
+    <div class="castle" onclick="openTrophyRoad()">🏰</div>
+    <div class="castle-hp">
+      <div class="hp-bar-bg"><div class="hp-bar-fill"></div></div>
+      <div class="hp-text">4 800 HP</div>
+    </div>
+  </div>
+
+  <!-- CHESTS -->
+  <div class="chests-row">
+    <div class="chest-slot silver" onclick="openChest('silver')">
+      <div class="chest-icon">🎁</div>
+      <div class="chest-timer">ÖFFNEN</div>
+    </div>
+    <div class="chest-slot gold" onclick="openChest('gold')">
+      <div class="open-ring"></div>
+      <div class="chest-icon">📦</div>
+      <div class="chest-timer">02:14</div>
+    </div>
+    <div class="chest-slot magical" onclick="openChest('magical')">
+      <div class="chest-icon">✨</div>
+      <div class="chest-timer">08:00:00</div>
+    </div>
+    <div class="chest-slot giant" onclick="openChest('giant')">
+      <div class="chest-icon">🗃️</div>
+      <div class="chest-timer">12:00:00</div>
+    </div>
+  </div>
+
+  <!-- BATTLE BUTTON -->
+  <div class="battle-btn-wrap">
+    <button class="battle-btn" onclick="startBattle()">
+      <span class="swords">⚔️</span>
+      BATTLE
+      <span class="swords">⚔️</span>
+    </button>
+    <div class="next-chest-hint">Nächste Truhe: 3 Siege</div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="switchNav(this,'homeScreen')">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">Home</div>
+    </div>
+    <div class="nav-item" onclick="switchNav(this,'cardsScreen')">
+      <div class="nav-icon">🃏</div>
+      <div class="nav-label">Karten</div>
+    </div>
+    <div class="nav-item" onclick="switchNav(this,'shopScreen')">
+      <div class="nav-icon">🛒</div>
+      <div class="nav-label">Shop</div>
+    </div>
+    <div class="nav-item" onclick="switchNav(this,'clanScreen')">
+      <div class="nav-icon">🛡️</div>
+      <div class="nav-label">Clan</div>
+    </div>
+    <div class="nav-item" onclick="switchNav(this,'eventsScreen')">
+      <div class="nav-icon">🎉</div>
+      <div class="nav-label">Events</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ CARDS SCREEN ════════════════════════════════════ -->
+<div class="screen off" id="cardsScreen">
+  <div class="cards-header">
+    <button style="background:none;border:none;color:rgba(255,255,255,.6);font-size:22px;cursor:pointer;line-height:1" onclick="goHome()">←</button>
+    <div class="screen-title">KARTEN</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.4)">55/78</div>
+  </div>
+  <div class="cards-scroll">
+    <!-- Deck -->
+    <div class="deck-area">
+      <div class="deck-label">MEIN DECK</div>
+      <div class="deck-grid" id="deckGrid"></div>
+      <div class="elixir-avg">
+        <div class="elixir-circle" id="deckElixirAvg">3.5</div>
+        <span>Ø Elixirkosten</span>
+      </div>
+    </div>
+
+    <div class="cards-section-title">LEGENDARY</div>
+    <div class="cards-grid" id="legendaryGrid"></div>
+    <div class="cards-section-title">EPIC</div>
+    <div class="cards-grid" id="epicGrid"></div>
+    <div class="cards-section-title">RARE</div>
+    <div class="cards-grid" id="rareGrid"></div>
+    <div class="cards-section-title">COMMON</div>
+    <div class="cards-grid" id="commonGrid"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="switchNav(this,'homeScreen')">
+      <div class="nav-icon">🏠</div><div class="nav-label">Home</div>
+    </div>
+    <div class="nav-item active" onclick="switchNav(this,'cardsScreen')">
+      <div class="nav-icon">🃏</div><div class="nav-label">Karten</div>
+    </div>
+    <div class="nav-item" onclick="switchNav(this,'shopScreen')">
+      <div class="nav-icon">🛒</div><div class="nav-label">Shop</div>
+    </div>
+    <div class="nav-item" onclick="switchNav(this,'clanScreen')">
+      <div class="nav-icon">🛡️</div><div class="nav-label">Clan</div>
+    </div>
+    <div class="nav-item" onclick="switchNav(this,'eventsScreen')">
+      <div class="nav-icon">🎉</div><div class="nav-label">Events</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ SHOP SCREEN ════════════════════════════════════ -->
+<div class="screen off" id="shopScreen">
+  <div class="cards-header">
+    <button style="background:none;border:none;color:rgba(255,255,255,.6);font-size:22px;cursor:pointer;line-height:1" onclick="goHome()">←</button>
+    <div class="screen-title">SHOP</div>
+    <div class="trophy-box" style="font-size:13px">💎 <span id="shopGemsDisplay">9 999</span></div>
+  </div>
+  <div class="shop-scroll">
+    <div class="shop-offer gems" onclick="showToast('💎 Gems kaufen!')">
+      <div class="offer-icon">💎</div>
+      <div class="offer-info">
+        <div class="offer-name">80 GEMS</div>
+        <div class="offer-desc">Kaufe Truhen & Angebote</div>
+      </div>
+      <div class="offer-price">0,99 €</div>
+    </div>
+    <div class="shop-offer gems" onclick="showToast('💎 Starter Pack!')">
+      <div class="offer-badge">NEU</div>
+      <div class="offer-icon">🎁</div>
+      <div class="offer-info">
+        <div class="offer-name">STARTER PACK</div>
+        <div class="offer-desc">500 Gems + 10 000 Gold + Epic Karte</div>
+      </div>
+      <div class="offer-price">4,99 €</div>
+    </div>
+    <div class="shop-offer gold" onclick="buyGold()">
+      <div class="offer-icon">🪙</div>
+      <div class="offer-info">
+        <div class="offer-name">10 000 GOLD</div>
+        <div class="offer-desc">Karten aufwerten & kaufen</div>
+      </div>
+      <div class="offer-price">💎 80</div>
+    </div>
+    <div class="shop-offer special" onclick="showToast('🃏 Karten-Angebot!')">
+      <div class="offer-badge">24h</div>
+      <div class="offer-icon">🃏</div>
+      <div class="offer-info">
+        <div class="offer-name">EPIC KARTE</div>
+        <div class="offer-desc">Zufällige Epic Karte</div>
+      </div>
+      <div class="offer-price">💎 150</div>
+    </div>
+    <div class="shop-offer gold" onclick="openChest('magical')">
+      <div class="offer-icon">✨</div>
+      <div class="offer-info">
+        <div class="offer-name">MAGIC CHEST</div>
+        <div class="offer-desc">Garantierte Epic Karten</div>
+      </div>
+      <div class="offer-price">💎 200</div>
+    </div>
+    <div class="shop-offer special" onclick="openChest('giant')">
+      <div class="offer-icon">🗃️</div>
+      <div class="offer-info">
+        <div class="offer-name">SUPER MAGIC</div>
+        <div class="offer-desc">Legendary guaranteed!</div>
+      </div>
+      <div class="offer-price">💎 400</div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="switchNav(this,'homeScreen')">
+      <div class="nav-icon">🏠</div><div class="nav-label">Home</div>
+    </div>
+    <div class="nav-item" onclick="switchNav(this,'cardsScreen')">
+      <div class="nav-icon">🃏</div><div class="nav-label">Karten</div>
+    </div>
+    <div class="nav-item active" onclick="switchNav(this,'shopScreen')">
+      <div class="nav-icon">🛒</div><div class="nav-label">Shop</div>
+    </div>
+    <div class="nav-item" onclick="switchNav(this,'clanScreen')">
+      <div class="nav-icon">🛡️</div><div class="nav-label">Clan</div>
+    </div>
+    <div class="nav-item" onclick="switchNav(this,'eventsScreen')">
+      <div class="nav-icon">🎉</div><div class="nav-label">Events</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ CLAN SCREEN ════════════════════════════════════ -->
+<div class="screen off" id="clanScreen">
+  <div class="cards-header">
+    <button style="background:none;border:none;color:rgba(255,255,255,.6);font-size:22px;cursor:pointer;line-height:1" onclick="goHome()">←</button>
+    <div class="screen-title">CLAN</div>
+    <button style="background:rgba(255,200,0,.15);border:1px solid rgba(255,200,0,.3);color:var(--cr-gold);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer" onclick="showToast('🛡️ Clan-Krieg bald!')">⚔️ KRIEG</button>
+  </div>
+  <div class="clan-scroll">
+    <div class="clan-banner">
+      <div class="clan-emblem">🛡️</div>
+      <div class="clan-name">GERMAN ELITE</div>
+      <div class="clan-tag">#GE2024</div>
+      <div class="clan-stats">
+        <div class="clan-stat"><div class="clan-stat-val">48</div><div class="clan-stat-lbl">MITGLIEDER</div></div>
+        <div class="clan-stat"><div class="clan-stat-val">🏆 32K</div><div class="clan-stat-lbl">TROPHÄEN</div></div>
+        <div class="clan-stat"><div class="clan-stat-val">🏅 12</div><div class="clan-stat-lbl">SIEGE</div></div>
+      </div>
+    </div>
+    <div class="members-list" id="membersList"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="switchNav(this,'homeScreen')">
+      <div class="nav-icon">🏠</div><div class="nav-label">Home</div>
+    </div>
+    <div class="nav-item" onclick="switchNav(this,'cardsScreen')">
+      <div class="nav-icon">🃏</div><div class="nav-label">Karten</div>
+    </div>
+    <div class="nav-item" onclick="switchNav(this,'shopScreen')">
+      <div class="nav-icon">🛒</div><div class="nav-label">Shop</div>
+    </div>
+    <div class="nav-item active" onclick="switchNav(this,'clanScreen')">
+      <div class="nav-icon">🛡️</div><div class="nav-label">Clan</div>
+    </div>
+    <div class="nav-item" onclick="switchNav(this,'eventsScreen')">
+      <div class="nav-icon">🎉</div><div class="nav-label">Events</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ EVENTS SCREEN ════════════════════════════════════ -->
+<div class="screen off" id="eventsScreen">
+  <div class="cards-header">
+    <button style="background:none;border:none;color:rgba(255,255,255,.6);font-size:22px;cursor:pointer;line-height:1" onclick="goHome()">←</button>
+    <div class="screen-title">EVENTS</div>
+  </div>
+  <div class="events-scroll">
+    <div class="event-card" style="border-color:rgba(255,100,0,.5);background:linear-gradient(135deg,#2a0a00,#500f00)" onclick="startBattle()">
+      <div class="event-header">
+        <div class="event-icon">🏆</div>
+        <div>
+          <div class="event-name">LADDER SEASON</div>
+          <div class="event-time">Endet in: 14T 06:22:18</div>
+        </div>
+      </div>
+      <div class="event-body">
+        <div class="event-desc">Erkämpfe dir Trophäen in der Rangliste! Steige in höhere Arenen auf.</div>
+        <div class="event-reward">
+          <div class="reward-item">🏆 <span>+30 Trophäen</span></div>
+          <div class="reward-item">🪙 <span>200 Gold</span></div>
+        </div>
+        <br>
+        <button class="event-join-btn">SPIELEN ⚔️</button>
+      </div>
+    </div>
+
+    <div class="event-card" style="border-color:rgba(150,50,255,.5);background:linear-gradient(135deg,#1a003a,#30006a)" onclick="startBattle()">
+      <div class="event-header">
+        <div class="event-icon">⚡</div>
+        <div>
+          <div class="event-name">GIANT CHALLENGE</div>
+          <div class="event-time">Endet in: 2T 14:00:00</div>
+        </div>
+      </div>
+      <div class="event-body">
+        <div class="event-desc">Riesen-Karten kosten nur 2 Elixir! Wer gewinnt 12 Runden?</div>
+        <div class="event-reward">
+          <div class="reward-item">💎 <span>100 Gems</span></div>
+          <div class="reward-item">✨ <span>Magic Chest</span></div>
+        </div>
+        <br>
+        <button class="event-join-btn">BEITRETEN 💎 10</button>
+      </div>
+    </div>
+
+    <div class="event-card" style="border-color:rgba(0,200,100,.4);background:linear-gradient(135deg,#001a0a,#003a14)" onclick="startBattle()">
+      <div class="event-header">
+        <div class="event-icon">🃏</div>
+        <div>
+          <div class="event-name">DRAFT CHALLENGE</div>
+          <div class="event-time">Endet in: 5T 20:00:00</div>
+        </div>
+      </div>
+      <div class="event-body">
+        <div class="event-desc">Wähle Karten wechselweise aus — Strategie ist gefragt!</div>
+        <div class="event-reward">
+          <div class="reward-item">🎁 <span>Golden Chest</span></div>
+          <div class="reward-item">🃏 <span>Epic Card</span></div>
+        </div>
+        <br>
+        <button class="event-join-btn">BEITRETEN GRATIS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="switchNav(this,'homeScreen')">
+      <div class="nav-icon">🏠</div><div class="nav-label">Home</div>
+    </div>
+    <div class="nav-item" onclick="switchNav(this,'cardsScreen')">
+      <div class="nav-icon">🃏</div><div class="nav-label">Karten</div>
+    </div>
+    <div class="nav-item" onclick="switchNav(this,'shopScreen')">
+      <div class="nav-icon">🛒</div><div class="nav-label">Shop</div>
+    </div>
+    <div class="nav-item" onclick="switchNav(this,'clanScreen')">
+      <div class="nav-icon">🛡️</div><div class="nav-label">Clan</div>
+    </div>
+    <div class="nav-item active" onclick="switchNav(this,'eventsScreen')">
+      <div class="nav-icon">🎉</div><div class="nav-label">Events</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ BATTLE SCREEN ════════════════════════════════════ -->
+<div class="screen off" id="battleScreen">
+  <div class="battle-arena">
+    <!-- Timer -->
+    <div class="battle-timer" id="battleTimer">3:00</div>
+
+    <div class="battle-field">
+      <!-- Enemy half -->
+      <div class="battle-half enemy">
+        <div class="battle-road"></div>
+        <!-- Enemy towers -->
+        <div class="battle-tower enemy-t" style="left:12px;bottom:10px">
+          <div class="tower-icon">🏯</div>
+          <div class="tower-hp-bar"><div class="tower-hp-fill" id="eTowerL" style="width:100%"></div></div>
+        </div>
+        <div class="battle-tower enemy-t" style="left:50%;transform:translateX(-50%);bottom:10px">
+          <div class="tower-icon">👑</div>
+          <div class="tower-hp-bar"><div class="tower-hp-fill" id="eKing" style="width:100%"></div></div>
+        </div>
+        <div class="battle-tower enemy-t" style="right:12px;bottom:10px">
+          <div class="tower-icon">🏯</div>
+          <div class="tower-hp-bar"><div class="tower-hp-fill" id="eTowerR" style="width:100%"></div></div>
+        </div>
+        <!-- Enemy name -->
+        <div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(200,30,30,.8);border-radius:8px;padding:3px 12px;font-size:11px;font-weight:700;letter-spacing:1px;white-space:nowrap">
+          🤖 GEGNER_7842 <span style="color:var(--cr-gold)">🏆 6 380</span>
+        </div>
+        <!-- Enemy troop spawn zone -->
+        <div id="enemyField" style="position:absolute;inset:0;pointer-events:none"></div>
+      </div>
+
+      <!-- Player half -->
+      <div class="battle-half player">
+        <div class="battle-road"></div>
+        <div class="battle-tower ally" style="left:12px;bottom:10px">
+          <div class="tower-icon">🏯</div>
+          <div class="tower-hp-bar"><div class="tower-hp-fill" id="pTowerL" style="width:100%"></div></div>
+        </div>
+        <div class="battle-tower ally" style="left:50%;transform:translateX(-50%);bottom:10px">
+          <div class="tower-icon">👑</div>
+          <div class="tower-hp-bar"><div class="tower-hp-fill" id="pKing" style="width:100%"></div></div>
+        </div>
+        <div class="battle-tower ally" style="right:12px;bottom:10px">
+          <div class="tower-icon">🏯</div>
+          <div class="tower-hp-bar"><div class="tower-hp-fill" id="pTowerR" style="width:100%"></div></div>
+        </div>
+        <!-- Player name -->
+        <div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(30,130,30,.8);border-radius:8px;padding:3px 12px;font-size:11px;font-weight:700;letter-spacing:1px;white-space:nowrap" id="playerBattleName">
+          ⚔️ DU <span style="color:var(--cr-gold)">🏆 6 400</span>
+        </div>
+        <!-- Player field -->
+        <div id="playerField" style="position:absolute;inset:0;pointer-events:none"></div>
+      </div>
+    </div>
+
+    <!-- Elixir bar -->
+    <div class="elixir-bar-wrap">
+      <div class="elixir-label">💜</div>
+      <div class="elixir-track" id="elixirTrack"></div>
+      <div id="elixirCount" style="font-size:18px;font-weight:900;color:#c39bd3;width:22px;text-align:right">0</div>
+    </div>
+
+    <!-- Hand -->
+    <div class="battle-hand" id="battleHand"></div>
+  </div>
+
+  <!-- Surrender button -->
+  <div style="position:absolute;top:14px;left:14px;z-index:20">
+    <button onclick="endBattle(false)" style="background:rgba(200,30,30,.6);border:2px solid rgba(255,100,100,.4);border-radius:10px;color:#fff;padding:6px 12px;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer">🏳️ AUFGEBEN</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ CHEST OPEN OVERLAY ════════════════════════════════════ -->
+<div id="chestOpenOv">
+  <div class="chest-open-icon" id="chestOpenIcon">🎁</div>
+  <div class="chest-open-title" id="chestOpenTitle">SILBERTRUHE</div>
+  <div style="font-size:12px;color:rgba(255,255,255,.5);letter-spacing:2px">TIPPE ZUM ÖFFNEN</div>
+  <div class="chest-reward-grid" id="chestRewardGrid" style="display:none"></div>
+  <button class="chest-close-btn" id="chestCloseBtn" style="display:none" onclick="closeChestOv()">WEITER!</button>
+  <div id="chestTapHint" style="margin-top:10px;font-size:13px;color:rgba(255,255,255,.4);letter-spacing:1px">Tippe auf die Truhe</div>
+</div>
+
+<!-- ════════════════════════════════════ TROPHY ROAD OVERLAY ════════════════════════════════════ -->
+<div id="trophyRoadOv">
+  <div class="tr-header">
+    <button class="tr-close" onclick="closeTrophyRoad()">✕</button>
+    <div class="tr-title">🏆 TROPHY ROAD</div>
+    <div class="tr-my-trophies">🏆 <span id="trCurrentTrophies">6 400</span></div>
+  </div>
+  <div class="tr-scroll" id="trScroll"></div>
+</div>
+
+<script>
+'use strict';
+
+// ── DATA ──────────────────────────────────────────────────────────
+var CARDS = {
+  legendary:[
+    {emoji:'🐉',name:'Baby Dragon',elixir:4,lvl:12},
+    {emoji:'🧙',name:'Wizard King',elixir:5,lvl:10},
+    {emoji:'⚡',name:'Sparky',elixir:6,lvl:9},
+    {emoji:'🪄',name:'Magic Archer',elixir:4,lvl:11},
+  ],
+  epic:[
+    {emoji:'🧟',name:'Golem',elixir:8,lvl:7},
+    {emoji:'🔥',name:'Fireball',elixir:4,lvl:8},
+    {emoji:'💀',name:'Witch',elixir:5,lvl:7},
+    {emoji:'🦹',name:'Dark Prince',elixir:4,lvl:8},
+    {emoji:'🔮',name:'Goblin Barrel',elixir:3,lvl:8},
+    {emoji:'🧱',name:'X-Bow',elixir:6,lvl:7},
+  ],
+  rare:[
+    {emoji:'🏹',name:'Musketeer',elixir:4,lvl:10},
+    {emoji:'🐷',name:'Hog Rider',elixir:4,lvl:11},
+    {emoji:'🪖',name:'Mini P.E.K.K.A',elixir:4,lvl:11},
+    {emoji:'💣',name:'Royal Giant',elixir:6,lvl:10},
+    {emoji:'🛡️',name:'Valkyrie',elixir:4,lvl:11},
+    {emoji:'🏚️',name:'Furnace',elixir:4,lvl:10},
+    {emoji:'⚙️',name:'Cannon',elixir:3,lvl:11},
+    {emoji:'🎈',name:'Balloon',elixir:5,lvl:10},
+  ],
+  common:[
+    {emoji:'⚔️',name:'Knight',elixir:3,lvl:13},
+    {emoji:'🏹',name:'Archers',elixir:3,lvl:13},
+    {emoji:'💥',name:'Arrows',elixir:3,lvl:13},
+    {emoji:'👺',name:'Goblins',elixir:2,lvl:13},
+    {emoji:'👷',name:'Barbarians',elixir:5,lvl:13},
+    {emoji:'🐊',name:'Skeleton Army',elixir:3,lvl:13},
+    {emoji:'💦',name:'Ice Spirit',elixir:1,lvl:13},
+    {emoji:'🔧',name:'Tesla',elixir:4,lvl:13},
+    {emoji:'💨',name:'Zap',elixir:2,lvl:13},
+    {emoji:'🎯',name:'Mortar',elixir:4,lvl:13},
+  ]
+};
+
+var MY_DECK = [
+  {emoji:'🐷',name:'Hog Rider',elixir:4,rarity:'rare'},
+  {emoji:'🏹',name:'Musketeer',elixir:4,rarity:'rare'},
+  {emoji:'💥',name:'Fireball',elixir:4,rarity:'epic'},
+  {emoji:'⚔️',name:'Knight',elixir:3,rarity:'common'},
+  {emoji:'💣',name:'Zap',elixir:2,rarity:'common'},
+  {emoji:'🐉',name:'Baby Dragon',elixir:4,rarity:'legendary'},
+  {emoji:'🏹',name:'Archers',elixir:3,rarity:'common'},
+  {emoji:'🎈',name:'Balloon',elixir:5,rarity:'rare'},
+];
+
+var CLAN_MEMBERS = [
+  {emoji:'👑',name:'KINGSLAYER',role:'ANFÜHRER',trophies:8420},
+  {emoji:'⭐',name:'STARFORCE',role:'CO-ANFÜHRER',trophies:7850},
+  {emoji:'⚔️',name:'BLADEWING',role:'ÄLTESTER',trophies:7340},
+  {emoji:'🔥',name:'PYRO99',role:'MITGLIED',trophies:6900},
+  {emoji:'🛡️',name:'DEFENDER',role:'MITGLIED',trophies:6400},
+  {emoji:'🏹',name:'ARCHER_X',role:'MITGLIED',trophies:6100},
+  {emoji:'💀',name:'DARKNIGHT',role:'MITGLIED',trophies:5800},
+  {emoji:'🌪️',name:'STORMIE',role:'MITGLIED',trophies:5500},
+];
+
+var TROPHY_MILESTONES = [
+  {req:0,    name:'Training Camp',    desc:'Lerne die Grundlagen',  icon:'🏕️'},
+  {req:400,  name:'Goblin Stadium',   desc:'Goblin Horde incoming', icon:'👺'},
+  {req:1100, name:'Bone Pit',         desc:'Untote streifen umher', icon:'💀'},
+  {req:2000, name:'Barbarian Bowl',   desc:'Barbar-Gladiatoren',    icon:'⚔️'},
+  {req:3000, name:'P.E.K.K.A\'s Playhouse', desc:'Iron Golem Arena', icon:'🤖'},
+  {req:4000, name:'Spell Valley',     desc:'Magischer Kampf',       icon:'🔮'},
+  {req:5000, name:'Builder\'s Workshop', desc:'Mechaniker-Arena',   icon:'🔧'},
+  {req:6000, name:'Royal Arena',      desc:'Arena der Könige',      icon:'👑'},
+  {req:7000, name:'Frozen Peak',      desc:'Eisige Gipfel',         icon:'🏔️'},
+  {req:8000, name:'Jungle Arena',     desc:'Dschungel-Gefecht',     icon:'🌴'},
+  {req:9000, name:'Hog Mountain',     desc:'Hog-Rider Hochburg',    icon:'🐷'},
+  {req:10000,name:'Electro Valley',   desc:'Elektrische Arena',     icon:'⚡'},
+];
+
+var state = {
+  gems: 9999,
+  gold: 999999,
+  trophies: 6400,
+  elixir: 0,
+  battleTime: 180,
+  battleActive: false,
+  elixirInterval: null,
+  battleInterval: null,
+};
+
+// ── NAVIGATION ────────────────────────────────────────────────────
+var currentScreen = 'homeScreen';
+
+function switchNav(navItem, screenId){
+  document.querySelectorAll('.screen').forEach(function(s){
+    s.classList.add('off');
+  });
+  document.getElementById(screenId).classList.remove('off');
+  currentScreen = screenId;
+
+  var allNavs = document.querySelectorAll('.bottom-nav .nav-item');
+  allNavs.forEach(function(n){ n.classList.remove('active'); });
+
+  var parent = navItem.closest('.bottom-nav');
+  if(parent){
+    var siblings = parent.querySelectorAll('.nav-item');
+    var idx = Array.from(siblings).indexOf(navItem);
+    document.querySelectorAll('.bottom-nav').forEach(function(nav){
+      nav.querySelectorAll('.nav-item')[idx].classList.add('active');
+    });
+  }
+}
+
+function goHome(){
+  switchNav(document.querySelectorAll('.bottom-nav')[0].querySelector('.nav-item'), 'homeScreen');
+}
+
+// ── CARDS ─────────────────────────────────────────────────────────
+function buildCard(c, rarity){
+  var rarityNames = {legendary:'LEGENDARY',epic:'EPIC',rare:'RARE',common:'COMMON'};
+  var badgeClass  = 'badge-'+rarity;
+  return '<div class="card '+rarity+'" onclick="showToast(\''+c.emoji+' '+c.name+'\')">'
+    +'<div class="card-elixir">'+c.elixir+'</div>'
+    +'<div class="card-emoji">'+c.emoji+'</div>'
+    +'<div class="card-name">'+c.name+'</div>'
+    +'<div class="card-level">LVL '+c.lvl+'</div>'
+    +'<div class="card-rarity-badge '+badgeClass+'">'+rarityNames[rarity]+'</div>'
+    +'</div>';
+}
+
+function renderCards(){
+  ['legendary','epic','rare','common'].forEach(function(r){
+    var grid = document.getElementById(r+'Grid');
+    if(!grid) return;
+    grid.innerHTML = CARDS[r].map(function(c){ return buildCard(c, r); }).join('');
+  });
+
+  var deckGrid = document.getElementById('deckGrid');
+  if(deckGrid){
+    deckGrid.innerHTML = MY_DECK.map(function(c){
+      return buildCard(c, c.rarity||'common');
+    }).join('');
+  }
+
+  var totalElixir = MY_DECK.reduce(function(s,c){ return s+c.elixir; }, 0);
+  var avg = document.getElementById('deckElixirAvg');
+  if(avg) avg.textContent = (totalElixir/8).toFixed(1);
+}
+
+// ── CLAN ──────────────────────────────────────────────────────────
+function renderClan(){
+  var list = document.getElementById('membersList');
+  if(!list) return;
+  var medals = ['👑','⭐','⭐'];
+  list.innerHTML = CLAN_MEMBERS.map(function(m,i){
+    return '<div class="member-row" onclick="showToast(\''+m.name+' - '+m.trophies+' 🏆\')">'
+      +'<div class="member-rank">'+(i<3?medals[i]:'#'+(i+1))+'</div>'
+      +'<div class="member-info"><div class="member-name">'+m.name+'</div><div class="member-role">'+m.role+'</div></div>'
+      +'<div class="member-trophies">🏆 '+m.trophies.toLocaleString()+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+// ── TROPHY ROAD ───────────────────────────────────────────────────
+function openTrophyRoad(){
+  document.getElementById('trophyRoadOv').classList.add('show');
+  var scroll = document.getElementById('trScroll');
+  scroll.innerHTML = '';
+  TROPHY_MILESTONES.slice().reverse().forEach(function(m){
+    var reached  = state.trophies >= m.req;
+    var isCurrent = false;
+    for(var i=0; i<TROPHY_MILESTONES.length; i++){
+      if(state.trophies >= TROPHY_MILESTONES[i].req && (i===TROPHY_MILESTONES.length-1 || state.trophies < TROPHY_MILESTONES[i+1].req)){
+        if(TROPHY_MILESTONES[i].req === m.req) isCurrent = true;
+      }
+    }
+    var div = document.createElement('div');
+    div.className = 'tr-milestone'+(reached?' reached':'')+(isCurrent?' current':'');
+    div.innerHTML =
+      '<div class="tr-trophy-req">🏆 '+m.req+'</div>'
+      +'<div class="tr-arena-info"><div class="tr-arena-name">'+m.name+'</div><div class="tr-arena-desc">'+m.desc+'</div></div>'
+      +'<div class="tr-arena-icon">'+m.icon+'</div>'
+      +(reached?'<div class="tr-checkmark">✅</div>':'');
+    scroll.appendChild(div);
+    if(isCurrent) div.scrollIntoView({block:'center'});
+  });
+  document.getElementById('trCurrentTrophies').textContent = state.trophies.toLocaleString();
+}
+function closeTrophyRoad(){
+  document.getElementById('trophyRoadOv').classList.remove('show');
+}
+
+// ── CHEST ─────────────────────────────────────────────────────────
+var chestStage = 0;
+
+var CHEST_REWARDS = {
+  silver:  {icon:'🎁', title:'SILBERTRUHE', rewards:[{e:'🪙',v:'+'+randInt(200,800),l:'Gold'},{e:'🃏',v:randInt(10,30),l:'Karten'},{e:'💎',v:randInt(0,5),l:'Gems'}]},
+  gold:    {icon:'📦', title:'GOLDTRUHE',   rewards:[{e:'🪙',v:'+'+randInt(1000,3000),l:'Gold'},{e:'🃏',v:randInt(30,60),l:'Karten'},{e:'💎',v:randInt(10,25),l:'Gems'}]},
+  magical: {icon:'✨', title:'MAGISCHE TRUHE',rewards:[{e:'🪙',v:'+'+randInt(3000,8000),l:'Gold'},{e:'🃏',v:randInt(60,120),l:'Karten'},{e:'💎',v:randInt(20,60),l:'Gems'},{e:'🏆',v:randInt(50,100),l:'Trophies'},{e:'⭐',v:'Epic!',l:'Epic Karte'},{e:'🐉',v:'Rare!',l:'Legendary?'}]},
+  giant:   {icon:'🗃️', title:'RIESEN-TRUHE', rewards:[{e:'🪙',v:'+'+randInt(8000,20000),l:'Gold'},{e:'🃏',v:randInt(120,200),l:'Karten'},{e:'💎',v:randInt(50,100),l:'Gems'},{e:'⭐',v:'Legendary!',l:'Legendary Karte'},{e:'🏆',v:randInt(100,200),l:'Trophies'},{e:'🎊',v:'x2',l:'Gold Boost'}]},
+};
+
+function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+
+function openChest(type){
+  chestStage = 0;
+  var data = CHEST_REWARDS[type] || CHEST_REWARDS.silver;
+  document.getElementById('chestOpenIcon').textContent = data.icon;
+  document.getElementById('chestOpenTitle').textContent = data.title;
+  document.getElementById('chestRewardGrid').style.display = 'none';
+  document.getElementById('chestRewardGrid').innerHTML = '';
+  document.getElementById('chestCloseBtn').style.display = 'none';
+  document.getElementById('chestTapHint').style.display = 'block';
+
+  var ov = document.getElementById('chestOpenOv');
+  ov.classList.add('show');
+
+  ov.onclick = function(){
+    if(chestStage === 0){
+      chestStage = 1;
+      document.getElementById('chestOpenIcon').textContent = '💥';
+      document.getElementById('chestOpenTitle').textContent = '✨ INHALT ✨';
+      document.getElementById('chestTapHint').style.display = 'none';
+
+      var grid = document.getElementById('chestRewardGrid');
+      grid.innerHTML = data.rewards.map(function(r){
+        return '<div class="chest-reward-item"><div class="ri-emoji">'+r.e+'</div><div class="ri-val">'+r.v+'</div><div class="ri-lbl">'+r.l+'</div></div>';
+      }).join('');
+      grid.style.display = 'grid';
+      document.getElementById('chestCloseBtn').style.display = 'block';
+
+      // Give rewards
+      state.gold += randInt(200,5000);
+      document.getElementById('goldVal').textContent = state.gold.toLocaleString().replace(/,/g,'.');
+    }
+  };
+}
+
+function closeChestOv(){
+  document.getElementById('chestOpenOv').classList.remove('show');
+  document.getElementById('chestOpenOv').onclick = null;
+}
+
+// ── BATTLE ────────────────────────────────────────────────────────
+var battleHand = [];
+
+function startBattle(){
+  state.battleTime = 180;
+  state.elixir = 0;
+  state.battleActive = true;
+  battleHand = MY_DECK.slice(0,4);
+
+  switchNav(document.querySelectorAll('#battleScreen').length > 0 ? document.createElement('div') : document.createElement('div'), 'battleScreen');
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.add('off'); });
+  document.getElementById('battleScreen').classList.remove('off');
+
+  renderElixir();
+  renderBattleHand();
+  updateTimer();
+
+  // Start elixir regen
+  if(state.elixirInterval) clearInterval(state.elixirInterval);
+  state.elixirInterval = setInterval(function(){
+    if(state.elixir < 10){ state.elixir++; renderElixir(); }
+  }, 2800);
+
+  // Start timer
+  if(state.battleInterval) clearInterval(state.battleInterval);
+  state.battleInterval = setInterval(function(){
+    state.battleTime--;
+    updateTimer();
+    if(state.battleTime <= 0){ endBattle(Math.random() > 0.4); return; }
+    // Enemy random attack
+    if(Math.random() < 0.15) spawnEnemyTroop();
+    // Damage player towers randomly
+    if(Math.random() < 0.05) damageTower();
+  }, 1000);
+}
+
+function updateTimer(){
+  var el = document.getElementById('battleTimer');
+  if(!el) return;
+  var m = Math.floor(state.battleTime/60);
+  var s = state.battleTime%60;
+  el.textContent = m+':'+(s<10?'0':'')+s;
+  el.classList.toggle('urgent', state.battleTime <= 30);
+}
+
+function renderElixir(){
+  var track = document.getElementById('elixirTrack');
+  if(!track) return;
+  track.innerHTML = '';
+  for(var i=1;i<=10;i++){
+    var pip = document.createElement('div');
+    pip.className = 'elixir-pip'+(i<=state.elixir?' filled':'');
+    track.appendChild(pip);
+  }
+  var cnt = document.getElementById('elixirCount');
+  if(cnt) cnt.textContent = state.elixir;
+}
+
+function renderBattleHand(){
+  var hand = document.getElementById('battleHand');
+  if(!hand) return;
+  hand.innerHTML = '';
+  battleHand.forEach(function(c, i){
+    var div = document.createElement('div');
+    div.className = 'hand-card'+(i===3?' next-card':'');
+    div.innerHTML = '<div class="hc-elixir">'+c.elixir+'</div><div class="hc-emoji">'+c.emoji+'</div><div class="hc-name">'+c.name+'</div>';
+    if(i < 3){
+      div.onclick = function(){ playCard(c, i); };
+    }
+    hand.appendChild(div);
+  });
+}
+
+function playCard(card, idx){
+  if(state.elixir < card.elixir){ showToast('💜 Nicht genug Elixir!'); return; }
+  state.elixir -= card.elixir;
+  renderElixir();
+  spawnPlayerTroop(card.emoji);
+
+  // Rotate deck
+  battleHand.splice(idx, 1);
+  var nextIdx = (MY_DECK.indexOf(card) + 4) % MY_DECK.length;
+  battleHand.push(MY_DECK[nextIdx]);
+  renderBattleHand();
+
+  // Random tower damage to enemy
+  var r = Math.random();
+  if(r < 0.3){
+    var etl = document.getElementById('eTowerL');
+    if(etl){
+      var cur = parseFloat(etl.style.width)||100;
+      etl.style.width = Math.max(0,cur-randInt(5,20))+'%';
+      if(cur<=0) showToast('🏯 Turm zerstört!');
+    }
+  }
+}
+
+function spawnPlayerTroop(emoji){
+  var field = document.getElementById('playerField');
+  if(!field) return;
+  var el = document.createElement('div');
+  el.className = 'troop';
+  el.style.setProperty('--dist','-80px');
+  el.style.left = (20+Math.random()*60)+'%';
+  el.style.bottom = '20%';
+  el.style.animationDuration = '2s';
+  el.textContent = emoji;
+  field.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 2200);
+}
+
+function spawnEnemyTroop(){
+  var field = document.getElementById('enemyField');
+  if(!field) return;
+  var troops = ['⚔️','🏹','👺','🧟','💣'];
+  var el = document.createElement('div');
+  el.className = 'troop';
+  el.style.setProperty('--dist','80px');
+  el.style.left = (20+Math.random()*60)+'%';
+  el.style.top = '20%';
+  el.style.animationDuration = '2.5s';
+  el.textContent = troops[Math.floor(Math.random()*troops.length)];
+  field.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 2700);
+}
+
+function damageTower(){
+  var bars = ['pTowerL','pTowerR'];
+  var id = bars[Math.floor(Math.random()*bars.length)];
+  var bar = document.getElementById(id);
+  if(!bar) return;
+  var cur = parseFloat(bar.style.width)||100;
+  bar.style.width = Math.max(0, cur - randInt(3,12))+'%';
+}
+
+function endBattle(won){
+  state.battleActive = false;
+  clearInterval(state.elixirInterval);
+  clearInterval(state.battleInterval);
+  state.elixirInterval = null;
+  state.battleInterval = null;
+
+  if(won){
+    state.trophies += randInt(20,35);
+    state.gold += randInt(100,500);
+    document.getElementById('trophiesVal').textContent = state.trophies.toLocaleString().replace(/,/g,'.');
+    document.getElementById('goldVal').textContent = state.gold.toLocaleString().replace(/,/g,'.');
+    showToast('🏆 GEWONNEN! +'+randInt(20,35)+' Trophäen');
+  } else {
+    state.trophies = Math.max(0, state.trophies - randInt(15,30));
+    document.getElementById('trophiesVal').textContent = state.trophies.toLocaleString().replace(/,/g,'.');
+    showToast('💀 VERLOREN! -'+randInt(15,30)+' Trophäen');
+  }
+
+  // Reset HP bars
+  ['eTowerL','eTowerR','eKing','pTowerL','pTowerR','pKing'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.style.width = '100%';
+  });
+
+  setTimeout(function(){
+    switchNav(document.querySelectorAll('.bottom-nav')[0].querySelector('.nav-item'), 'homeScreen');
+  }, 800);
+}
+
+// ── SHOP ──────────────────────────────────────────────────────────
+function buyGold(){
+  if(state.gems >= 80){
+    state.gems -= 80;
+    state.gold += 10000;
+    document.getElementById('gemsVal').textContent = state.gems.toLocaleString().replace(/,/g,'.');
+    document.getElementById('goldVal').textContent = state.gold.toLocaleString().replace(/,/g,'.');
+    document.getElementById('shopGemsDisplay').textContent = state.gems.toLocaleString().replace(/,/g,'.');
+    showToast('🪙 10 000 Gold erhalten!');
+  } else {
+    showToast('💎 Nicht genug Gems!');
+  }
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────
+var toastTimer = null;
+function showToast(msg){
+  var old = document.querySelector('.cr-toast');
+  if(old) old.remove();
+  var t = document.createElement('div');
+  t.className = 'cr-toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.remove(); toastTimer=null; }, 2500);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+function init(){
+  renderCards();
+  renderClan();
+}
+
+init();
+</script>
+</body>
+</html>
