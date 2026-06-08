@@ -1899,9 +1899,9 @@ import { clone as skeletonClone } from 'three/addons/utils/SkeletonUtils.js';
 var BSCALE = 0.09;
 
 var CHAR_DEFS = {
-  'Matafaka Rider':    { url:'https://github.com/enzae69/multiplayergames/releases/download/Matafakarider/character.fbx',  targetH:28 },
-  'Giant':             { url:'https://github.com/enzae69/multiplayergames/releases/download/Giant/character.2.fbx',        targetH:38 },
-  'Enzae Pimmelshot':  { url:'https://github.com/enzae69/multiplayergames/releases/download/enzae/character.3.fbx',        targetH:25 },
+  'Matafaka Rider':    { url:'matafaka.fbx', targetH:28 },
+  'Giant':             { url:'giant.fbx',    targetH:38 },
+  'Enzae Pimmelshot':  { url:'enzae.fbx',    targetH:25 },
 };
 
 var renderer=null, scene=null, camera=null, clock=null;
@@ -1933,7 +1933,7 @@ function prepareModel(fbx, targetH) {
 async function loadAll() {
   // Load run animation from enzae char
   try {
-    var rf = await loadFBX(CHAR_DEFS['Enzae Pimmelshot'].url);
+    var rf = await loadFBX('enzae.fbx');
     if(rf.animations && rf.animations[0]){
       runClip = rf.animations[0].clone();
       runClip.tracks = runClip.tracks.filter(t => !t.name.match(/Hips\.position/i));
