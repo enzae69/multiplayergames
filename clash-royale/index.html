@@ -1436,11 +1436,18 @@ var ALL_ENEMY_CARDS = [
 ];
 
 function buildEnemyDeck(arenaIdx){
-  // Only use cards available up to the bot's arena
+  // Cards available up to the bot's arena
   var pool = ALL_ENEMY_CARDS.filter(function(c){ return c.arena <= arenaIdx; });
-  // Shuffle and pick 8
+  // Need at least 8 distinct cards so the hand (4) is never the whole deck.
+  // If not enough unlocked yet, pull cards from the next arenas to fill up.
+  if(pool.length < 8){
+    var extra = ALL_ENEMY_CARDS
+      .filter(function(c){ return c.arena > arenaIdx; })
+      .sort(function(a,b){ return a.arena - b.arena; });
+    for(var i=0; i<extra.length && pool.length<8; i++) pool.push(extra[i]);
+  }
+  // Shuffle, take up to 8
   pool = pool.slice().sort(function(){ return Math.random()-0.5; });
-  // Ensure at least some cheap cards and some fighters
   return pool.slice(0, Math.min(8, pool.length));
 }
 
@@ -1526,18 +1533,21 @@ var battleHand = [], battleNext = [];
 var eBattleHand = [], eBattleNext = [], eBattleQueue = [], eBattleQueueIdx = 0;
 
 function eBuildQueue(deck){
-  // Shuffle deck into a queue, hand = first 4 slots
-  eBattleQueue = deck.slice().sort(function(){ return Math.random()-0.5; });
-  eBattleQueueIdx = 4; // next card to draw is index 4
-  eBattleHand = eBattleQueue.slice(0, 4);
+  // eBattleQueue is the FULL ordered deck. Hand = first 4, waiting = rest.
+  eBattleQueue = deck.slice();
+  eBattleHand  = eBattleQueue.slice(0, 4);
 }
 
 function enemyRotateHand(idx){
-  // Put played card at end of queue
-  eBattleQueue.push(eBattleHand[idx]);
-  // Replace that hand slot with the next card in queue
-  eBattleHand[idx] = eBattleQueue[eBattleQueueIdx % eBattleQueue.length];
-  eBattleQueueIdx++;
+  // The played card leaves the hand and goes to the very back of the deck.
+  var played = eBattleHand[idx];
+  // The 5th card (first waiting card) moves into the freed hand slot.
+  var nextCard = eBattleQueue[4];
+  eBattleHand[idx] = nextCard;
+  // Rebuild the queue order: [hand..., remaining waiting cards..., played]
+  // Remove played and nextCard from their old spots, then reassemble.
+  var waiting = eBattleQueue.slice(4).filter(function(c){ return c !== nextCard; });
+  eBattleQueue = eBattleHand.slice().concat(waiting).concat([played]);
 }
 
 // ── DEPLOY ────────────────────────────────────────────────────────
