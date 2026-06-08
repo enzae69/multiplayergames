@@ -1095,6 +1095,33 @@ var state = {
   battleInterval: null,
 };
 
+function saveProgress(){
+  try {
+    localStorage.setItem('cr_save', JSON.stringify({
+      gems: state.gems,
+      gold: state.gold,
+      trophies: state.trophies,
+      deck: MY_DECK.map(function(c){ return c.name; }),
+    }));
+  } catch(e){}
+}
+
+function loadProgress(){
+  try {
+    var raw = localStorage.getItem('cr_save');
+    if(!raw) return;
+    var d = JSON.parse(raw);
+    if(typeof d.gems === 'number') state.gems = d.gems;
+    if(typeof d.gold === 'number') state.gold = d.gold;
+    if(typeof d.trophies === 'number') state.trophies = d.trophies;
+    if(Array.isArray(d.deck) && d.deck.length === 8){
+      var allCards = CARDS;
+      var rebuilt = d.deck.map(function(n){ return allCards.find(function(c){ return c.name===n; }); }).filter(Boolean);
+      if(rebuilt.length === 8) MY_DECK = rebuilt;
+    }
+  } catch(e){}
+}
+
 // ── NAVIGATION ────────────────────────────────────────────────────
 var currentScreen = 'homeScreen';
 
@@ -1239,6 +1266,7 @@ function openChest(type){
       // Give rewards
       state.gold += randInt(200,5000);
       document.getElementById('goldVal').textContent = state.gold.toLocaleString().replace(/,/g,'.');
+      saveProgress();
     }
   };
 }
@@ -1321,7 +1349,7 @@ function startBattle(){
     return {
       side:side, kind:kind, x:x, y:y,
       hp: king ? 3200 : 1700, maxhp: king ? 3200 : 1700,
-      range: king ? 105 : 100, dmg: king ? 60 : 55, atk:0.8, cd:0,
+      range: king ? 130 : 145, dmg: king ? 60 : 55, atk:0.8, cd:0,
       r:26, dead:false, active: king ? false : true // king activates when a crown falls or it's hit
     };
   }
@@ -1901,6 +1929,7 @@ function syncTopBar(){
   document.getElementById('trophiesVal').textContent=state.trophies.toLocaleString().replace(/,/g,'.');
   document.getElementById('goldVal').textContent=state.gold.toLocaleString().replace(/,/g,'.');
   document.getElementById('gemsVal').textContent=state.gems.toLocaleString().replace(/,/g,'.');
+  saveProgress();
 }
 
 // ── SHOP ──────────────────────────────────────────────────────────
@@ -1911,6 +1940,7 @@ function buyGold(){
     document.getElementById('gemsVal').textContent = state.gems.toLocaleString().replace(/,/g,'.');
     document.getElementById('goldVal').textContent = state.gold.toLocaleString().replace(/,/g,'.');
     document.getElementById('shopGemsDisplay').textContent = state.gems.toLocaleString().replace(/,/g,'.');
+    saveProgress();
     showToast('🪙 10 000 Gold erhalten!');
   } else {
     showToast('💎 Nicht genug Gems!');
@@ -1957,7 +1987,8 @@ function closeDeckEditor(){
 function saveDeck(){
   if(draftDeck.length !== 8){ showToast('Genau 8 Karten wählen!'); return; }
   MY_DECK = draftDeck.slice();
-  renderCards(); // refresh cards screen deck preview
+  renderCards();
+  saveProgress();
   closeDeckEditor();
   showToast('✅ Deck gespeichert!');
 }
@@ -2035,6 +2066,8 @@ function renderPickGrid(){
 }
 
 function init(){
+  loadProgress();
+  syncTopBar();
   renderCards();
   renderClan();
 }
