@@ -618,7 +618,7 @@ body{
       <span class="plus-btn">+</span>
     </div>
     <div class="trophy-box">🏆 <span id="trophiesVal">0</span></div>
-    <button class="settings-btn" onclick="showToast('⚙️ Einstellungen')">⚙️</button>
+    <button class="settings-btn" onclick="switchNav(null,'friendsScreen');frShowScreen()" style="font-size:20px;background:rgba(255,255,255,.1);border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center">👥</button>
   </div>
 
   <!-- ARENA -->
@@ -680,9 +680,9 @@ body{
       <div class="nav-icon">🛡️</div>
       <div class="nav-label">Clan</div>
     </div>
-    <div class="nav-item" onclick="switchNav(this,'friendsScreen')">
-      <div class="nav-icon">👥</div>
-      <div class="nav-label">Freunde</div>
+    <div class="nav-item" onclick="switchNav(this,'eventsScreen')">
+      <div class="nav-icon">🎉</div>
+      <div class="nav-label">Events</div>
     </div>
   </div>
 </div>
@@ -732,8 +732,8 @@ body{
     <div class="nav-item" onclick="switchNav(this,'clanScreen')">
       <div class="nav-icon">🛡️</div><div class="nav-label">Clan</div>
     </div>
-    <div class="nav-item" onclick="switchNav(this,'friendsScreen')">
-      <div class="nav-icon">👥</div><div class="nav-label">Freunde</div>
+    <div class="nav-item" onclick="switchNav(this,'eventsScreen')">
+      <div class="nav-icon">🎉</div><div class="nav-label">Events</div>
     </div>
   </div>
 </div>
@@ -812,8 +812,8 @@ body{
     <div class="nav-item" onclick="switchNav(this,'clanScreen')">
       <div class="nav-icon">🛡️</div><div class="nav-label">Clan</div>
     </div>
-    <div class="nav-item" onclick="switchNav(this,'friendsScreen')">
-      <div class="nav-icon">👥</div><div class="nav-label">Freunde</div>
+    <div class="nav-item" onclick="switchNav(this,'eventsScreen')">
+      <div class="nav-icon">🎉</div><div class="nav-label">Events</div>
     </div>
   </div>
 </div>
@@ -853,8 +853,8 @@ body{
     <div class="nav-item active" onclick="switchNav(this,'clanScreen')">
       <div class="nav-icon">🛡️</div><div class="nav-label">Clan</div>
     </div>
-    <div class="nav-item" onclick="switchNav(this,'friendsScreen')">
-      <div class="nav-icon">👥</div><div class="nav-label">Freunde</div>
+    <div class="nav-item" onclick="switchNav(this,'eventsScreen')">
+      <div class="nav-icon">🎉</div><div class="nav-label">Events</div>
     </div>
   </div>
 </div>
@@ -903,8 +903,8 @@ body{
     <div class="nav-item" onclick="switchNav(this,'clanScreen')">
       <div class="nav-icon">🛡️</div><div class="nav-label">Clan</div>
     </div>
-    <div class="nav-item active" onclick="switchNav(this,'friendsScreen')">
-      <div class="nav-icon">👥</div><div class="nav-label">Freunde</div>
+    <div class="nav-item" onclick="switchNav(this,'eventsScreen')">
+      <div class="nav-icon">🎉</div><div class="nav-label">Events</div>
     </div>
   </div>
 </div>
@@ -988,8 +988,8 @@ body{
     <div class="nav-item" onclick="switchNav(this,'clanScreen')">
       <div class="nav-icon">🛡️</div><div class="nav-label">Clan</div>
     </div>
-    <div class="nav-item active" onclick="switchNav(this,'friendsScreen')">
-      <div class="nav-icon">👥</div><div class="nav-label">Freunde</div>
+    <div class="nav-item" onclick="switchNav(this,'eventsScreen')">
+      <div class="nav-icon">🎉</div><div class="nav-label">Events</div>
     </div>
   </div>
 </div>
@@ -1203,7 +1203,7 @@ function switchNav(navItem, screenId){
   var allNavs = document.querySelectorAll('.bottom-nav .nav-item');
   allNavs.forEach(function(n){ n.classList.remove('active'); });
 
-  var parent = navItem.closest('.bottom-nav');
+  var parent = navItem && navItem.closest('.bottom-nav');
   if(parent){
     var siblings = parent.querySelectorAll('.nav-item');
     var idx = Array.from(siblings).indexOf(navItem);
