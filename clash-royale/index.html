@@ -1485,7 +1485,7 @@ function startBattle(){
       side:side, kind:kind, x:x, y:y,
       hp:hp, maxhp:hp,
       range: king ? 130 : 145, dmg:dmg, atk:0.8, cd:0,
-      r:26, dead:false, active: king ? false : true
+      r:40, dead:false, active: king ? false : true
     };
   }
   var towers = [
@@ -1603,7 +1603,7 @@ function deployTroop(side, card, st, x, y){
       speed: st.speed, atk: st.atk, cd: 0.3,
       fly: !!st.fly, air: !!st.air, bld: !!st.bld, splash: st.splash||0,
       building: !!st.building, life: st.life||0, spawns: st.spawns||null, spawnCd:3,
-      r: (st.count>4?7:11), target:null, dead:false,
+      r: (st.count>4?11:18), target:null, dead:false,
       vx:0, vy:0,
     });
   }
