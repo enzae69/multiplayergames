@@ -1321,7 +1321,7 @@ function startBattle(){
     return {
       side:side, kind:kind, x:x, y:y,
       hp: king ? 3200 : 1700, maxhp: king ? 3200 : 1700,
-      range: king ? 120 : 130, dmg: king ? 60 : 55, atk:0.8, cd:0,
+      range: king ? 105 : 100, dmg: king ? 60 : 55, atk:0.8, cd:0,
       r:26, dead:false, active: king ? false : true // king activates when a crown falls or it's hit
     };
   }
@@ -1378,9 +1378,17 @@ function onArenaTap(e){
   if(state.elixir < card.elixir){ showToast('💜 Nicht genug Elixir!'); return; }
 
   // Troops only on player half (below river); spells anywhere
+  // Exception: if an enemy crown tower is dead, allow placing in that lane's enemy half
   if(!st.spell && y < B.riverBot + 4){
-    showToast('⬇️ Nur in deiner Hälfte!');
-    return;
+    var inEnemyHalf = y < B.riverTop;
+    var nearLeft = Math.abs(x - B.laneL) < Math.abs(x - B.laneR);
+    var eCrownL = B.towers.find(function(t){ return t.side==='e' && t.kind==='crown' && Math.abs(t.x - B.laneL) < 10; });
+    var eCrownR = B.towers.find(function(t){ return t.side==='e' && t.kind==='crown' && Math.abs(t.x - B.laneR) < 10; });
+    var relevantCrownDead = nearLeft ? (eCrownL && eCrownL.dead) : (eCrownR && eCrownR.dead);
+    if(!inEnemyHalf || !relevantCrownDead){
+      showToast('⬇️ Nur in deiner Hälfte!');
+      return;
+    }
   }
 
   state.elixir -= card.elixir; state.elixirF -= card.elixir; renderElixir();
