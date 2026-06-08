@@ -1266,7 +1266,7 @@ var TROOP_STATS = {
   'Zap':           {spell:true, dmg:90,  radius:58},
   'Arrows':        {spell:true, dmg:140, radius:82},
   'Wizard King':   {hp:520, dmg:120, range:115, speed:42, atk:1.4, count:1, air:true, splash:30},
-  'Sparky':        {hp:900, dmg:500, range:130, speed:30, atk:3.5, count:1, splash:30},
+  'Sparky':        {hp:900, dmg:280, range:130, speed:30, atk:5.0, count:1, splash:30},
   'Magic Archer':  {hp:300, dmg:70,  range:140, speed:42, atk:1.1, count:1, air:true},
   'Golem':         {hp:2400,dmg:130, range:24,  speed:28, atk:2.0, count:1, bld:true},
   'Witch':         {hp:480, dmg:55,  range:105, speed:42, atk:1.1, count:1, air:true, splash:28},
@@ -1290,10 +1290,10 @@ var TROOP_STATS = {
 function statFor(name){ return TROOP_STATS[name] || {hp:500,dmg:70,range:22,speed:45,atk:1.2,count:1}; }
 
 var ENEMY_DECK = [
-  {emoji:'🦣',name:'Giant'},      {emoji:'🎯',name:'Enzae Pimmelshot'},
-  {emoji:'⚔️',name:'Knight'},     {emoji:'🏹',name:'Archers'},
-  {emoji:'💥',name:'Fireball'},   {emoji:'🐉',name:'Baby Dragon'},
-  {emoji:'🐊',name:'Skeleton Army'},{emoji:'🏇',name:'Matafaka Rider'},
+  {emoji:'🦣',name:'Giant',elixir:5},      {emoji:'🎯',name:'Enzae Pimmelshot',elixir:4},
+  {emoji:'⚔️',name:'Knight',elixir:3},     {emoji:'🏹',name:'Archers',elixir:3},
+  {emoji:'💥',name:'Fireball',elixir:4},   {emoji:'🐉',name:'Baby Dragon',elixir:4},
+  {emoji:'🐊',name:'Skeleton Army',elixir:3},{emoji:'🏇',name:'Matafaka Rider',elixir:4},
 ];
 
 // Engine state
@@ -1341,7 +1341,7 @@ function startBattle(){
     towers:towers, units:[], projs:[], fx:[],
     time:180, elixir:5, eElixir:5,
     selected:-1, raf:null, last:0, acc:0,
-    eAcc:0, eNext:2 + Math.random()*2,
+    eAcc:0, eNext:1.5 + Math.random()*1.5,
     pCrowns:0, eCrowns:0, over:false,
   };
 
@@ -1350,6 +1350,9 @@ function startBattle(){
   B.eElixirF = 5; B.eElixir = 5;
   battleHand = MY_DECK.slice(0,4);
   battleNext = MY_DECK.slice();
+  var eShuffle = ENEMY_DECK.slice().sort(function(){ return Math.random()-0.5; });
+  eBattleHand = eShuffle.slice(0,4);
+  eBattleNext = eShuffle.slice();
 
   renderElixir(); renderBattleHand(); updateTimer();
   updateCrowns();
@@ -1365,6 +1368,7 @@ function startBattle(){
 }
 
 var battleHand = [], battleNext = [];
+var eBattleHand = [], eBattleNext = [];
 
 // ── DEPLOY ────────────────────────────────────────────────────────
 function onArenaTap(e){
@@ -1459,7 +1463,7 @@ function battleLoop(now){
 
   // Enemy AI
   B.eAcc += dt;
-  if(B.eAcc >= B.eNext){ B.eAcc = 0; B.eNext = 2.2 + Math.random()*3.2; enemyPlay(); }
+  if(B.eAcc >= B.eNext){ B.eAcc = 0; B.eNext = 1.5 + Math.random()*2.0; enemyPlay(); }
 
   updateUnits(dt);
   updateTowers(dt);
@@ -1650,14 +1654,24 @@ function updateFx(dt){
 }
 
 // ── ENEMY AI ──────────────────────────────────────────────────────
+function enemyRotateHand(idx){
+  var played = eBattleHand[idx];
+  eBattleNext = eBattleNext.filter(function(c){ return c !== played; });
+  eBattleNext.push(played);
+  eBattleHand = eBattleNext.slice(0, 4);
+}
+
 function enemyPlay(){
-  // choose an affordable card
-  var pool = ENEMY_DECK.filter(function(c){ return MY_DECK_ELIX(c) <= B.eElixir; });
-  if(!pool.length) return;
-  var card = pool[Math.floor(Math.random()*pool.length)];
+  // find an affordable card in hand
+  var idxList = [];
+  for(var i=0;i<eBattleHand.length;i++){
+    if(eBattleHand[i].elixir <= B.eElixir) idxList.push(i);
+  }
+  if(!idxList.length) return;
+  var idx = idxList[Math.floor(Math.random()*idxList.length)];
+  var card = eBattleHand[idx];
   var st = statFor(card.name);
-  var cost = MY_DECK_ELIX(card);
-  B.eElixirF -= cost; B.eElixir = Math.floor(B.eElixirF);
+  B.eElixirF -= card.elixir; B.eElixir = Math.floor(B.eElixirF);
 
   // pick a lane; react to player units sometimes
   var lane = Math.random()<0.5 ? B.laneL : B.laneR;
@@ -1667,20 +1681,15 @@ function enemyPlay(){
     lane = avg < B.W/2 ? B.laneL : B.laneR;
   }
   var x = lane + (Math.random()*30-15);
-  var y = B.riverTop * (0.3 + Math.random()*0.3); // upper half
+  var y = B.riverTop * (0.3 + Math.random()*0.3);
 
   if(st.spell){
-    // aim spell at densest player cluster
     var pts = B.units.filter(function(u){return u.side==='p';});
-    if(pts.length){ var c=pts[0]; castSpell('e', st, c.x, c.y, card.emoji); }
+    if(pts.length){ var cx=pts[0]; castSpell('e', st, cx.x, cx.y, card.emoji); }
   } else {
     deployTroop('e', card, st, x, y);
   }
-}
-// elixir cost lookup for enemy cards (matches main deck costs by name)
-function MY_DECK_ELIX(card){
-  var byName={Giant:5,'Enzae Pimmelshot':4,Knight:3,Archers:3,Fireball:4,'Baby Dragon':4,'Skeleton Army':3,'Matafaka Rider':4};
-  return byName[card.name] || 4;
+  enemyRotateHand(idx);
 }
 
 // ── DRAW ──────────────────────────────────────────────────────────
