@@ -681,8 +681,8 @@ body{
       <div class="nav-label">Clan</div>
     </div>
     <div class="nav-item" onclick="switchNav(this,'eventsScreen')">
-      <div class="nav-icon">🎉</div>
-      <div class="nav-label">Events</div>
+      <div class="nav-icon">👥</div>
+      <div class="nav-label">Freunde</div>
     </div>
   </div>
 </div>
@@ -732,8 +732,8 @@ body{
     <div class="nav-item" onclick="switchNav(this,'clanScreen')">
       <div class="nav-icon">🛡️</div><div class="nav-label">Clan</div>
     </div>
-    <div class="nav-item" onclick="switchNav(this,'eventsScreen')">
-      <div class="nav-icon">🎉</div><div class="nav-label">Events</div>
+    <div class="nav-item" onclick="switchNav(this,'friendsScreen')">
+      <div class="nav-icon">👥</div><div class="nav-label">Freunde</div>
     </div>
   </div>
 </div>
@@ -812,8 +812,8 @@ body{
     <div class="nav-item" onclick="switchNav(this,'clanScreen')">
       <div class="nav-icon">🛡️</div><div class="nav-label">Clan</div>
     </div>
-    <div class="nav-item" onclick="switchNav(this,'eventsScreen')">
-      <div class="nav-icon">🎉</div><div class="nav-label">Events</div>
+    <div class="nav-item" onclick="switchNav(this,'friendsScreen')">
+      <div class="nav-icon">👥</div><div class="nav-label">Freunde</div>
     </div>
   </div>
 </div>
@@ -853,13 +853,63 @@ body{
     <div class="nav-item active" onclick="switchNav(this,'clanScreen')">
       <div class="nav-icon">🛡️</div><div class="nav-label">Clan</div>
     </div>
-    <div class="nav-item" onclick="switchNav(this,'eventsScreen')">
-      <div class="nav-icon">🎉</div><div class="nav-label">Events</div>
+    <div class="nav-item" onclick="switchNav(this,'friendsScreen')">
+      <div class="nav-icon">👥</div><div class="nav-label">Freunde</div>
     </div>
   </div>
 </div>
 
-<!-- ════════════════════════════════════ EVENTS SCREEN ════════════════════════════════════ -->
+<!-- ════════════════════════════════════ FRIENDS SCREEN ════════════════════════════════════ -->
+<div class="screen off" id="friendsScreen">
+  <div class="cards-header">
+    <button style="background:none;border:none;color:rgba(255,255,255,.6);font-size:22px;cursor:pointer;line-height:1" onclick="goHome()">←</button>
+    <div class="screen-title">FREUNDE</div>
+    <div id="friendsLoginHint" style="font-size:11px;color:rgba(255,255,255,.4)"></div>
+  </div>
+
+  <!-- Login prompt (shown when not logged in) -->
+  <div id="friendsLoginBox" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:30px 20px;text-align:center">
+    <div style="font-size:40px">🔐</div>
+    <div style="font-size:15px;font-weight:700;color:#fff">Melde dich an, um Freunde hinzuzufügen</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.5)">Nutze deinen Account aus dem Hauptmenü</div>
+    <input id="frLoginUser" placeholder="Benutzername" style="width:100%;max-width:260px;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:14px;box-sizing:border-box">
+    <input id="frLoginPass" type="password" placeholder="Passwort" style="width:100%;max-width:260px;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:14px;box-sizing:border-box">
+    <button onclick="frLogin()" style="background:linear-gradient(135deg,var(--cr-gold),var(--cr-gold2));border:none;border-radius:10px;padding:10px 30px;font-size:14px;font-weight:900;color:#3d1a00;cursor:pointer;letter-spacing:1px">ANMELDEN</button>
+  </div>
+
+  <!-- Friends UI (shown when logged in) -->
+  <div id="friendsMain" style="display:none;flex-direction:column;height:calc(100% - 100px);overflow-y:auto">
+    <div style="padding:12px 16px;display:flex;gap:8px">
+      <input id="addFriendInput" placeholder="Freund suchen..." style="flex:1;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:13px">
+      <button onclick="addFriend()" style="background:linear-gradient(135deg,#3a8fff,#1a5fd8);border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;color:#fff;cursor:pointer">+ ADD</button>
+    </div>
+    <div style="padding:0 16px 8px;font-size:11px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:1px">FREUNDESLISTE</div>
+    <div id="friendsList" style="padding:0 16px;display:flex;flex-direction:column;gap:8px"></div>
+    <div style="padding:12px 16px 4px;font-size:11px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:1px">AUSSTEHENDE ANFRAGEN</div>
+    <div id="pendingList" style="padding:0 16px;display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="switchNav(this,'homeScreen')">
+      <div class="nav-icon">🏠</div><div class="nav-label">Home</div>
+    </div>
+    <div class="nav-item" onclick="switchNav(this,'cardsScreen')">
+      <div class="nav-icon">🃏</div><div class="nav-label">Karten</div>
+    </div>
+    <div class="nav-item" onclick="switchNav(this,'shopScreen')">
+      <div class="nav-icon">🛒</div><div class="nav-label">Shop</div>
+    </div>
+    <div class="nav-item" onclick="switchNav(this,'clanScreen')">
+      <div class="nav-icon">🛡️</div><div class="nav-label">Clan</div>
+    </div>
+    <div class="nav-item active" onclick="switchNav(this,'friendsScreen')">
+      <div class="nav-icon">👥</div><div class="nav-label">Freunde</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ EVENTS SCREEN (kept for reference) ════════════════════════════════════ -->
 <div class="screen off" id="eventsScreen">
   <div class="cards-header">
     <button style="background:none;border:none;color:rgba(255,255,255,.6);font-size:22px;cursor:pointer;line-height:1" onclick="goHome()">←</button>
@@ -944,6 +994,19 @@ body{
   </div>
 </div>
 
+<!-- ════ INCOMING INVITE OVERLAY ════ -->
+<div id="inviteOverlay" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.7);align-items:center;justify-content:center">
+  <div style="background:linear-gradient(145deg,#1a0a3a,#2a1060);border:2px solid rgba(100,60,255,.5);border-radius:20px;padding:28px 24px;max-width:300px;width:90%;text-align:center">
+    <div style="font-size:36px">⚔️</div>
+    <div style="font-size:18px;font-weight:900;color:#fff;margin:8px 0 4px">KAMPFEINLADUNG</div>
+    <div id="inviteFromText" style="font-size:14px;color:rgba(255,255,255,.7);margin-bottom:20px"></div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button onclick="declineInvite()" style="flex:1;padding:12px;border:none;border-radius:10px;background:rgba(255,60,60,.25);color:#ff6b6b;font-size:14px;font-weight:700;cursor:pointer">ABLEHNEN</button>
+      <button onclick="acceptInvite()" style="flex:1;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#3a8fff,#1a5fd8);color:#fff;font-size:14px;font-weight:900;cursor:pointer">ANNEHMEN ⚔️</button>
+    </div>
+  </div>
+</div>
+
 <!-- ════════════════════════════════════ BATTLE SCREEN ════════════════════════════════════ -->
 <div class="screen off" id="battleScreen">
   <div class="battle-arena">
@@ -1005,6 +1068,7 @@ body{
   <div class="tr-scroll" id="trScroll"></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 'use strict';
 
@@ -2150,9 +2214,343 @@ function init(){
   syncTopBar();
   renderCards();
   renderClan();
+  frCheckSession();
 }
 
 init();
+
+// ══════════════════════════════════════════════════════════════════
+// MULTIPLAYER – Friends & Invites via Supabase
+// ══════════════════════════════════════════════════════════════════
+var _sb = null;
+var _frUser = null;      // logged-in username
+var _inviteSub = null;   // realtime subscription for incoming invites
+var _matchSub  = null;   // realtime subscription for match state
+var _currentInvite = null; // { id, match_id, from_user }
+var _matchId = null;
+var _mpRole  = null;     // 'host' | 'guest'
+
+var SUPA_URL = 'https://ozvyymrqibpyqccgszlz.supabase.co';
+var SUPA_KEY = 'sb_publishable_30WmZF8d8h_rUSrTGtBwnQ_Kn9gquwL';
+
+function getSb(){
+  if(_sb) return _sb;
+  if(typeof supabase !== 'undefined') _sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+  return _sb;
+}
+
+// ── Session ─────────────────────────────────────────────────────
+function frCheckSession(){
+  var saved = localStorage.getItem('authUser');
+  if(saved){ _frUser = saved; frOnLogin(); }
+}
+
+async function frLogin(){
+  var u = document.getElementById('frLoginUser').value.trim();
+  var p = document.getElementById('frLoginPass').value.trim();
+  if(!u || !p){ showToast('⚠️ Name und Passwort eingeben!'); return; }
+  var sb = getSb(); if(!sb){ showToast('⚠️ Kein Netz'); return; }
+  // hash like the main menu does
+  var enc = new TextEncoder();
+  var buf = await crypto.subtle.digest('SHA-256', enc.encode(p));
+  var hash = Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+  var res = await sb.from('players').select('username').eq('username',u).eq('password_hash',hash).single();
+  if(res.error || !res.data){ showToast('❌ Falsche Zugangsdaten'); return; }
+  _frUser = u;
+  localStorage.setItem('authUser', u);
+  frOnLogin();
+}
+
+function frOnLogin(){
+  document.getElementById('friendsLoginBox').style.display = 'none';
+  document.getElementById('friendsMain').style.display    = 'flex';
+  document.getElementById('friendsLoginHint').textContent = _frUser;
+  frLoadFriends();
+  frSubscribeInvites();
+}
+
+function frShowScreen(){
+  if(_frUser){
+    document.getElementById('friendsLoginBox').style.display = 'none';
+    document.getElementById('friendsMain').style.display    = 'flex';
+    frLoadFriends();
+  } else {
+    document.getElementById('friendsLoginBox').style.display = 'flex';
+    document.getElementById('friendsMain').style.display    = 'none';
+  }
+}
+
+// Override switchNav to trigger frShowScreen
+var _origSwitchNav = switchNav;
+switchNav = function(navItem, screenId){
+  _origSwitchNav(navItem, screenId);
+  if(screenId === 'friendsScreen') frShowScreen();
+};
+
+// ── Friend List ──────────────────────────────────────────────────
+async function frLoadFriends(){
+  var sb = getSb(); if(!sb || !_frUser) return;
+  var res = await sb.from('cr_friends')
+    .select('*')
+    .or('from_user.eq.'+_frUser+',to_user.eq.'+_frUser);
+  if(res.error) return;
+  var rows = res.data || [];
+
+  var accepted = rows.filter(function(r){ return r.status==='accepted'; });
+  var pending  = rows.filter(function(r){ return r.status==='pending' && r.to_user===_frUser; });
+
+  var fl = document.getElementById('friendsList');
+  fl.innerHTML = accepted.length ? '' : '<div style="color:rgba(255,255,255,.3);font-size:13px;padding:8px 0">Noch keine Freunde</div>';
+  accepted.forEach(function(r){
+    var other = r.from_user===_frUser ? r.to_user : r.from_user;
+    var div = document.createElement('div');
+    div.style.cssText = 'display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border-radius:12px;padding:10px 14px';
+    div.innerHTML = '<div style="font-size:22px">👤</div>'
+      +'<div style="flex:1;font-size:14px;font-weight:700;color:#fff">'+other+'</div>'
+      +'<button onclick="sendInvite(\''+other+'\')" style="border:none;border-radius:8px;background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff;font-size:12px;font-weight:700;padding:6px 12px;cursor:pointer">⚔️ 1v1</button>';
+    fl.appendChild(div);
+  });
+
+  var pl = document.getElementById('pendingList');
+  pl.innerHTML = pending.length ? '' : '<div style="color:rgba(255,255,255,.3);font-size:13px;padding:8px 0">Keine Anfragen</div>';
+  pending.forEach(function(r){
+    var div = document.createElement('div');
+    div.id = 'fr_'+r.id;
+    div.style.cssText = 'display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border-radius:12px;padding:10px 14px';
+    div.innerHTML = '<div style="font-size:22px">👤</div>'
+      +'<div style="flex:1;font-size:13px;color:rgba(255,255,255,.8)">'+r.from_user+' möchte befreundet sein</div>'
+      +'<button onclick="frAccept('+r.id+',\''+r.from_user+'\')" style="border:none;border-radius:8px;background:linear-gradient(135deg,#27ae60,#1a7a42);color:#fff;font-size:12px;font-weight:700;padding:6px 10px;cursor:pointer">✓</button>'
+      +'<button onclick="frDeclineFr('+r.id+')" style="border:none;border-radius:8px;background:rgba(255,60,60,.2);color:#ff6b6b;font-size:12px;font-weight:700;padding:6px 10px;cursor:pointer">✕</button>';
+    pl.appendChild(div);
+  });
+}
+
+async function addFriend(){
+  var inp = document.getElementById('addFriendInput');
+  var target = inp.value.trim();
+  if(!target){ showToast('⚠️ Name eingeben'); return; }
+  if(target === _frUser){ showToast('⚠️ Du kannst dich nicht selbst adden'); return; }
+  var sb = getSb(); if(!sb) return;
+  // Check user exists
+  var chk = await sb.from('players').select('username').eq('username', target).single();
+  if(chk.error || !chk.data){ showToast('❌ Spieler nicht gefunden'); return; }
+  // Check existing
+  var ex = await sb.from('cr_friends').select('id').or(
+    'and(from_user.eq.'+_frUser+',to_user.eq.'+target+'),and(from_user.eq.'+target+',to_user.eq.'+_frUser+')').maybeSingle();
+  if(ex.data){ showToast('ℹ️ Bereits befreundet oder Anfrage läuft'); return; }
+  var ins = await sb.from('cr_friends').insert({from_user:_frUser, to_user:target, status:'pending'});
+  if(ins.error){ showToast('❌ Fehler: '+ins.error.message); return; }
+  inp.value = '';
+  showToast('✅ Anfrage gesendet an '+target);
+  frLoadFriends();
+}
+
+async function frAccept(id, fromUser){
+  var sb = getSb(); if(!sb) return;
+  await sb.from('cr_friends').update({status:'accepted'}).eq('id', id);
+  showToast('✅ '+fromUser+' ist jetzt dein Freund!');
+  frLoadFriends();
+}
+
+async function frDeclineFr(id){
+  var sb = getSb(); if(!sb) return;
+  await sb.from('cr_friends').delete().eq('id', id);
+  frLoadFriends();
+}
+
+// ── Invite ───────────────────────────────────────────────────────
+async function sendInvite(toUser){
+  if(!_frUser){ showToast('⚠️ Nicht eingeloggt'); return; }
+  var sb = getSb(); if(!sb) return;
+  var matchId = _frUser + '_' + toUser + '_' + Date.now();
+  // Create match row
+  await sb.from('cr_matches').insert({match_id:matchId, host:_frUser, state:{phase:'waiting'}});
+  // Send invite
+  var res = await sb.from('cr_invites').insert({from_user:_frUser, to_user:toUser, match_id:matchId, status:'pending'});
+  if(res.error){ showToast('❌ Einladung fehlgeschlagen'); return; }
+  _matchId = matchId;
+  _mpRole  = 'host';
+  showToast('📨 Einladung an '+toUser+' gesendet... warte...');
+  // Subscribe to match changes to detect guest joining
+  mpSubscribeMatch(matchId, function(payload){
+    var newState = payload.new && payload.new.state;
+    if(newState && newState.phase === 'starting'){
+      showToast('✅ '+toUser+' hat angenommen! Starte...');
+      setTimeout(function(){ startMultiplayerBattle(matchId, 'host', toUser); }, 1000);
+    }
+  });
+}
+
+function frSubscribeInvites(){
+  if(!_frUser) return;
+  var sb = getSb(); if(!sb) return;
+  if(_inviteSub) sb.removeChannel(_inviteSub);
+  _inviteSub = sb.channel('cr_invites_'+_frUser)
+    .on('postgres_changes', {event:'INSERT', schema:'public', table:'cr_invites', filter:'to_user=eq.'+_frUser},
+      function(payload){
+        var inv = payload.new;
+        if(!inv || inv.status !== 'pending') return;
+        _currentInvite = {id: inv.id, match_id: inv.match_id, from_user: inv.from_user};
+        showInviteOverlay(inv.from_user);
+      })
+    .subscribe();
+}
+
+function showInviteOverlay(fromUser){
+  document.getElementById('inviteFromText').textContent = fromUser + ' lädt dich zum 1v1 ein!';
+  document.getElementById('inviteOverlay').style.display = 'flex';
+}
+
+function declineInvite(){
+  document.getElementById('inviteOverlay').style.display = 'none';
+  if(_currentInvite){
+    var sb = getSb();
+    if(sb) sb.from('cr_invites').update({status:'declined'}).eq('id',_currentInvite.id).then(function(){});
+    _currentInvite = null;
+  }
+}
+
+async function acceptInvite(){
+  document.getElementById('inviteOverlay').style.display = 'none';
+  if(!_currentInvite) return;
+  var inv = _currentInvite; _currentInvite = null;
+  var sb = getSb(); if(!sb) return;
+  await sb.from('cr_invites').update({status:'accepted'}).eq('id', inv.id);
+  // Signal host by updating match state
+  await sb.from('cr_matches').update({state:{phase:'starting'}, guest:_frUser}).eq('match_id', inv.match_id);
+  _matchId = inv.match_id;
+  _mpRole  = 'guest';
+  showToast('⚔️ Starte Multiplayer...');
+  setTimeout(function(){ startMultiplayerBattle(inv.match_id, 'guest', inv.from_user); }, 1200);
+}
+
+// ── Multiplayer Battle ───────────────────────────────────────────
+var _mpOpponent = null;
+var _mpSyncAcc  = 0;
+var _mpLastSeq  = 0;
+
+function mpSubscribeMatch(matchId, cb){
+  var sb = getSb(); if(!sb) return;
+  if(_matchSub) sb.removeChannel(_matchSub);
+  _matchSub = sb.channel('cr_match_'+matchId)
+    .on('postgres_changes', {event:'UPDATE', schema:'public', table:'cr_matches', filter:'match_id=eq.'+matchId}, cb)
+    .subscribe();
+}
+
+function startMultiplayerBattle(matchId, role, opponentName){
+  _matchId    = matchId;
+  _mpRole     = role;
+  _mpOpponent = opponentName;
+  _mpSyncAcc  = 0;
+  _mpLastSeq  = 0;
+  // Patch enemyPlay so it does nothing — opponent controls enemy
+  window._mpActive = true;
+  startBattle();
+  // After battle starts, subscribe to match updates
+  var sb = getSb();
+  if(sb){
+    if(_matchSub) sb.removeChannel(_matchSub);
+    _matchSub = sb.channel('cr_match_live_'+matchId)
+      .on('postgres_changes', {event:'UPDATE', schema:'public', table:'cr_matches', filter:'match_id=eq.'+matchId},
+        function(payload){
+          var ms = payload.new && payload.new.state;
+          if(!ms) return;
+          mpApplyRemoteState(ms);
+        })
+      .subscribe();
+  }
+}
+
+// Push local state every ~0.5s
+function mpPushState(){
+  if(!window._mpActive || !B || !_matchId) return;
+  var sb = getSb(); if(!sb) return;
+  var myKey  = _mpRole === 'host' ? 'host' : 'guest';
+  var myData = {
+    seq: ++_mpLastSeq,
+    elixir: state.elixirF,
+    units: B.units.filter(function(u){ return u.side==='p'; }).map(function(u){
+      return {uid:u.uid,name:u.name,emoji:u.emoji,x:u.x,y:u.y,hp:u.hp,maxhp:u.maxhp,dead:u.dead};
+    }),
+    towers: B.towers.filter(function(t){ return t.side==='p'; }).map(function(t){
+      return {kind:t.kind,hp:t.hp,dead:t.dead};
+    }),
+    time: B.time,
+  };
+  var patch = {state:{}};
+  patch.state[myKey] = myData;
+  patch.state.phase = 'live';
+  patch.updated_at = new Date().toISOString();
+  sb.from('cr_matches').update(patch).eq('match_id', _matchId).then(function(){});
+}
+
+function mpApplyRemoteState(ms){
+  if(!B || !window._mpActive) return;
+  var remoteKey = _mpRole === 'host' ? 'guest' : 'host';
+  var rd = ms[remoteKey];
+  if(!rd) return;
+  if(rd.seq <= _mpLastSeq && _mpRole !== 'host') return; // skip old
+  // Mirror remote units as enemy units (side 'e'), flip Y axis
+  var H = B.H;
+  // Remove old remote-controlled enemy units
+  B.units = B.units.filter(function(u){ return u.side !== 'e' || u._local; });
+  (rd.units||[]).forEach(function(ru){
+    if(ru.dead) return;
+    B.units.push({
+      uid:ru.uid, side:'e', name:ru.name, emoji:ru.emoji,
+      x:B.W - ru.x, y:H - ru.y,
+      hp:ru.hp, maxhp:ru.maxhp, dmg:0, range:0,
+      speed:0, atk:1, cd:999, fly:false, air:false, bld:false, splash:0,
+      building:false, life:0, r:11, target:null, dead:false, vx:0, vy:0,
+      _remote:true,
+    });
+  });
+  // Sync enemy tower HP
+  if(rd.towers){
+    var eTowers = B.towers.filter(function(t){ return t.side==='e'; });
+    rd.towers.forEach(function(rt, i){
+      if(eTowers[i]){
+        eTowers[i].hp   = rt.hp;
+        eTowers[i].dead = rt.dead;
+        if(rt.dead && !eTowers[i]._wasDead){ eTowers[i]._wasDead=true; B.eCrowns++; }
+      }
+    });
+  }
+  // Sync timer from host
+  if(_mpRole === 'guest' && rd.time !== undefined) B.time = rd.time;
+}
+
+// Hook into battleLoop to push state periodically
+var _origBattleLoopTick = null;
+(function patchLoop(){
+  var origUpdate = window.updateElixir;
+  // We'll inject into the existing acc-based timing — use a separate interval
+})();
+
+// Push state on a timer when MP active
+setInterval(function(){
+  if(window._mpActive && B && !B.over) mpPushState();
+}, 500);
+
+// When battle ends in MP, clean up
+var _origFinishBattle = finishBattle;
+finishBattle = function(surrender){
+  if(window._mpActive){
+    window._mpActive = false;
+    var sb = getSb();
+    if(sb && _matchId) sb.from('cr_matches').update({state:{phase:'done'}}).eq('match_id',_matchId).then(function(){});
+    if(_matchSub && sb) sb.removeChannel(_matchSub);
+    _matchSub = null;
+  }
+  _origFinishBattle(surrender);
+};
+
+// Also suppress enemyPlay when in MP mode (opponent is real player)
+var _origEnemyPlay = enemyPlay;
+enemyPlay = function(){
+  if(window._mpActive) return; // don't run bot AI in multiplayer
+  _origEnemyPlay();
+};
 </script>
 
 <!-- ════ DECK EDITOR OVERLAY ════ -->
