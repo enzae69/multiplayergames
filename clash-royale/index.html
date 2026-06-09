@@ -1162,7 +1162,22 @@ var state = {
   elixirInterval: null,
   battleInterval: null,
   owned: null, // set in init – list of owned card names
+  silversToday: 0,
+  silverResetDay: '',
 };
+
+function getCETDateStr(){
+  // Returns current date string in German timezone (CET/CEST)
+  return new Date().toLocaleDateString('de-DE', {timeZone:'Europe/Berlin'});
+}
+
+function checkSilverReset(){
+  var today = getCETDateStr();
+  if(state.silverResetDay !== today){
+    state.silversToday = 0;
+    state.silverResetDay = today;
+  }
+}
 
 // Cards every player starts with (Arena 0/1 basics)
 var STARTER_CARDS = ['Knight','Archers','Arrows','Goblins','Enzae Pimmelshot','Zap','Barbarians','Matafaka Rider'];
@@ -1197,6 +1212,8 @@ function saveProgress(){
       trophies: state.trophies,
       owned: state.owned,
       deck: MY_DECK.map(function(c){ return c.name; }),
+      silversToday: state.silversToday,
+      silverResetDay: state.silverResetDay,
     }));
   } catch(e){}
 }
@@ -1210,6 +1227,9 @@ function loadProgress(){
     if(typeof d.gold === 'number') state.gold = d.gold;
     if(typeof d.trophies === 'number') state.trophies = d.trophies;
     if(Array.isArray(d.owned) && d.owned.length){ state.owned = d.owned.slice(); }
+    if(typeof d.silversToday === 'number') state.silversToday = d.silversToday;
+    if(typeof d.silverResetDay === 'string') state.silverResetDay = d.silverResetDay;
+    checkSilverReset(); // reset counter if new day
     ensureOwned();
     if(Array.isArray(d.deck) && d.deck.length === 8){
       var allCards = CARDS;
@@ -2119,17 +2139,20 @@ function drawTower(c,t){
 
   c.restore();
 
-  // ── HP bar (outside save/restore, no translate) ───────
+  // ── HP bar (outside save/restore, world coords) ───────
   if(!dead){
-    var bw = isKing ? 70 : 56, bh = 7;
-    var bx = x - bw/2, by = y - th/2 - (isKing ? r*.9+merlonH : r*.7+merlonH) - 18;
-    c.fillStyle='rgba(0,0,0,.7)'; c.fillRect(bx,by,bw,bh);
+    var bw = isKing ? 74 : 60, bh = 8;
+    // Top of tower = y - th/2 - merlonH - poleH (all local), then 10px gap
+    var topOfTower = y - th/2 - merlonH - poleH;
+    var by = topOfTower - 14;
+    var bx = x - bw/2;
+    c.fillStyle='rgba(0,0,0,.75)'; c.fillRect(bx,by,bw,bh);
     var pct=Math.max(0,t.hp/t.maxhp);
     var hpColor = pct>0.5 ? '#2ecc71' : pct>0.25 ? '#f39c12' : '#e74c3c';
     c.fillStyle=hpColor; c.fillRect(bx,by,bw*pct,bh);
-    c.strokeStyle='rgba(255,255,255,.3)'; c.lineWidth=1; c.strokeRect(bx,by,bw,bh);
-    c.fillStyle='#fff'; c.font='bold 9px sans-serif'; c.textAlign='center';
-    c.fillText(Math.ceil(t.hp), x, by-2);
+    c.strokeStyle='rgba(255,255,255,.4)'; c.lineWidth=1; c.strokeRect(bx,by,bw,bh);
+    c.fillStyle='#fff'; c.font='bold 10px sans-serif'; c.textAlign='center';
+    c.fillText(Math.ceil(t.hp)+' HP', x, by-3);
   }
 }
 
@@ -2588,7 +2611,19 @@ function finishBattle(surrender){
     document.getElementById('resultEmoji').textContent='🏆';
     document.getElementById('resultTitle').textContent='SIEG!';
     document.getElementById('resultTitle').style.color='var(--cr-gold)';
-    document.getElementById('resultReward').textContent='+'+dTrophies+' 🏆   +'+randInt(150,400)+' 🪙';
+    // Silver chest: max 6 per day (German timezone), only on win
+    checkSilverReset();
+    var goldReward = randInt(150,400);
+    var silverMsg = '';
+    if(state.silversToday < 6){
+      state.silversToday++;
+      B._earnedSilver = true;
+      silverMsg = '  +🎁 Silbertruhe ('+state.silversToday+'/6)';
+    } else {
+      B._earnedSilver = false;
+      silverMsg = '  ❌ Heute schon 6/6 Silbertruhen';
+    }
+    document.getElementById('resultReward').textContent='+'+dTrophies+' 🏆   +'+goldReward+' 🪙'+silverMsg;
   } else {
     dTrophies=randInt(18,29);
     state.trophies=Math.max(0,state.trophies-dTrophies);
@@ -2606,8 +2641,13 @@ function leaveBattle(){
   document.getElementById('battleResultOv').style.display='none';
   if(window.CR3D) window.CR3D.stop();
   document.getElementById('battleGL').style.display='none';
+  var earnedSilver = B && B._earnedSilver;
   B=null;
   switchNav(document.querySelectorAll('.bottom-nav')[0].querySelector('.nav-item'), 'homeScreen');
+  if(earnedSilver){
+    saveProgress();
+    setTimeout(function(){ openChest('silver'); }, 300);
+  }
 }
 
 function syncTopBar(){
