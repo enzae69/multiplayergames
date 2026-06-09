@@ -866,12 +866,11 @@ body{
 
   <!-- Login prompt (shown when not logged in) -->
   <div id="friendsLoginBox" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:30px 20px;text-align:center">
-    <div style="font-size:40px">🔐</div>
-    <div style="font-size:15px;font-weight:700;color:#fff">Melde dich an, um Freunde hinzuzufügen</div>
-    <div style="font-size:12px;color:rgba(255,255,255,.5)">Nutze deinen Account aus dem Hauptmenü</div>
-    <input id="frLoginUser" placeholder="Benutzername" style="width:100%;max-width:260px;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:14px;box-sizing:border-box">
-    <input id="frLoginPass" type="password" placeholder="Passwort" style="width:100%;max-width:260px;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:14px;box-sizing:border-box">
-    <button onclick="frLogin()" style="background:linear-gradient(135deg,var(--cr-gold),var(--cr-gold2));border:none;border-radius:10px;padding:10px 30px;font-size:14px;font-weight:900;color:#3d1a00;cursor:pointer;letter-spacing:1px">ANMELDEN</button>
+    <div style="font-size:40px">👥</div>
+    <div style="font-size:15px;font-weight:700;color:#fff">Wähle deinen Spielernamen</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.5)">Dein Name ist für Freunde sichtbar</div>
+    <input id="frLoginUser" placeholder="Spielername..." style="width:100%;max-width:260px;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:14px;box-sizing:border-box">
+    <button onclick="frLogin()" style="background:linear-gradient(135deg,var(--cr-gold),var(--cr-gold2));border:none;border-radius:10px;padding:10px 30px;font-size:14px;font-weight:900;color:#3d1a00;cursor:pointer;letter-spacing:1px">LOSLEGEN</button>
   </div>
 
   <!-- Friends UI (shown when logged in) -->
@@ -2033,7 +2032,7 @@ function damageTower(t, dmg){
     if(t.kind==='crown'){
       B.towers.forEach(function(o){ if(o.side===t.side && o.kind==='king') o.active=true; });
     }
-    if(t.kind==='king'){ finishBattle(); }
+    if(t.kind==='king'){ finishBattle(); return; }
   }
 }
 
@@ -2994,15 +2993,8 @@ function frCheckSession(){
 
 async function frLogin(){
   var u = document.getElementById('frLoginUser').value.trim();
-  var p = document.getElementById('frLoginPass').value.trim();
-  if(!u || !p){ showToast('⚠️ Name und Passwort eingeben!'); return; }
-  var sb = getSb(); if(!sb){ showToast('⚠️ Kein Netz'); return; }
-  // hash like the main menu does
-  var enc = new TextEncoder();
-  var buf = await crypto.subtle.digest('SHA-256', enc.encode(p));
-  var hash = Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
-  var res = await sb.from('players').select('username').eq('username',u).eq('password_hash',hash).single();
-  if(res.error || !res.data){ showToast('❌ Falsche Zugangsdaten'); return; }
+  if(!u){ showToast('⚠️ Name eingeben!'); return; }
+  if(u.length < 3){ showToast('⚠️ Name muss mindestens 3 Zeichen haben'); return; }
   _frUser = u;
   localStorage.setItem('authUser', u);
   frOnLogin();
@@ -3077,18 +3069,19 @@ async function addFriend(){
   var target = inp.value.trim();
   if(!target){ showToast('⚠️ Name eingeben'); return; }
   if(target === _frUser){ showToast('⚠️ Du kannst dich nicht selbst adden'); return; }
-  var sb = getSb(); if(!sb) return;
-  // Check user exists
-  var chk = await sb.from('players').select('username').eq('username', target).single();
-  if(chk.error || !chk.data){ showToast('❌ Spieler nicht gefunden'); return; }
-  // Check existing
-  var ex = await sb.from('cr_friends').select('id').or(
-    'and(from_user.eq.'+_frUser+',to_user.eq.'+target+'),and(from_user.eq.'+target+',to_user.eq.'+_frUser+')').maybeSingle();
-  if(ex.data){ showToast('ℹ️ Bereits befreundet oder Anfrage läuft'); return; }
+  var sb = getSb(); if(!sb){ showToast('⚠️ Nicht eingeloggt'); return; }
+  // Check for existing relationship
+  var ex = await sb.from('cr_friends').select('id,status').or(
+    'and(from_user.eq.'+_frUser+',to_user.eq.'+target+'),and(from_user.eq.'+target+',to_user.eq.'+_frUser+')'
+  ).maybeSingle();
+  if(ex.data){
+    showToast(ex.data.status==='accepted' ? 'ℹ️ Ihr seid bereits Freunde!' : 'ℹ️ Anfrage bereits gesendet!');
+    return;
+  }
   var ins = await sb.from('cr_friends').insert({from_user:_frUser, to_user:target, status:'pending'});
   if(ins.error){ showToast('❌ Fehler: '+ins.error.message); return; }
   inp.value = '';
-  showToast('✅ Anfrage gesendet an '+target);
+  showToast('✅ Freundschaftsanfrage an '+target+' gesendet!');
   frLoadFriends();
 }
 
