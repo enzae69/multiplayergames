@@ -1663,8 +1663,8 @@ function startBattle(){
     };
   }
   // Tower setback from each player's edge — identical for both sides (mirrored)
-  var crownBack = 0.20; // crown towers: 20% in from the edge
-  var kingBack  = 0.10; // king tower:  10% in from the edge
+  var crownBack = 0.15; // crown towers: 15% in from the edge (further back = longer path)
+  var kingBack  = 0.06; // king tower:   6% in from the edge
   var towers = [
     // enemy (top): measured from top edge
     tower('e','crown', laneL, H*crownBack),
