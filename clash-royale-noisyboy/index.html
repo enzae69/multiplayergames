@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Clash Royale</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:#0a0a1a;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+canvas{display:block;touch-action:none}
+#ui{position:fixed;inset:0;pointer-events:none;z-index:10}
+
+/* Overlays */
+.overlay{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+#splashScreen{background:linear-gradient(180deg,#1a0a2e 0%,#0d0619 50%,#060310 100%)}
+#splashScreen h1{font-size:clamp(28px,7vw,52px);font-weight:900;letter-spacing:4px;color:#f5c518;text-shadow:0 0 30px rgba(245,197,24,.6),0 0 60px rgba(245,197,24,.3)}
+#splashScreen .sub{font-size:13px;letter-spacing:3px;color:rgba(255,255,255,.4)}
+.btn{background:linear-gradient(135deg,#f5c518,#e8a400);border:none;border-radius:14px;padding:14px 40px;font-size:15px;font-weight:900;color:#3d1a00;cursor:pointer;letter-spacing:2px;transition:transform .1s}
+.btn:active{transform:scale(.95)}
+.btn.secondary{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)}
+
+#resultScreen{background:rgba(0,0,0,.92);backdrop-filter:blur(8px)}
+#resultScreen h2{font-size:42px;font-weight:900;letter-spacing:4px}
+#resultScreen .crowns{font-size:28px;letter-spacing:6px}
+#resultScreen .reward{font-size:14px;color:rgba(255,255,255,.6);letter-spacing:2px}
+
+/* In-game HUD */
+#hud{position:fixed;top:0;left:0;right:0;pointer-events:none;z-index:20;display:none}
+#timerBox{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);border:2px solid rgba(255,255,255,.2);border-radius:20px;padding:5px 18px;font-size:20px;font-weight:900;color:#fff;letter-spacing:3px}
+#timerBox.urgent{color:#e74c3c;animation:pulse .5s infinite alternate}
+@keyframes pulse{from{transform:translateX(-50%) scale(1)}to{transform:translateX(-50%) scale(1.06)}}
+#crownTrack{position:absolute;top:10px;left:50%;transform:translateX(-50%);margin-top:38px;display:flex;gap:20px;font-size:13px;font-weight:900;pointer-events:none}
+.crown-box{display:flex;align-items:center;gap:4px;background:rgba(0,0,0,.5);border-radius:20px;padding:3px 10px}
+
+/* Card hand */
+#handArea{position:fixed;bottom:0;left:0;right:0;pointer-events:auto;z-index:20;display:none;flex-direction:column;gap:0}
+#elixirBar{display:flex;gap:3px;padding:4px 12px;background:rgba(0,0,0,.5);justify-content:center;align-items:center}
+.elixir-pip{width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);transition:background .2s}
+.elixir-pip.filled{background:#c039ff;border-color:#e060ff;box-shadow:0 0 6px rgba(192,57,255,.6)}
+#elixirNum{font-size:13px;font-weight:900;color:#e060ff;margin-left:6px;min-width:18px}
+#cardHand{display:flex;gap:6px;padding:6px 12px 8px;background:rgba(0,0,0,.6);justify-content:center}
+.hcard{width:64px;height:82px;border-radius:10px;border:2px solid rgba(255,255,255,.25);background:linear-gradient(160deg,#1e1e3a,#0d0d20);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative;transition:transform .1s,box-shadow .1s;user-select:none}
+.hcard:active{transform:scale(.92)}
+.hcard.selected{border-color:#64c8ff;box-shadow:0 0 16px rgba(100,200,255,.5)}
+.hcard.no-elixir{filter:grayscale(.6);opacity:.55}
+.hcard .hc-icon{font-size:28px;line-height:1}
+.hcard .hc-name{font-size:7px;font-weight:700;color:rgba(255,255,255,.7);text-align:center;letter-spacing:.5px;padding:0 2px}
+.hcard .hc-cost{position:absolute;bottom:3px;right:5px;font-size:10px;font-weight:900;color:#c039ff}
+.hcard.next-card{width:46px;height:60px;opacity:.65;border-style:dashed}
+.hcard.next-card .hc-icon{font-size:20px}
+
+#surrenderBtn{position:fixed;top:8px;left:10px;z-index:25;pointer-events:auto;display:none;background:rgba(200,30,30,.6);border:2px solid rgba(255,100,100,.4);border-radius:10px;color:#fff;padding:5px 10px;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer}
+
+/* Spell placement ring */
+#spellRing{position:fixed;pointer-events:none;z-index:19;display:none;width:80px;height:80px;border-radius:50%;border:3px solid rgba(255,174,0,.7);background:rgba(255,174,0,.1);transform:translate(-50%,-50%)}
+
+/* Toast */
+#toast{position:fixed;bottom:140px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;display:none;z-index:200;pointer-events:none;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<!-- Canvas -->
+<canvas id="gc"></canvas>
+
+<!-- Splash -->
+<div class="overlay" id="splashScreen">
+  <div style="font-size:72px;filter:drop-shadow(0 0 20px gold)">🏰</div>
+  <h1>CLASH ROYALE</h1>
+  <div class="sub">BY NOISYBOY-9 • HTML5 EDITION</div>
+  <div style="display:flex;flex-direction:column;gap:10px;width:220px;margin-top:10px">
+    <button class="btn" onclick="startGame('bot')">⚔️ VS BOT</button>
+    <button class="btn secondary" onclick="showToast('Multiplayer coming soon! 🔜',3000)">👥 ONLINE (bald)</button>
+  </div>
+  <div style="font-size:11px;color:rgba(255,255,255,.25);letter-spacing:2px;margin-top:8px">Based on github.com/Noisyboy-9</div>
+</div>
+
+<!-- Result -->
+<div class="overlay" id="resultScreen" style="display:none">
+  <div id="resEmoji" style="font-size:80px"></div>
+  <h2 id="resTitle"></h2>
+  <div class="crowns" id="resCrowns"></div>
+  <div class="reward" id="resReward"></div>
+  <button class="btn" onclick="backToMenu()" style="margin-top:10px">↩ ZURÜCK</button>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+  <div id="timerBox">3:00</div>
+</div>
+<div id="crownTrack" style="display:none">
+  <div class="crown-box" style="color:#ff6b6b">👑 <span id="eCrowns">0</span></div>
+  <div class="crown-box" style="color:#6bd1ff">👑 <span id="pCrowns">0</span></div>
+</div>
+
+<!-- Card Hand -->
+<div id="handArea">
+  <div id="elixirBar">
+    <div id="elixirPips" style="display:flex;gap:3px"></div>
+    <span id="elixirNum">4</span>
+  </div>
+  <div id="cardHand"></div>
+</div>
+
+<button id="surrenderBtn" onclick="surrender()">🏳 AUFGEBEN</button>
+<div id="spellRing"></div>
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// CLASH ROYALE — HTML5 Recreation based on Noisyboy-9/clash-royale
+// Stats sourced directly from the Java source code
+// ════════════════════════════════════════════════════════════
+
+var canvas = document.getElementById('gc');
+var ctx = canvas.getContext('2d');
+
+// ── CONSTANTS ────────────────────────────────────────────────
+var GRID_COLS = 24, GRID_ROWS = 39;
+var GAME_DURATION = 180; // seconds
+var ELIXIR_REGEN_RATE = 0.5; // per second (1 every 2s)
+var MAX_ELIXIR = 10;
+var START_ELIXIR = 4;
+var BRIDGE_Y_TOP = 16, BRIDGE_Y_BOT = 22; // river zone rows
+var LANE_L = 6, LANE_R = 17;   // attack lane X columns
+
+// ── CARD DEFINITIONS (from Java source stats) ────────────────
+var CARDS = {
+  Barbarian:  {emoji:'⚔️',  elixir:5, hp:300, dmg:75,  range:1.2, speed:55, atkSpeed:1.5, count:2, type:'ground', targets:'ground', splash:0},
+  Archer:     {emoji:'🏹',  elixir:3, hp:125, dmg:33,  range:5.0, speed:55, atkSpeed:1.2, count:2, type:'ground', targets:'both',   splash:0},
+  Giant:      {emoji:'👹',  elixir:5, hp:2000,dmg:126, range:1.2, speed:35, atkSpeed:1.5, count:1, type:'ground', targets:'building',splash:0},
+  BabyDragon: {emoji:'🐉',  elixir:4, hp:800, dmg:100, range:4.0, speed:65, atkSpeed:1.8, count:1, type:'air',    targets:'both',   splash:60},
+  MiniPEKKA:  {emoji:'🤖',  elixir:4, hp:600, dmg:325, range:1.2, speed:65, atkSpeed:1.8, count:1, type:'ground', targets:'ground', splash:0},
+  Valkyrie:   {emoji:'🪓',  elixir:4, hp:880, dmg:120, range:1.5, speed:55, atkSpeed:1.5, count:1, type:'ground', targets:'ground', splash:55},
+  Wizard:     {emoji:'🧙',  elixir:5, hp:340, dmg:130, range:5.0, speed:55, atkSpeed:1.7, count:1, type:'ground', targets:'both',   splash:55},
+  Cannon:     {emoji:'💣',  elixir:6, hp:380, dmg:60,  range:5.5, speed:0,  atkSpeed:0.8, count:1, type:'building',targets:'ground',splash:0, isBuilding:true, life:30},
+  InfernoTower:{emoji:'🔥', elixir:3, hp:800, dmg:210, range:6.0, speed:0,  atkSpeed:0.4, count:1, type:'building',targets:'both',  splash:0, isBuilding:true, life:40},
+  Arrows:     {emoji:'🏹',  elixir:3, dmg:144,range:4.0,splash:160,isSpell:true},
+  Fireball:   {emoji:'🔥',  elixir:4, dmg:325,range:2.5,splash:100,isSpell:true},
+  Rage:       {emoji:'⚡',  elixir:3, duration:6, range:5.0, splash:200, isSpell:true, isRage:true},
+};
+
+// ── STARTER DECKS ─────────────────────────────────────────────
+var PLAYER_DECK = ['Giant','Barbarian','Archer','BabyDragon','MiniPEKKA','Wizard','Arrows','Fireball'];
+var BOT_DECK    = ['Valkyrie','Barbarian','Archer','Giant','Wizard','BabyDragon','Cannon','Arrows'];
+
+// ── GAME STATE ────────────────────────────────────────────────
+var G = null; // game object when active
+
+function cellW(){ return Math.floor(canvas.width / GRID_COLS); }
+function cellH(){ return Math.floor(canvas.height / GRID_ROWS); }
+function cellX(col){ return col * cellW(); }
+function cellY(row){ return row * cellH(); }
+function worldX(col){ return cellX(col) + cellW()/2; }
+function worldY(row){ return cellY(row) + cellH()/2; }
+function toCol(px){ return Math.floor(px / cellW()); }
+function toRow(py){ return Math.floor(py / cellH()); }
+function dist(a,b){ var dx=a.x-b.x,dy=a.y-b.y; return Math.sqrt(dx*dx+dy*dy); }
+function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+
+// ── RESIZE ────────────────────────────────────────────────────
+function resize(){
+  var ratio = GRID_COLS/GRID_ROWS;
+  var h = window.innerHeight, w = window.innerWidth;
+  if(w/h > ratio){ canvas.height=h; canvas.width=Math.floor(h*ratio); }
+  else { canvas.width=w; canvas.height=Math.floor(w/ratio); }
+  canvas.style.position='fixed';
+  canvas.style.left=Math.floor((window.innerWidth-canvas.width)/2)+'px';
+  canvas.style.top='0px';
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ── TOWERS ───────────────────────────────────────────────────
+function makeTower(side, kind, col, row){
+  var isKing = kind==='king';
+  return {
+    side:side, kind:kind, col:col, row:row,
+    x:worldX(col), y:worldY(row),
+    hp: isKing ? 2400 : 1400,
+    maxHp: isKing ? 2400 : 1400,
+    dmg: isKing ? 50 : 50,
+    range: (isKing?7:8) * cellW(),
+    atkSpeed: 1.0, cd: 0,
+    active: isKing ? false : true,
+    dead: false,
+  };
+}
+
+// ── UNIT FACTORY ─────────────────────────────────────────────
+var _uid = 0;
+function spawnUnit(name, side, col, row){
+  var def = CARDS[name];
+  if(!def || def.isSpell) return;
+  var targetRow = side==='p' ? 4 : GRID_ROWS-5; // walk toward opponent's king
+  var u = {
+    id: ++_uid,
+    name: name,
+    emoji: def.emoji,
+    side: side,
+    col: col + (Math.random()-.5)*0.8,
+    row: row,
+    x: worldX(col), y: worldY(row),
+    hp: def.hp, maxHp: def.hp,
+    dmg: def.dmg,
+    range: def.range * cellW(),
+    speed: def.speed,
+    atkSpeed: def.atkSpeed, cd: 0,
+    type: def.type,
+    targets: def.targets,
+    splash: def.splash,
+    isBuilding: !!def.isBuilding,
+    life: def.life || 999,
+    lifeTimer: 0,
+    target: null,
+    state: 'walk', // walk | fight
+    rage: 0,
+    dead: false,
+  };
+  u.x = worldX(Math.round(u.col));
+  u.y = worldY(row);
+  return u;
+}
+
+// ── BOT AI ────────────────────────────────────────────────────
+var botElixir = START_ELIXIR, botElixirF = START_ELIXIR;
+var botHand, botQueue, botHandIdx = 0;
+function botInit(deck){
+  botQueue = shuffle(deck.slice());
+  botHand = botQueue.splice(0,4);
+}
+function botRotate(idx){
+  var played = botHand[idx];
+  botHand[idx] = botQueue.shift() || played;
+  botQueue.push(played);
+}
+function botTick(dt){
+  botElixirF = Math.min(MAX_ELIXIR, botElixirF + ELIXIR_REGEN_RATE*dt);
+  botElixir = Math.floor(botElixirF);
+  if(!G || G.over) return;
+  G.botThink = (G.botThink||0) + dt;
+  if(G.botThink < (1.5 + Math.random()*2)) return;
+  G.botThink = 0;
+  // Find affordable card
+  for(var i=0;i<botHand.length;i++){
+    var name = botHand[i];
+    var def = CARDS[name];
+    if(!def || def.elixir > botElixir) continue;
+    // Pick spawn position: random lane, enemy half
+    var col = (Math.random()<.5 ? LANE_L : LANE_R) + rnd(-2,2);
+    col = Math.max(1, Math.min(GRID_COLS-2, col));
+    var row = rnd(BRIDGE_Y_TOP+1, BRIDGE_Y_BOT+4);
+    if(def.isSpell){
+      castSpell(name,'e', worldX(col), worldY(row));
+    } else {
+      var count = def.count||1;
+      for(var c=0;c<count;c++){
+        var u = spawnUnit(name,'e', col+rnd(-1,1), row+rnd(0,1));
+        if(u) G.units.push(u);
+      }
+    }
+    botElixirF -= def.elixir; botElixir = Math.floor(botElixirF);
+    botRotate(i);
+    return;
+  }
+}
+
+// ── SPELL ─────────────────────────────────────────────────────
+function castSpell(name, side, wx, wy){
+  var def = CARDS[name];
+  if(!def) return;
+  var r = def.splash;
+  // damage units in radius
+  if(def.isRage){
+    G.units.forEach(function(u){
+      if(u.dead) return;
+      var dx=u.x-wx, dy=u.y-wy;
+      if(dx*dx+dy*dy <= r*r && u.side===side){ u.rage = def.duration; }
+    });
+  } else {
+    G.units.forEach(function(u){
+      if(u.dead) return;
+      var dx=u.x-wx, dy=u.y-wy;
+      if(dx*dx+dy*dy <= r*r){ damageUnit(u, def.dmg); }
+    });
+    // damage towers
+    G.towers.forEach(function(t){
+      if(t.dead) return;
+      var dx=t.x-wx, dy=t.y-wy;
+      if(dx*dx+dy*dy <= r*r){ damageTower(t, def.dmg); }
+    });
+  }
+  // FX
+  G.fx.push({x:wx,y:wy,r:5,maxR:r,t:0,dur:0.5,color:'rgba(255,174,0,',emoji:def.emoji});
+}
+
+// ── DAMAGE ────────────────────────────────────────────────────
+function damageUnit(u, dmg){
+  if(u.dead) return;
+  u.hp -= dmg;
+  if(u.hp <= 0){ u.hp=0; u.dead=true; }
+}
+function damageTower(t, dmg){
+  if(t.dead) return;
+  t.hp -= dmg;
+  if(t.hp <= 0){
+    t.hp=0; t.dead=true;
+    var side = t.side;
+    if(t.kind==='queen'){ if(side==='e') G.pCrowns++; else G.eCrowns++; }
+    if(t.kind==='king'){
+      if(side==='e'){ G.pCrowns=Math.min(3,G.pCrowns+3); } else { G.eCrowns=Math.min(3,G.eCrowns+3); }
+      finishGame();
+      return;
+    }
+    // Activate king when queen dies
+    G.towers.forEach(function(o){ if(o.side===side && o.kind==='king') o.active=true; });
+    G.fx.push({x:t.x,y:t.y,r:5,maxR:80,t:0,dur:0.8,color:'rgba(255,100,0,'});
+  }
+  updateCrowns();
+}
+
+// ── TARGETING ─────────────────────────────────────────────────
+function canTarget(attacker, defender){
+  // attacker targets: ground|air|both|building
+  var dType = defender.type || (defender.kind?'building':'ground');
+  if(attacker.targets==='ground' && dType==='air') return false;
+  if(attacker.targets==='building' && dType!=='building') return false;
+  return true;
+}
+function findTarget(u){
+  var opp = u.side==='p'?'e':'p';
+  var best=null, bestD=Infinity;
+  // Check units
+  G.units.forEach(function(o){
+    if(o.dead||o.side===u.side) return;
+    if(!canTarget(u,o)) return;
+    var d=dist(u,o);
+    if(d<bestD){bestD=d;best=o;}
+  });
+  // Check towers
+  G.towers.forEach(function(t){
+    if(t.dead||t.side===u.side||!t.active) return;
+    if(!canTarget(u,t)) return;
+    var d=dist(u,t);
+    if(d<bestD){bestD=d;best=t;}
+  });
+  return (best && bestD <= u.range) ? best : null;
+}
+function findTowerTarget(t){
+  var opp = t.side==='p'?'e':'p';
+  var best=null, bestD=Infinity;
+  G.units.forEach(function(u){
+    if(u.dead||u.side===t.side) return;
+    var d=dist(t,u);
+    if(d<bestD && d<=t.range){bestD=d;best=u;}
+  });
+  return best;
+}
+
+// ── MOVEMENT (path-based like Java) ──────────────────────────
+function moveUnit(u, dt){
+  if(u.isBuilding) return;
+  var spd = u.speed * (u.rage>0?1.4:1) * dt;
+  // Find nearest lane
+  var laneX_L = worldX(LANE_L), laneX_R = worldX(LANE_R);
+  var onLane = Math.abs(u.x - laneX_L) < cellW()*1.5 || Math.abs(u.x - laneX_R) < cellW()*1.5;
+  // Target king tower of opponent
+  var oppKing = G.towers.find(function(t){ return t.side!==(u.side) && t.kind==='king'; });
+  if(!oppKing || oppKing.dead) return;
+  // River row (impassable except at bridges)
+  var riverTopY = cellY(BRIDGE_Y_TOP), riverBotY = cellY(BRIDGE_Y_BOT);
+  // Direction toward opponent
+  var dx = 0, dy = (u.side==='p') ? -1 : 1; // p moves up, e moves down
+  // Choose lane: pick nearest lane x if not yet on a lane
+  var targetLaneX = (Math.abs(u.x-laneX_L) < Math.abs(u.x-laneX_R)) ? laneX_L : laneX_R;
+  if(!onLane){ dx = (targetLaneX-u.x)>0?1:-1; dy*=0.3; }
+  // Normalize
+  var len = Math.sqrt(dx*dx+dy*dy)||1;
+  u.x += (dx/len)*spd;
+  u.y += (dy/len)*spd;
+  // Clamp in arena
+  u.x = Math.max(cellW(), Math.min(canvas.width-cellW(), u.x));
+  u.y = Math.max(cellH(), Math.min(canvas.height-cellH(), u.y));
+}
+
+// ── GAME LOOP ─────────────────────────────────────────────────
+var lastTime = 0;
+function gameLoop(ts){
+  var dt = Math.min(0.05, (ts - lastTime)/1000);
+  lastTime = ts;
+  if(G && !G.over) tick(dt);
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+function tick(dt){
+  // Timers
+  G.time -= dt;
+  if(G.time <= 0){ G.time=0; finishGame(); return; }
+
+  // Elixir regen
+  G.elixirF = Math.min(MAX_ELIXIR, G.elixirF + ELIXIR_REGEN_RATE*dt);
+  G.elixir = Math.floor(G.elixirF);
+  botTick(dt);
+  updateHUD();
+
+  // Units tick
+  G.units.forEach(function(u){
+    if(u.dead) return;
+    if(u.isBuilding){ u.lifeTimer+=dt; if(u.lifeTimer>=u.life){u.dead=true;return;} }
+    if(u.rage>0) u.rage-=dt;
+    u.cd = Math.max(0, u.cd-dt);
+    var tgt = findTarget(u);
+    if(tgt){
+      u.state='fight'; u.target=tgt;
+      if(u.cd<=0){
+        u.cd = u.atkSpeed*(u.rage>0?.7:1);
+        if(u.splash>0){
+          // Splash damage
+          var sr=u.splash;
+          G.units.forEach(function(o){
+            if(o.dead||o.side===u.side) return;
+            if(dist(u,o)<=sr && canTarget(u,o)) damageUnit(o,u.dmg);
+          });
+          G.towers.forEach(function(t){
+            if(t.dead||t.side===u.side) return;
+            if(dist(u,t)<=sr) damageTower(t,u.dmg);
+          });
+        } else {
+          if(tgt.hp!==undefined && tgt.kind) damageTower(tgt,u.dmg);
+          else damageUnit(tgt,u.dmg);
+        }
+        G.fx.push({x:tgt.x,y:tgt.y,r:4,maxR:u.splash||15,t:0,dur:0.25,color:'rgba(255,220,50,'});
+      }
+    } else {
+      u.state='walk'; u.target=null;
+      moveUnit(u,dt);
+    }
+  });
+
+  // Tower attack
+  G.towers.forEach(function(t){
+    if(t.dead||!t.active) return;
+    t.cd=Math.max(0,t.cd-dt);
+    if(t.cd>0) return;
+    var tgt=findTowerTarget(t);
+    if(tgt){ t.cd=t.atkSpeed; damageUnit(tgt,t.dmg); G.fx.push({x:tgt.x,y:tgt.y,r:3,maxR:12,t:0,dur:0.2,color:'rgba(200,100,255,'}); }
+  });
+
+  // FX
+  G.fx = G.fx.filter(function(f){
+    f.t+=dt;
+    return f.t<f.dur;
+  });
+
+  // Remove dead
+  G.units = G.units.filter(function(u){ return !u.dead; });
+}
+
+// ── DRAW ──────────────────────────────────────────────────────
+function draw(){
+  var c=ctx, W=canvas.width, H=canvas.height;
+  c.clearRect(0,0,W,H);
+
+  if(!G){ drawMenu(); return; }
+
+  // Background — arena
+  var bg = c.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#2d4a1e'); bg.addColorStop(.45,'#3a5c24');
+  bg.addColorStop(.5,'#1a3a6e'); bg.addColorStop(.55,'#3a5c24');
+  bg.addColorStop(1,'#1e3d12');
+  c.fillStyle=bg; c.fillRect(0,0,W,H);
+
+  // River
+  var ry = cellY(BRIDGE_Y_TOP), rh = cellY(BRIDGE_Y_BOT)-ry;
+  c.fillStyle='#2a6fb0'; c.fillRect(0,ry,W,rh);
+  c.fillStyle='rgba(255,255,255,.08)';
+  for(var rx=0;rx<W;rx+=24){ c.fillRect(rx,ry+rh/2-1,12,2); }
+
+  // Lane paths
+  [LANE_L, LANE_R].forEach(function(lx){
+    var px=cellX(lx)-2, pw=cellW()+4;
+    c.fillStyle='rgba(0,0,0,.18)'; c.fillRect(px,0,pw,H);
+    // Bridge
+    c.fillStyle='#7a5a2a'; c.fillRect(px,ry-4,pw,rh+8);
+    c.strokeStyle='#5a3a0a'; c.lineWidth=2;
+    c.strokeRect(px,ry-4,pw,rh+8);
+  });
+
+  // Grid (subtle)
+  c.strokeStyle='rgba(0,0,0,.06)'; c.lineWidth=.5;
+  for(var col=0;col<=GRID_COLS;col++){ c.beginPath();c.moveTo(col*cellW(),0);c.lineTo(col*cellW(),H);c.stroke(); }
+  for(var row=0;row<=GRID_ROWS;row++){ c.beginPath();c.moveTo(0,row*cellH());c.lineTo(W,row*cellH());c.stroke(); }
+
+  // Placement highlight
+  if(G.selected>=0 && G.hoverX!==undefined){
+    var def=CARDS[G.hand[G.selected]];
+    if(def && !def.isSpell){
+      c.fillStyle='rgba(100,200,255,.15)'; c.fillRect(0,cellY(BRIDGE_Y_BOT),W,H-cellY(BRIDGE_Y_BOT));
+      c.strokeStyle='rgba(100,200,255,.4)'; c.lineWidth=2; c.setLineDash([6,4]);
+      c.beginPath(); c.moveTo(0,cellY(BRIDGE_Y_BOT)); c.lineTo(W,cellY(BRIDGE_Y_BOT)); c.stroke();
+      c.setLineDash([]);
+    }
+  }
+
+  // Towers
+  G.towers.forEach(function(t){ drawTower(c,t); });
+
+  // Units
+  G.units.forEach(function(u){ drawUnit(c,u); });
+
+  // FX
+  G.fx.forEach(function(f){
+    var a=1-f.t/f.dur, r=f.r+(f.maxR-f.r)*(f.t/f.dur);
+    c.strokeStyle=f.color+a+')'; c.lineWidth=2.5;
+    c.beginPath(); c.arc(f.x,f.y,r,0,Math.PI*2); c.stroke();
+    if(f.emoji){ c.globalAlpha=a; c.font='20px serif'; c.textAlign='center'; c.fillText(f.emoji,f.x,f.y+7); c.globalAlpha=1; }
+  });
+}
+
+function drawTower(c,t){
+  var r = t.kind==='king'?28:22;
+  var isP = t.side==='p';
+  var wallC = isP?'#2a5a9c':'#9c2a2a';
+  var lightC= isP?'#4a8abf':'#bf4a4a';
+  var darkC = isP?'#1a3a5f':'#5f1a1a';
+  var alpha = t.dead?0.3:1;
+  c.globalAlpha=alpha;
+  c.save(); c.translate(t.x, t.y);
+
+  // Body
+  var tw=r*1.5, th=r*2;
+  c.fillStyle='rgba(0,0,0,.25)'; c.fillRect(-tw/2+3,th*.4-th+5,tw,th*1.2);
+  c.fillStyle=wallC; c.fillRect(-tw/2,-th/2,tw,th);
+  c.fillStyle=lightC; c.fillRect(-tw/2,-th/2,tw*.3,th);
+  // Bricks
+  c.strokeStyle=darkC; c.lineWidth=1;
+  var bh=r*.28;
+  for(var row=0;row*bh<th;row++){
+    var off=(row%2===0)?0:tw*.3;
+    for(var col=-1;col*tw*.6<tw+tw*.6;col++){
+      c.strokeRect(-tw/2+off+col*tw*.6,-th/2+row*bh,tw*.6,bh);
+    }
+  }
+  // Merlons
+  var mw=r*.28,mh=r*.35,gap=r*.16,mc=t.kind==='king'?4:3;
+  var totalW=mc*mw+(mc-1)*gap, mStart=-totalW/2;
+  for(var m=0;m<mc;m++){
+    var mx=mStart+m*(mw+gap);
+    c.fillStyle=wallC; c.fillRect(mx,-th/2-mh,mw,mh);
+    c.fillStyle=lightC; c.fillRect(mx,-th/2-mh,mw*.3,mh);
+    c.strokeStyle=darkC; c.lineWidth=1; c.strokeRect(mx,-th/2-mh,mw,mh);
+  }
+  // Flag
+  var poleH=r*.8, poleY=-th/2-mh-poleH;
+  c.strokeStyle=darkC; c.lineWidth=2;
+  c.beginPath(); c.moveTo(0,-th/2-mh); c.lineTo(0,poleY); c.stroke();
+  c.fillStyle=isP?'#e74c3c':'#2ecc71';
+  c.beginPath(); c.moveTo(0,poleY); c.lineTo(r*.5,poleY+r*.2); c.lineTo(0,poleY+r*.4); c.closePath(); c.fill();
+  // King crown / arrow slit
+  if(t.kind==='king'){
+    c.font='bold '+(r*.6)+'px serif'; c.fillStyle='#f1c40f';
+    c.textAlign='center'; c.textBaseline='middle';
+    c.fillText('👑',0,th*.1);
+  } else {
+    c.fillStyle=darkC; c.fillRect(-r*.08,-th*.1,r*.16,r*.35);
+    c.beginPath(); c.arc(0,-th*.1,r*.08,Math.PI,0); c.fill();
+  }
+  // Dead rubble
+  if(t.dead){
+    c.fillStyle='rgba(80,40,0,.6)';
+    for(var rb=0;rb<5;rb++) c.fillRect(-tw/2+rb*tw*.22,th/4+rb%2*r*.1,r*.3,r*.18);
+  }
+  c.restore();
+
+  // HP bar
+  if(!t.dead){
+    var bw=t.kind==='king'?64:50, bh=8;
+    var by = isP ? t.y-r*2.3 : t.y+r*2.3;
+    var bx=t.x-bw/2;
+    c.globalAlpha=1;
+    c.fillStyle='rgba(0,0,0,.8)'; c.fillRect(bx-1,by-1,bw+2,bh+2);
+    var pct=Math.max(0,t.hp/t.maxHp);
+    c.fillStyle=pct>.5?'#2ecc71':pct>.25?'#f39c12':'#e74c3c'; c.fillRect(bx,by,bw*pct,bh);
+    c.fillStyle='#222'; c.fillRect(bx+bw*pct,by,bw*(1-pct),bh);
+    c.strokeStyle='rgba(255,255,255,.4)'; c.lineWidth=1; c.strokeRect(bx,by,bw,bh);
+    c.fillStyle='#fff'; c.font='bold 8px sans-serif'; c.textAlign='center';
+    c.fillText(Math.ceil(t.hp),t.x, isP ? by-3 : by+bh+10);
+  }
+  c.globalAlpha=1;
+}
+
+function drawUnit(c,u){
+  if(u.dead) return;
+  var r=14;
+  var isP=u.side==='p';
+  c.save(); c.translate(u.x,u.y);
+  // Shadow
+  c.fillStyle='rgba(0,0,0,.3)'; c.beginPath(); c.ellipse(0,r,r*.7,r*.22,0,0,Math.PI*2); c.fill();
+  // Body circle
+  var bc=isP?'#3a8fff':'#e74c3c';
+  if(u.rage>0) bc=isP?'#ff8800':'#ff00ff';
+  c.fillStyle=bc; c.beginPath(); c.arc(0,0,r,0,Math.PI*2); c.fill();
+  c.strokeStyle=isP?'#1a5fd8':'#a93226'; c.lineWidth=2; c.beginPath(); c.arc(0,0,r,0,Math.PI*2); c.stroke();
+  if(u.isBuilding){
+    c.strokeStyle='rgba(255,255,255,.3)'; c.lineWidth=1;
+    c.beginPath(); c.arc(0,0,r+3,0,Math.PI*2); c.stroke();
+  }
+  // Emoji
+  c.font=(r*1.2)+'px serif'; c.textAlign='center'; c.textBaseline='middle';
+  c.fillText(u.emoji,0,1);
+  c.restore();
+  // HP bar
+  var bw=r*2.2, bh=4;
+  var bx=u.x-bw/2, by=u.y-r-8;
+  c.fillStyle='#333'; c.fillRect(bx,by,bw,bh);
+  var pct=Math.max(0,u.hp/u.maxHp);
+  c.fillStyle=pct>.5?'#2ecc71':pct>.25?'#f39c12':'#e74c3c'; c.fillRect(bx,by,bw*pct,bh);
+}
+
+function drawMenu(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+
+// ── HUD UPDATE ────────────────────────────────────────────────
+function updateHUD(){
+  if(!G) return;
+  var m=Math.floor(G.time/60), s=Math.floor(G.time%60);
+  var tb=document.getElementById('timerBox');
+  tb.textContent=m+':'+(s<10?'0':'')+s;
+  tb.className='';
+  if(G.time<60) tb.className='urgent';
+  // Elixir pips
+  var pips=document.getElementById('elixirPips');
+  if(pips){
+    pips.innerHTML='';
+    for(var i=0;i<MAX_ELIXIR;i++){
+      var d=document.createElement('div'); d.className='elixir-pip'+(i<G.elixir?' filled':''); pips.appendChild(d);
+    }
+  }
+  document.getElementById('elixirNum').textContent=G.elixir;
+}
+function updateCrowns(){
+  if(!G) return;
+  document.getElementById('pCrowns').textContent=G.pCrowns;
+  document.getElementById('eCrowns').textContent=G.eCrowns;
+}
+
+// ── CARD HAND UI ──────────────────────────────────────────────
+function renderHand(){
+  var area=document.getElementById('cardHand');
+  area.innerHTML='';
+  G.hand.forEach(function(name,i){
+    var def=CARDS[name]||{};
+    var div=document.createElement('div');
+    div.className='hcard'+(i===G.selected?' selected':'')+(def.elixir>G.elixir?' no-elixir':'');
+    div.innerHTML='<div class="hc-icon">'+(def.emoji||'🃏')+'</div>'
+      +'<div class="hc-name">'+name.replace(/([A-Z])/g,' $1').trim()+'</div>'
+      +'<div class="hc-cost">'+(def.elixir||'')+'</div>';
+    div.onclick=(function(ii){return function(){ selectCard(ii); };})(i);
+    area.appendChild(div);
+  });
+  // Next card preview
+  var next=G.queue[0];
+  if(next){
+    var def=CARDS[next]||{};
+    var div=document.createElement('div');
+    div.className='hcard next-card';
+    div.innerHTML='<div class="hc-icon">'+(def.emoji||'🃏')+'</div><div class="hc-cost">'+(def.elixir||'')+'</div>';
+    area.appendChild(div);
+  }
+}
+function selectCard(i){
+  if(!G||G.over) return;
+  var def=CARDS[G.hand[i]];
+  if(!def) return;
+  if(def.elixir>G.elixir){ showToast('⚡ Nicht genug Elixir!'); return; }
+  G.selected = (G.selected===i)?-1:i;
+  renderHand();
+}
+function rotateHand(idx){
+  var played=G.hand[idx];
+  G.hand[idx]=G.queue.shift()||played;
+  G.queue.push(played);
+  G.selected=-1;
+}
+
+// ── INPUT ─────────────────────────────────────────────────────
+canvas.addEventListener('pointerdown', function(e){
+  if(!G||G.over||G.selected<0) return;
+  var rect=canvas.getBoundingClientRect();
+  var scaleX=canvas.width/rect.width, scaleY=canvas.height/rect.height;
+  var cx=(e.clientX-rect.left)*scaleX, cy=(e.clientY-rect.top)*scaleY;
+  var row=toRow(cy);
+  var def=CARDS[G.hand[G.selected]];
+  if(!def) return;
+  // Player can only place in own half (below river)
+  if(!def.isSpell && row<=BRIDGE_Y_BOT){ showToast('Nur auf deiner Seite platzieren!'); return; }
+  var col=toCol(cx);
+  G.elixirF-=def.elixir; G.elixir=Math.floor(G.elixirF);
+  var name=G.hand[G.selected];
+  if(def.isSpell){
+    castSpell(name,'p',cx,cy);
+  } else {
+    var count=def.count||1;
+    for(var c2=0;c2<count;c2++){
+      var u=spawnUnit(name,'p',col+(c2*(Math.random()<.5?-1:1)),row);
+      if(u) G.units.push(u);
+    }
+  }
+  rotateHand(G.selected);
+  renderHand();
+});
+
+// ── GAME START ────────────────────────────────────────────────
+function shuffle(a){ for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;} return a; }
+
+function startGame(mode){
+  document.getElementById('splashScreen').style.display='none';
+  document.getElementById('resultScreen').style.display='none';
+  document.getElementById('hud').style.display='block';
+  document.getElementById('handArea').style.display='flex';
+  document.getElementById('surrenderBtn').style.display='block';
+  document.getElementById('crownTrack').style.display='flex';
+
+  var pDeck=shuffle(PLAYER_DECK.slice());
+  var eDeck=shuffle(BOT_DECK.slice());
+  var pQ=pDeck.slice(); var pH=pQ.splice(0,4);
+  botInit(eDeck);
+
+  G = {
+    mode:mode, over:false, time:GAME_DURATION,
+    elixir:START_ELIXIR, elixirF:START_ELIXIR,
+    hand:pH, queue:pQ, selected:-1,
+    pCrowns:0, eCrowns:0,
+    botThink:0,
+    units:[], fx:[],
+    towers:[
+      // Queen towers (called "Queen" in Noisyboy source)
+      makeTower('e','queen',LANE_L,  8), makeTower('e','queen',LANE_R,  8),
+      makeTower('p','queen',LANE_L, 30), makeTower('p','queen',LANE_R, 30),
+      // King towers
+      makeTower('e','king', 12,        5),
+      makeTower('p','king', 12,       33),
+    ],
+  };
+  updateCrowns();
+  renderHand();
+  updateHUD();
+}
+
+// ── FINISH ────────────────────────────────────────────────────
+function finishGame(){
+  if(!G||G.over) return;
+  G.over=true;
+  var won;
+  if(G.pCrowns>G.eCrowns) won=true;
+  else if(G.eCrowns>G.pCrowns) won=false;
+  else won=null; // draw
+
+  document.getElementById('hud').style.display='none';
+  document.getElementById('handArea').style.display='none';
+  document.getElementById('surrenderBtn').style.display='none';
+  document.getElementById('crownTrack').style.display='none';
+  document.getElementById('resultScreen').style.display='flex';
+
+  var emoji=won===null?'🤝':won?'🏆':'💀';
+  var title=won===null?'UNENTSCHIEDEN':won?'SIEG!':'NIEDERLAGE';
+  var color=won===null?'#bbb':won?'#f5c518':'#e74c3c';
+  document.getElementById('resEmoji').textContent=emoji;
+  document.getElementById('resTitle').textContent=title;
+  document.getElementById('resTitle').style.color=color;
+  document.getElementById('resCrowns').textContent='👑 '+G.pCrowns+'  —  '+G.eCrowns+' 👑';
+  document.getElementById('resReward').textContent=won?'Du hast '+G.pCrowns+' von 3 Kronen':'';
+}
+
+function surrender(){
+  if(!G||G.over) return;
+  G.pCrowns=0; G.eCrowns=Math.max(G.eCrowns,1);
+  finishGame();
+}
+
+function backToMenu(){
+  G=null;
+  document.getElementById('resultScreen').style.display='none';
+  document.getElementById('splashScreen').style.display='flex';
+}
+
+// ── TOAST ─────────────────────────────────────────────────────
+var _toastTimer=null;
+function showToast(msg,dur){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.style.display='block';
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(function(){t.style.display='none';},dur||2000);
+}
+
+// ── START LOOP ────────────────────────────────────────────────
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
