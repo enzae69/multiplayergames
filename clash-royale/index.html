@@ -1840,7 +1840,13 @@ function onArenaTap(e){
 
   state.elixir -= card.elixir; state.elixirF -= card.elixir; renderElixir();
 
-  if(st.spell){ castSpell('p', st, x, y, card.emoji); }
+  if(window._mpActive && _mpLobbyRole === 'guest'){
+    // Guest doesn't simulate — send the deploy to the host (mirrored on receive)
+    mpMqPublish('cr/game/'+_mpLobbyId+'/deploy', {
+      card: card.name, emoji: card.emoji, x: x, y: y, spell: !!st.spell
+    });
+    spawnFx(x, y, '#6bd1ff');
+  } else if(st.spell){ castSpell('p', st, x, y, card.emoji); }
   else { deployTroop('p', card, st, x, y); }
 
   // Rotate hand
@@ -1892,6 +1898,40 @@ function battleLoop(now){
   var dt = Math.min(0.05, (now - B.last)/1000);
   B.last = now;
 
+  var isGuest = (window._mpActive && _mpLobbyRole === 'guest');
+
+  if(isGuest){
+    // ── GUEST: render-only. Host is authoritative for all units/towers/time. ──
+    // Own elixir still regenerates locally so the guest can play cards.
+    var grate = B.time <= 60 ? 0.71 : 0.36;
+    state.elixirF += grate*dt;
+    if(state.elixirF > 10) state.elixirF = 10;
+    if(Math.floor(state.elixirF) !== state.elixir){ state.elixir = Math.floor(state.elixirF); renderElixir(); renderBattleHand(); }
+
+    // Smoothly interpolate remote units toward last known position
+    for(var gi=0; gi<B.units.length; gi++){
+      var gu = B.units[gi];
+      if(gu._tx !== undefined){
+        var gdx = gu._tx - gu.x, gdy = gu._ty - gu.y, gd = Math.hypot(gdx,gdy);
+        var gstep = Math.min(gd, 200 * dt);
+        if(gd > 0.5){ gu.x += gdx/gd*gstep; gu.y += gdy/gd*gstep; }
+      }
+    }
+    updateProjectiles(dt);
+    updateFx(dt);
+
+    // End detection from synced tower state / timer
+    var gKingE = B.towers.some(function(t){return t.side==='e'&&t.kind==='king'&&t.dead;});
+    var gKingP = B.towers.some(function(t){return t.side==='p'&&t.kind==='king'&&t.dead;});
+    if(gKingE || gKingP || B.time <= 0){ drawBattle(); finishBattle(); return; }
+
+    drawBattle();
+    if(window.CR3D) window.CR3D.update(dt, B.units, B.W, B.H);
+    B.raf = requestAnimationFrame(battleLoop);
+    return;
+  }
+
+  // ── HOST / single-player: full simulation ──
   // Timers
   B.acc += dt;
   if(B.acc >= 1){ B.acc -= 1; B.time--; updateTimer();
@@ -1907,9 +1947,11 @@ function battleLoop(now){
   if(B.eElixirF > 10) B.eElixirF = 10;
   B.eElixir = Math.floor(B.eElixirF);
 
-  // Enemy AI
-  B.eAcc += dt;
-  if(B.eAcc >= B.eNext){ B.eAcc = 0; B.eNext = 1.5 + Math.random()*2.0; enemyPlay(); }
+  // Enemy AI (only in single-player; suppressed in multiplayer)
+  if(!window._mpActive){
+    B.eAcc += dt;
+    if(B.eAcc >= B.eNext){ B.eAcc = 0; B.eNext = 1.5 + Math.random()*2.0; enemyPlay(); }
+  }
 
   updateUnits(dt);
   updateTowers(dt);
@@ -1926,21 +1968,6 @@ function updateUnits(dt){
   var alive = [];
   for(var i=0;i<B.units.length;i++){
     var u = B.units[i];
-    // Remote units: only interpolate position toward target, never process locally
-    if(u._remote){
-      if(u.hp > 0){
-        if(u._tx !== undefined){
-          var dx = u._tx - u.x, dy = u._ty - u.y;
-          var d = Math.hypot(dx, dy);
-          var step = Math.min(d, 120 * dt); // smooth lerp at 120px/s
-          if(d > 1){ u.x += dx/d*step; u.y += dy/d*step; }
-        }
-        alive.push(u);
-      } else {
-        spawnFx(u.x, u.y, '#888', .8);
-      }
-      continue;
-    }
     if(u.hp <= 0){ spawnFx(u.x, u.y, '#888', .8); continue; }
     if(u.cd > 0) u.cd -= dt;
 
@@ -1981,7 +2008,7 @@ function acquireTarget(u){
     var best=null, bd= u.building ? u.range+30 : 150;
     for(var i=0;i<B.units.length;i++){
       var o = B.units[i];
-      if(o.side!==enemySide || o.hp<=0 || o._remote) continue; // remote units not targeted locally
+      if(o.side!==enemySide || o.hp<=0) continue;
       if(o.fly && !u.air) continue; // can't hit air
       var d = dist(u,o);
       if(d < bd){ bd=d; best=o; }
@@ -3158,8 +3185,8 @@ function mpJoinLobby(){
       mpLaunchMatch();
     });
 
-    // Listen for game state from host
-    mpMqSubscribe('cr/game/'+code+'/host', function(rd){
+    // Listen for authoritative game state from host
+    mpMqSubscribe('cr/game/'+code+'/state', function(rd){
       mpApplyRemoteState(rd);
     });
 
@@ -3204,12 +3231,23 @@ function mpRenderSlots(players, max, isHost){
 
 function mpStartMatch(){
   if(_mpLobbyRole !== 'host') return;
-  // Subscribe to guest game state before starting
-  mpMqSubscribe('cr/game/'+_mpLobbyId+'/guest', function(rd){
-    mpApplyRemoteState(rd);
+  // Host listens for guest card deploys, then mirrors them as enemy troops
+  mpMqSubscribe('cr/game/'+_mpLobbyId+'/deploy', function(cmd){
+    mpHostApplyDeploy(cmd);
   });
   mpMqPublish('cr/lobby/'+_mpLobbyId+'/start', {go:true});
   mpLaunchMatch();
+}
+
+// Host receives a guest deploy → mirror coordinates and spawn as side 'e'
+function mpHostApplyDeploy(cmd){
+  if(!B || B.over || _mpLobbyRole !== 'host') return;
+  var st = statFor(cmd.card);
+  if(!st) return;
+  var mx = B.W - cmd.x, my = B.H - cmd.y;   // mirror to host's perspective
+  var card = {name:cmd.card, emoji:cmd.emoji};
+  if(cmd.spell){ castSpell('e', st, mx, my, cmd.emoji); }
+  else { deployTroop('e', card, st, mx, my); }
 }
 
 function mpLaunchMatch(){
@@ -3228,74 +3266,75 @@ function mpLeaveLobby(){
   document.getElementById('mpMain').style.display='flex';
 }
 
-// ── Game state sync ───────────────────────────────────────────
+// ── Game state sync (host authoritative) ──────────────────────
+// Host broadcasts the FULL world (all units + all towers + time).
 function mpPushState(){
-  if(!window._mpActive || !B || B.over || !_mpLobbyId || !_mqClient) return;
-  var myRole = _mpLobbyRole || 'guest';
-  var topic  = 'cr/game/'+_mpLobbyId+'/'+myRole;
+  if(!window._mpActive || _mpLobbyRole !== 'host' || !B || B.over || !_mpLobbyId || !_mqClient) return;
   var myData = {
     seq: ++_mpSyncSeq,
-    units: B.units.filter(function(u){ return u.side==='p' && !u.dead; }).map(function(u){
-      return {uid:u.uid,name:u.name,emoji:u.emoji,x:u.x,y:u.y,hp:u.hp,maxhp:u.maxhp};
+    units: B.units.filter(function(u){ return u.hp > 0; }).map(function(u){
+      return {uid:u.uid,side:u.side,name:u.name,emoji:u.emoji,x:Math.round(u.x),y:Math.round(u.y),hp:Math.round(u.hp),maxhp:u.maxhp,fly:u.fly?1:0};
     }),
-    towers: B.towers.filter(function(t){ return t.side==='p'; }).map(function(t){
-      return {kind:t.kind,hp:t.hp,dead:t.dead};
+    towers: B.towers.map(function(t){
+      return {side:t.side,kind:t.kind,hp:Math.round(t.hp),dead:t.dead};
     }),
     time: B.time,
   };
-  mpMqPublish(topic, myData);
+  mpMqPublish('cr/game/'+_mpLobbyId+'/state', myData);
 }
 
+// Guest applies host's world, flipping coordinates & sides so the guest
+// always sees their own troops at the bottom.
 function mpApplyRemoteState(rd){
-  if(!B || !window._mpActive) return;
+  if(!B || !window._mpActive || _mpLobbyRole !== 'guest') return;
   if(rd.seq && rd.seq <= _mpLastRemoteSeq) return;
   _mpLastRemoteSeq = rd.seq || 0;
-  var H = B.H;
+  var W = B.W, H = B.H;
 
-  // Build map of existing remote units by uid
   var existing = {};
-  B.units.forEach(function(u){ if(u._remote) existing[u.uid] = u; });
+  B.units.forEach(function(u){ existing[u.uid] = u; });
 
-  // Mark all remote units for removal; re-add those still in remote state
-  var remoteUids = {};
-  (rd.units||[]).forEach(function(ru){ remoteUids[ru.uid] = true; });
-
-  // Remove remote units no longer present
-  B.units = B.units.filter(function(u){ return !u._remote || remoteUids[u.uid]; });
-
-  // Update existing or add new remote units
+  var seen = {};
   (rd.units||[]).forEach(function(ru){
-    var rx = B.W - ru.x, ry = H - ru.y;
-    if(existing[ru.uid]){
-      // Smooth: set target position, let updateUnits interpolate
-      var e = existing[ru.uid];
-      e._tx  = rx; e._ty = ry;
-      e.hp   = ru.hp; e.maxhp = ru.maxhp;
+    seen[ru.uid] = true;
+    var fx = W - ru.x, fy = H - ru.y;          // flip position
+    var fside = ru.side === 'p' ? 'e' : 'p';   // flip side (host 'p' = guest's enemy)
+    var ex = existing[ru.uid];
+    if(ex){
+      ex._tx = fx; ex._ty = fy;
+      ex.hp = ru.hp; ex.maxhp = ru.maxhp; ex.side = fside;
     } else {
       B.units.push({
-        uid:ru.uid, side:'e', name:ru.name, emoji:ru.emoji,
-        x:rx, y:ry, _tx:rx, _ty:ry,
+        uid:ru.uid, side:fside, name:ru.name, emoji:ru.emoji,
+        x:fx, y:fy, _tx:fx, _ty:fy,
         hp:ru.hp, maxhp:ru.maxhp, dmg:0, range:0,
-        speed:0, atk:0, cd:999, fly:false, air:false, bld:false, splash:0,
-        building:false, life:0, r:11, target:null, dead:false, vx:0, vy:0,
-        _remote:true,
+        speed:0, atk:0, cd:999, fly:!!ru.fly, air:false, bld:false, splash:0,
+        building:false, life:0, r:(ru.fly?16:18), target:null, dead:false, vx:0, vy:0,
       });
     }
   });
+  // Drop units no longer in host world
+  B.units = B.units.filter(function(u){ return seen[u.uid]; });
+
+  // Sync towers: host side 'p' → guest side 'e', and vice versa
   if(rd.towers){
-    var eTowers = B.towers.filter(function(t){ return t.side==='e'; });
-    rd.towers.forEach(function(rt, i){
-      if(eTowers[i]){
-        eTowers[i].hp   = rt.hp;
-        eTowers[i].dead = rt.dead;
-        if(rt.dead && !eTowers[i]._wasDead){ eTowers[i]._wasDead=true; B.eCrowns++; }
-      }
+    ['p','e'].forEach(function(hostSide){
+      var guestSide = hostSide === 'p' ? 'e' : 'p';
+      ['crown','king'].forEach(function(kind){
+        var hostTs  = rd.towers.filter(function(t){ return t.side===hostSide && t.kind===kind; });
+        var guestTs = B.towers.filter(function(t){ return t.side===guestSide && t.kind===kind; });
+        hostTs.forEach(function(ht, idx){
+          if(guestTs[idx]){ guestTs[idx].hp = ht.hp; guestTs[idx].dead = ht.dead; }
+        });
+      });
     });
   }
-  if(_mpLobbyRole === 'guest' && rd.time !== undefined) B.time = rd.time;
+  if(rd.time !== undefined){ B.time = rd.time; updateTimer(); }
+  updateCrowns();
 }
 
-setInterval(function(){ if(window._mpActive && B && !B.over) mpPushState(); }, 500);
+// Host pushes state at ~10Hz for smooth playback
+setInterval(function(){ if(window._mpActive && _mpLobbyRole==='host' && B && !B.over) mpPushState(); }, 100);
 
 function mpShowScreen(){
   mpCheckSession();
