@@ -11,19 +11,16 @@ body{background:#050510;color:#fff;font-family:'Exo 2',sans-serif;min-height:100
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(168,85,247,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(168,85,247,.04) 1px,transparent 1px);background-size:40px 40px;animation:grid 20s linear infinite;pointer-events:none;z-index:0}
 @keyframes grid{0%{background-position:0 0}100%{background-position:40px 40px}}
 
-/* ── SCREENS ── */
-.screen{display:none;flex-direction:column;align-items:center;min-height:100vh;padding:24px 16px 40px;position:relative;z-index:1}
+.screen{display:none;flex-direction:column;align-items:center;min-height:100vh;padding:20px 14px 40px;position:relative;z-index:1;gap:12px}
 .screen.active{display:flex}
 
-/* ── LOGO ── */
 .imp-logo{font-family:'Russo One',sans-serif;font-size:clamp(52px,17vw,96px);color:#fff;background:linear-gradient(135deg,#6d00c4,#a855f7);padding:4px 28px 10px;border-radius:16px;letter-spacing:10px;text-indent:10px;box-shadow:0 8px 0 #3d006e,0 14px 40px rgba(168,85,247,.5),inset 0 2px 0 rgba(255,255,255,.2);border:3px solid rgba(255,255,255,.7);transform:rotate(-1.5deg);text-shadow:2px 2px 6px rgba(0,0,0,.4);line-height:1.1;flex-shrink:0}
-.imp-sub{font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:5px;color:rgba(255,255,255,.35);text-transform:uppercase;margin-top:12px;margin-bottom:32px}
+.imp-sub{font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:5px;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:20px}
 
-/* ── INPUTS & BUTTONS ── */
 .inp{background:rgba(12,12,36,1);border:2px solid rgba(168,85,247,.35);color:#fff;font-family:'Russo One',sans-serif;font-size:20px;padding:14px 18px;border-radius:12px;outline:none;width:100%;text-align:center;letter-spacing:3px;text-transform:uppercase;transition:border-color .2s;max-width:360px}
 .inp:focus{border-color:#a855f7;box-shadow:0 0 0 3px rgba(168,85,247,.15)}
 .inp::placeholder{color:rgba(255,255,255,.2);font-weight:400;letter-spacing:1px;text-transform:none}
-.btn{font-family:'Russo One',sans-serif;font-size:16px;letter-spacing:2px;padding:15px 28px;border:none;border-radius:12px;cursor:pointer;touch-action:manipulation;transition:transform .12s,opacity .15s;text-transform:uppercase;width:100%;max-width:360px}
+.btn{font-family:'Russo One',sans-serif;font-size:16px;letter-spacing:2px;padding:15px 28px;border:none;border-radius:12px;cursor:pointer;touch-action:manipulation;transition:transform .12s,opacity .15s;text-transform:uppercase;width:100%;max-width:400px}
 .btn:active{transform:scale(.95)}
 .btn-primary{background:linear-gradient(135deg,#6d00c4,#a855f7);color:#fff;box-shadow:0 4px 20px rgba(168,85,247,.4)}
 .btn-secondary{background:rgba(255,255,255,.07);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.15)}
@@ -32,17 +29,17 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .btn:disabled{opacity:.35;cursor:default;pointer-events:none}
 .err{color:#ff4466;font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:1px;min-height:18px;text-align:center}
 
-/* ── MENU ── */
-#sMenu{justify-content:center;gap:14px}
+/* MENU */
+#sMenu{justify-content:center}
 .menu-form{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:360px}
-.or-divider{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:4px;color:rgba(255,255,255,.2);margin:4px 0}
+.or-divider{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:4px;color:rgba(255,255,255,.2);margin:2px 0}
 .join-row{display:flex;gap:8px;width:100%;max-width:360px}
-.join-row .inp{font-size:24px;letter-spacing:8px;text-align:center}
+.join-row .inp{font-size:24px;letter-spacing:8px}
 .join-row .btn{width:auto;flex-shrink:0;padding:15px 20px}
 
-/* ── LOBBY ── */
-#sLobby{justify-content:flex-start;gap:16px;padding-top:32px}
-.room-code-box{display:flex;flex-direction:column;align-items:center;background:rgba(168,85,247,.08);border:2px solid rgba(168,85,247,.3);border-radius:18px;padding:18px 32px;gap:4px}
+/* LOBBY */
+#sLobby{justify-content:flex-start;padding-top:28px}
+.room-code-box{display:flex;flex-direction:column;align-items:center;background:rgba(168,85,247,.08);border:2px solid rgba(168,85,247,.3);border-radius:18px;padding:16px 32px;gap:4px;width:100%;max-width:400px}
 .room-code-label{font-family:'Russo One',sans-serif;font-size:10px;letter-spacing:5px;color:rgba(168,85,247,.6)}
 .room-code-val{font-family:'Russo One',sans-serif;font-size:48px;letter-spacing:12px;color:#a855f7;text-shadow:0 0 20px rgba(168,85,247,.6)}
 .room-code-hint{font-size:11px;color:rgba(255,255,255,.25);letter-spacing:1px}
@@ -61,15 +58,15 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 @keyframes pulse-text{0%,100%{opacity:.5}50%{opacity:1}}
 .back-btn{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.25);background:none;border:none;cursor:pointer;padding:8px;align-self:flex-start}
 
-/* ── REVEAL ── */
-#sReveal{justify-content:center;gap:0}
-.reveal-card{width:min(320px,90vw);background:rgba(10,10,30,.9);border:3px solid rgba(168,85,247,.4);border-radius:24px;padding:40px 24px;display:flex;flex-direction:column;align-items:center;gap:20px;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(168,85,247,.2)}
+/* REVEAL */
+#sReveal{justify-content:center}
+.reveal-card{width:min(320px,90vw);background:rgba(10,10,30,.9);border:3px solid rgba(168,85,247,.4);border-radius:24px;padding:36px 24px;display:flex;flex-direction:column;align-items:center;gap:18px;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(168,85,247,.2)}
 .reveal-cover{position:absolute;inset:0;background:linear-gradient(135deg,#1a0040,#0a0020);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;border-radius:22px;transition:opacity .4s}
 .reveal-cover.hidden{opacity:0;pointer-events:none}
 .reveal-cover-icon{font-size:52px;animation:tap-bounce .8s ease-in-out infinite}
 @keyframes tap-bounce{0%,100%{transform:scale(1) translateY(0)}50%{transform:scale(1.1) translateY(-6px)}}
 .reveal-cover-text{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:4px;color:rgba(255,255,255,.4)}
-.reveal-category{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:4px;color:rgba(168,85,247,.6);text-transform:uppercase}
+.reveal-category{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:4px;color:rgba(168,85,247,.6)}
 .reveal-role{font-family:'Russo One',sans-serif;font-size:18px;letter-spacing:2px;text-align:center}
 .reveal-role.imp{color:#ff4466;text-shadow:0 0 20px rgba(255,68,102,.5)}
 .reveal-role.player{color:#1B9B3D;text-shadow:0 0 20px rgba(27,155,61,.3)}
@@ -77,71 +74,109 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .reveal-word.imp-word{color:#ff4466;font-size:28px;letter-spacing:3px;opacity:.7}
 .reveal-warning{font-size:12px;color:rgba(255,255,255,.3);text-align:center;letter-spacing:.5px;line-height:1.5}
 .ready-count{font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:3px;color:rgba(168,85,247,.5);text-align:center}
-
-/* ── CLUES ── */
-#sClues{gap:16px;padding-top:28px}
-.phase-header{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:5px;color:rgba(255,255,255,.3);text-align:center;text-transform:uppercase}
-.phase-title{font-family:'Russo One',sans-serif;font-size:clamp(22px,7vw,32px);color:#a855f7;text-align:center;letter-spacing:2px;text-shadow:0 0 20px rgba(168,85,247,.4)}
-.my-word-reminder{background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);border-radius:12px;padding:10px 18px;display:flex;align-items:center;gap:10px;width:100%;max-width:400px}
+.phase-header{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:5px;color:rgba(255,255,255,.3);text-align:center}
+.phase-title{font-family:'Russo One',sans-serif;font-size:clamp(20px,6vw,28px);color:#a855f7;text-align:center;letter-spacing:2px;text-shadow:0 0 20px rgba(168,85,247,.4)}
+.my-word-reminder{background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);border-radius:12px;padding:10px 18px;display:flex;align-items:center;gap:10px;width:100%;max-width:480px}
 .mwr-label{font-size:11px;color:rgba(255,255,255,.3);letter-spacing:2px;white-space:nowrap}
 .mwr-word{font-family:'Russo One',sans-serif;font-size:18px;color:#a855f7;letter-spacing:2px}
-.clue-status-list{display:flex;flex-direction:column;gap:6px;width:100%;max-width:400px}
-.clue-status-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);border-radius:10px;padding:8px 12px}
-.cs-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:background .3s}
-.cs-dot.done{background:#1B9B3D;box-shadow:0 0 8px rgba(27,155,61,.6)}
-.cs-dot.wait{background:rgba(255,255,255,.2);animation:blink .8s ease-in-out infinite}
-@keyframes blink{0%,100%{opacity:.2}50%{opacity:1}}
-.cs-name{font-family:'Russo One',sans-serif;font-size:13px;flex:1}
-.cs-status{font-size:11px;color:rgba(255,255,255,.3);letter-spacing:1px}
-.clue-input-area{width:100%;max-width:400px;display:flex;flex-direction:column;gap:10px}
-.clue-inp{background:rgba(12,12,36,1);border:2px solid rgba(168,85,247,.35);color:#fff;font-family:'Exo 2',sans-serif;font-size:18px;font-weight:700;padding:14px 18px;border-radius:12px;outline:none;width:100%;letter-spacing:1px;transition:border-color .2s}
+
+/* CLUES — 2-column player grid */
+#sClues{padding-top:18px}
+.players-2col{display:grid;grid-template-columns:1fr 1fr;gap:7px;width:100%;max-width:480px}
+.pt{background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:12px;padding:9px 11px;display:flex;align-items:center;gap:9px;transition:all .25s;min-width:0}
+.pt.active{border-color:#a855f7;background:rgba(168,85,247,.18);box-shadow:0 0 18px rgba(168,85,247,.35);animation:pulse-border 1.2s ease-in-out infinite}
+@keyframes pulse-border{0%,100%{box-shadow:0 0 18px rgba(168,85,247,.35)}50%{box-shadow:0 0 30px rgba(168,85,247,.6)}}
+.pt.done{border-color:rgba(27,155,61,.5);background:rgba(27,155,61,.07)}
+.pt.elim{opacity:.35;border-color:rgba(255,255,255,.05)}
+.pt-av{font-size:18px;flex-shrink:0}
+.pt-info{flex:1;min-width:0}
+.pt-name{font-family:'Russo One',sans-serif;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pt-status{font-size:9px;color:rgba(255,255,255,.35);letter-spacing:1px;margin-top:1px}
+.pt.active .pt-status{color:#c084fc}
+.pt.done .pt-status{color:#1B9B3D}
+.clue-input-wrap{width:100%;max-width:480px;display:flex;flex-direction:column;gap:9px;background:rgba(168,85,247,.07);border:1.5px solid rgba(168,85,247,.3);border-radius:14px;padding:14px}
+.active-label{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:3px;color:#c084fc;text-align:center}
+.clue-inp{background:rgba(12,12,36,1);border:2px solid rgba(168,85,247,.35);color:#fff;font-family:'Exo 2',sans-serif;font-size:17px;font-weight:700;padding:13px 16px;border-radius:10px;outline:none;width:100%;letter-spacing:1px;transition:border-color .2s}
 .clue-inp:focus{border-color:#a855f7;box-shadow:0 0 0 3px rgba(168,85,247,.12)}
 .clue-inp::placeholder{color:rgba(255,255,255,.2);font-weight:400}
-.clue-sent-msg{font-family:'Russo One',sans-serif;font-size:14px;letter-spacing:2px;color:#1B9B3D;text-align:center;animation:pulse-text 2s ease-in-out infinite}
+.clue-sent-msg{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:2px;color:#1B9B3D;text-align:center;animation:pulse-text 2s ease-in-out infinite}
+.clue-wait-msg{font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:2px;color:rgba(168,85,247,.5);text-align:center;animation:pulse-text 2s ease-in-out infinite}
 
-/* ── VOTE ── */
-#sVote{gap:14px;padding-top:28px}
-.vote-phase-hint{font-size:13px;color:rgba(255,255,255,.4);text-align:center;letter-spacing:.5px;line-height:1.5;max-width:340px}
-.clue-cards{display:flex;flex-direction:column;gap:10px;width:100%;max-width:400px}
-.clue-card{background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.08);border-radius:14px;padding:14px 16px;cursor:pointer;transition:border-color .15s,background .15s,transform .1s;touch-action:manipulation}
-.clue-card:active{transform:scale(.97)}
-.clue-card.selected{border-color:#a855f7;background:rgba(168,85,247,.12);box-shadow:0 0 20px rgba(168,85,247,.2)}
-.clue-card.voted{pointer-events:none}
-.clue-card-name{font-family:'Russo One',sans-serif;font-size:13px;color:rgba(255,255,255,.5);letter-spacing:1px;margin-bottom:6px}
-.clue-card-name .me-tag{font-size:9px;color:#a855f7;letter-spacing:2px;margin-left:6px}
-.clue-card-text{font-family:'Russo One',sans-serif;font-size:20px;color:#fff;letter-spacing:1px}
-.vote-count-info{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:3px;color:rgba(168,85,247,.5);text-align:center}
+/* VOTE — discussion chat + player vote grid */
+#sVote{padding-top:14px}
+
+/* Clues summary (compact, 2 cols) */
+.clues-summary{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%;max-width:480px}
+.cs-item{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 11px;min-width:0}
+.cs-pname{font-family:'Russo One',sans-serif;font-size:9px;color:rgba(255,255,255,.35);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cs-clue{font-family:'Russo One',sans-serif;font-size:13px;color:#fff;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Discussion chat box */
+.disc-box{width:100%;max-width:480px;background:rgba(5,5,20,.92);border:2px solid rgba(168,85,247,.5);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 0 30px rgba(168,85,247,.2)}
+.disc-head{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid rgba(168,85,247,.2);background:rgba(168,85,247,.08)}
+.disc-head-label{font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:3px;color:rgba(168,85,247,.8)}
+.disc-timer{font-family:'Russo One',sans-serif;font-size:22px;color:#a855f7;min-width:36px;text-align:right;transition:color .3s}
+.disc-timer.urgent{color:#ff4466;animation:pulse-text .5s ease-in-out infinite}
+.disc-msgs{height:150px;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:5px}
+.disc-msg{font-size:13px;line-height:1.4;word-break:break-word}
+.disc-msg-name{font-family:'Russo One',sans-serif;font-size:10px;color:#c084fc;margin-right:5px}
+.disc-msg-me .disc-msg-name{color:#ffd700}
+.disc-inp-row{display:flex;gap:7px;padding:8px 10px;border-top:1px solid rgba(255,255,255,.07)}
+.disc-inp{flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:#fff;font-family:'Exo 2',sans-serif;font-size:14px;padding:8px 11px;border-radius:8px;outline:none;min-width:0}
+.disc-inp:focus{border-color:#a855f7}
+.disc-inp::placeholder{color:rgba(255,255,255,.25)}
+.disc-send{background:linear-gradient(135deg,#6d00c4,#a855f7);border:none;color:#fff;font-family:'Russo One',sans-serif;font-size:13px;padding:8px 14px;border-radius:8px;cursor:pointer;flex-shrink:0}
+.disc-send:active{transform:scale(.94)}
+
+/* Vote player tiles */
+.vote-section-label{font-family:'Russo One',sans-serif;font-size:10px;letter-spacing:4px;color:rgba(255,255,255,.3);width:100%;max-width:480px}
+.vote-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;width:100%;max-width:480px}
+.vt{background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s;touch-action:manipulation;min-width:0}
+.vt:active{transform:scale(.96)}
+.vt.selected{border-color:#D72027;background:rgba(215,32,39,.15);box-shadow:0 0 16px rgba(215,32,39,.3)}
+.vt.elim{opacity:.3;pointer-events:none}
+.vt.self{pointer-events:none;opacity:.5}
+.vt.voted-out{border-color:#D72027;background:rgba(215,32,39,.1)}
+.vt-av{font-size:20px;flex-shrink:0}
+.vt-name{font-family:'Russo One',sans-serif;font-size:12px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .you-voted-msg{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:2px;color:#a855f7;text-align:center;animation:pulse-text 2s ease-in-out infinite}
+.vote-count-info{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:3px;color:rgba(168,85,247,.5);text-align:center}
 
-/* ── RESULTS ── */
-#sResults{justify-content:flex-start;gap:16px;padding-top:32px}
-.result-banner{width:100%;max-width:400px;border-radius:20px;padding:28px 20px;display:flex;flex-direction:column;align-items:center;gap:12px;position:relative;overflow:hidden}
+/* ELIM FLASH */
+#elimFlash{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:800;align-items:center;justify-content:center;flex-direction:column;gap:18px}
+#elimFlash.show{display:flex}
+.ef-avatar{font-size:64px}
+.ef-title{font-family:'Russo One',sans-serif;font-size:clamp(18px,6vw,28px);text-align:center;letter-spacing:2px;color:#fff}
+.ef-sub{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:3px;color:rgba(255,255,255,.4);text-align:center}
+.ef-not-imp{font-family:'Russo One',sans-serif;font-size:15px;letter-spacing:2px;color:#1B9B3D;text-align:center;margin-top:6px}
+
+/* RESULTS */
+#sResults{justify-content:flex-start;padding-top:28px}
+.result-banner{width:100%;max-width:400px;border-radius:20px;padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:10px}
 .result-banner.players-win{background:linear-gradient(135deg,#003a1a,#006830);border:2px solid rgba(27,155,61,.5);box-shadow:0 0 40px rgba(27,155,61,.2)}
 .result-banner.imposter-win{background:linear-gradient(135deg,#3a0010,#7a0020);border:2px solid rgba(215,32,39,.5);box-shadow:0 0 40px rgba(215,32,39,.2)}
-.result-icon{font-size:60px}
-.result-title{font-family:'Russo One',sans-serif;font-size:clamp(22px,7vw,32px);text-align:center;letter-spacing:2px}
-.result-sub{font-size:14px;color:rgba(255,255,255,.6);text-align:center;letter-spacing:.5px;line-height:1.5}
-.imposter-reveal{width:100%;max-width:400px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);border-radius:16px;padding:16px 20px;display:flex;flex-direction:column;gap:8px}
+.result-icon{font-size:56px}
+.result-title{font-family:'Russo One',sans-serif;font-size:clamp(20px,7vw,30px);text-align:center;letter-spacing:2px}
+.result-sub{font-size:13px;color:rgba(255,255,255,.6);text-align:center;line-height:1.5}
+.imposter-reveal{width:100%;max-width:400px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;gap:6px}
 .ir-label{font-family:'Russo One',sans-serif;font-size:10px;letter-spacing:4px;color:rgba(168,85,247,.5)}
-.ir-name{font-family:'Russo One',sans-serif;font-size:22px;color:#c084fc}
-.word-reveal{width:100%;max-width:400px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px 20px;display:flex;flex-direction:column;gap:6px}
+.ir-name{font-family:'Russo One',sans-serif;font-size:20px;color:#c084fc}
+.word-reveal{width:100%;max-width:400px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px 18px;display:flex;flex-direction:column;gap:5px}
 .wr-label{font-family:'Russo One',sans-serif;font-size:10px;letter-spacing:4px;color:rgba(255,255,255,.3)}
-.wr-word{font-family:'Russo One',sans-serif;font-size:26px;color:#fff}
+.wr-word{font-family:'Russo One',sans-serif;font-size:24px;color:#fff}
 .scores-box{width:100%;max-width:400px;display:flex;flex-direction:column;gap:6px}
 .score-row{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border-radius:10px;padding:9px 14px}
 .score-row.imposter-row{border:1px solid rgba(168,85,247,.3);background:rgba(168,85,247,.07)}
-.score-name{font-family:'Russo One',sans-serif;font-size:14px;flex:1}
-.score-pts{font-family:'Russo One',sans-serif;font-size:18px;color:#a855f7}
-.score-pts.gained{color:#1B9B3D}
+.score-name{font-family:'Russo One',sans-serif;font-size:13px;flex:1}
+.score-pts{font-family:'Russo One',sans-serif;font-size:16px;color:#a855f7}
 .result-btn-row{display:flex;gap:10px;width:100%;max-width:400px}
 .result-btn-row .btn{flex:1}
 
-/* ── TOAST ── */
+/* TOAST */
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:rgba(168,85,247,.9);color:#fff;font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:2px;padding:12px 24px;border-radius:12px;z-index:999;transition:transform .3s;white-space:nowrap;box-shadow:0 4px 20px rgba(168,85,247,.4)}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
-/* ── LOADING OVERLAY ── */
-#loading{position:fixed;inset:0;background:rgba(5,5,16,.9);z-index:900;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;display:none}
+#loading{position:fixed;inset:0;background:rgba(5,5,16,.9);z-index:900;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px}
 #loading.show{display:flex}
 .spinner{width:40px;height:40px;border:3px solid rgba(168,85,247,.2);border-top-color:#a855f7;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -150,12 +185,16 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 </head>
 <body>
 
-<div id="loading">
-  <div class="spinner"></div>
-  <div class="loading-text">VERBINDE...</div>
-</div>
-
+<div id="loading"><div class="spinner"></div><div class="loading-text">VERBINDE...</div></div>
 <div id="toast" class="toast"></div>
+
+<!-- ELIM FLASH OVERLAY -->
+<div id="elimFlash">
+  <div class="ef-avatar" id="efAvatar">🐱</div>
+  <div class="ef-title" id="efTitle">NAME wurde rausgeflogen!</div>
+  <div class="ef-not-imp" id="efNotImp">❌ NICHT DER IMPOSTER</div>
+  <div class="ef-sub" id="efSub">Das Spiel geht weiter...</div>
+</div>
 
 <!-- ── MENU ── -->
 <div class="screen active" id="sMenu">
@@ -186,14 +225,13 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
   <div class="players-label">SPIELER</div>
   <div class="players-list" id="lobbyPlayers"></div>
   <div class="lobby-hint" id="lobbyHint">Mindestens 3 Spieler zum Starten</div>
-  <div style="height:8px"></div>
   <button class="btn btn-primary" id="startBtn" onclick="hostStartGame()" disabled style="max-width:400px">🎮 SPIEL STARTEN</button>
   <div class="lobby-wait" id="lobbyWait" style="display:none">Warte auf den Host...</div>
 </div>
 
 <!-- ── REVEAL ── -->
 <div class="screen" id="sReveal">
-  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;width:100%">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;width:100%">
     <div class="phase-header">RUNDE BEGINNT</div>
     <div class="reveal-card" id="revealCard">
       <div class="reveal-cover" id="revealCover" onclick="revealRole()">
@@ -213,34 +251,51 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 <!-- ── CLUES ── -->
 <div class="screen" id="sClues">
   <div class="phase-header">PHASE 1</div>
-  <div class="phase-title">HINWEIS GEBEN</div>
+  <div class="phase-title">HINWEISE GEBEN</div>
   <div class="my-word-reminder" id="clueWordReminder">
     <div class="mwr-label">DEIN WORT</div>
     <div class="mwr-word" id="clueMyWord">—</div>
   </div>
-  <div style="font-size:12px;color:rgba(255,255,255,.3);text-align:center;max-width:340px;letter-spacing:.5px;line-height:1.5">
-    Gib einen kurzen Hinweis auf das Wort. Sei nicht zu offensichtlich — der Imposter darf nicht erraten!
-  </div>
-  <div class="players-label" style="max-width:400px">STATUS</div>
-  <div class="clue-status-list" id="clueStatusList"></div>
-  <div class="clue-input-area" id="clueInputArea">
+  <!-- 2-column player grid -->
+  <div class="players-2col" id="cluePlayersGrid"></div>
+  <!-- Active speaker input -->
+  <div class="clue-input-wrap" id="clueInputArea" style="display:none">
+    <div class="active-label">🎤 DU BIST DRAN!</div>
     <input class="clue-inp" id="clueInp" placeholder="Dein Hinweis..." maxlength="30" autocomplete="off">
     <button class="btn btn-primary" id="clueSendBtn" onclick="sendClue()">SENDEN →</button>
     <div class="err" id="clueErr"></div>
   </div>
-  <div class="clue-sent-msg" id="clueSentMsg" style="display:none">✓ Hinweis gesendet — warte auf andere...</div>
+  <div class="clue-sent-msg" id="clueSentMsg" style="display:none">✓ Hinweis gesendet</div>
+  <div class="clue-wait-msg" id="clueWaitMsg" style="display:none">Warte auf anderen Spieler...</div>
 </div>
 
 <!-- ── VOTE ── -->
 <div class="screen" id="sVote">
   <div class="phase-header">PHASE 2</div>
-  <div class="phase-title">ABSTIMMEN</div>
-  <div class="vote-phase-hint">Wer ist der Imposter? Tippe auf die Person, die du verdächtigst.</div>
-  <div class="vote-count-info" id="voteCountInfo">0 / 0 haben abgestimmt</div>
-  <div class="clue-cards" id="clueCards"></div>
-  <button class="btn btn-danger" id="voteConfirmBtn" onclick="confirmVote()" style="max-width:400px;display:none">🗳️ ABSTIMMEN</button>
-  <div class="you-voted-msg" id="youVotedMsg" style="display:none">✓ Du hast abgestimmt — warte auf andere...</div>
-  <div class="err" id="voteErr"></div>
+  <div class="phase-title">ABSTIMMUNG</div>
+
+  <!-- Clues summary compact -->
+  <div class="clues-summary" id="cluesSummary"></div>
+
+  <!-- Discussion chat — prominent center -->
+  <div class="disc-box">
+    <div class="disc-head">
+      <span class="disc-head-label">💬 DISKUSSION</span>
+      <span class="disc-timer" id="discTimer">30</span>
+    </div>
+    <div class="disc-msgs" id="discMsgs"></div>
+    <div class="disc-inp-row">
+      <input class="disc-inp" id="discInp" placeholder="Schreib etwas..." maxlength="60" autocomplete="off">
+      <button class="disc-send" onclick="sendDiscMsg()">→</button>
+    </div>
+  </div>
+
+  <!-- Vote section -->
+  <div class="vote-section-label">WEN RAUSVOTEN?</div>
+  <div class="vote-grid" id="voteGrid"></div>
+  <button class="btn btn-danger" id="voteConfirmBtn" onclick="confirmVote()" style="display:none;max-width:480px">🗳️ RAUSVOTEN</button>
+  <div class="you-voted-msg" id="youVotedMsg" style="display:none">✓ Du hast abgestimmt</div>
+  <div class="vote-count-info" id="voteCountInfo"></div>
 </div>
 
 <!-- ── RESULTS ── -->
@@ -282,116 +337,107 @@ const WORDS = {
   '🎬 Filme': ['Titanic','Avatar','Matrix','Inception','Interstellar','Joker','Jaws','Bambi','Shrek','Ghostbusters'],
   '🎮 Games': ['Minecraft','Fortnite','Among Us','Mario','Zelda','Pokémon','Tetris','GTA','FIFA','Roblox'],
 };
-
 const AVATARS = ['🐱','🐶','🦊','🐸','🐧','🦋','🐺','🦁','🐼','🐨','🦄','🐉'];
 
 let myId = crypto.randomUUID();
-let myName = '';
-let myAvatar = '';
-let roomCode = '';
+let myName = '', myAvatar = '', roomCode = '';
 let isHost = false;
-let gs = null;
-let ch = null;
+let gs = null, ch = null;
 let heartbeatTimer = null;
-let selectedVote = null;
-let hasVoted = false;
-let clueSent = false;
-let revealed = false;
-let readySent = false;
+let voteTimerInterval = null;
+
+// per-round client state (reset on new round)
+let revealed = false, readySent = false, clueSent = false, hasVoted = false;
+let selectedVoteId = null;
 
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 function randCode(){ return Math.random().toString(36).slice(2,6).toUpperCase(); }
+function shuffle(arr){ var a=[...arr]; for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]; } return a; }
 function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 function setLoading(v){ document.getElementById('loading').classList.toggle('show',v); }
-
-function showToast(msg, dur=2500){
-  var t=document.getElementById('toast');
-  t.textContent=msg;
-  t.classList.add('show');
-  clearTimeout(t._tm);
-  t._tm=setTimeout(()=>t.classList.remove('show'),dur);
-}
-
+function showToast(msg,dur=2500){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._tm); t._tm=setTimeout(()=>t.classList.remove('show'),dur); }
 function setMenuErr(msg){ document.getElementById('menuErr').textContent=msg; }
+function esc(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
-// ── CREATE ROOM ──
+// ── CREATE / JOIN ──
 window.createRoom = function(){
-  var name = document.getElementById('nameInp').value.trim().toUpperCase();
-  if(!name){ setMenuErr('Name eingeben!'); return; }
-  if(name.length<2){ setMenuErr('Name zu kurz!'); return; }
-  myName = name;
-  myAvatar = pick(AVATARS);
-  roomCode = randCode();
-  isHost = true;
+  var name=document.getElementById('nameInp').value.trim().toUpperCase();
+  if(!name||name.length<2){ setMenuErr('Name eingeben!'); return; }
+  myName=name; myAvatar=pick(AVATARS); roomCode=randCode(); isHost=true;
   connectChannel();
 };
-
-// ── JOIN ROOM ──
 window.joinRoom = function(){
-  var name = document.getElementById('nameInp').value.trim().toUpperCase();
-  var code = document.getElementById('codeInp').value.trim().toUpperCase();
+  var name=document.getElementById('nameInp').value.trim().toUpperCase();
+  var code=document.getElementById('codeInp').value.trim().toUpperCase();
   if(!name){ setMenuErr('Name eingeben!'); return; }
   if(!code||code.length<4){ setMenuErr('Code eingeben!'); return; }
-  myName = name;
-  myAvatar = pick(AVATARS);
-  roomCode = code;
-  isHost = false;
+  myName=name; myAvatar=pick(AVATARS); roomCode=code; isHost=false;
   connectChannel();
 };
 
 function connectChannel(){
   setLoading(true);
-  ch = sb.channel('imposter_'+roomCode, { config:{ broadcast:{self:false} } });
+  ch = sb.channel('imposter_'+roomCode, {config:{broadcast:{self:false}}});
 
   ch.on('broadcast',{event:'state'}, m=>{
     if(isHost) return;
-    var prev = gs;
+    var prevPhase = gs ? gs.phase : null;
     gs = m.payload.s;
-    updateUI(prev);
+    // Reset client vars on phase change
+    if(prevPhase !== gs.phase){
+      if(gs.phase==='reveal'){ revealed=false; readySent=false; clueSent=false; hasVoted=false; selectedVoteId=null; }
+      if(gs.phase==='clues'){ clueSent=false; }
+      if(gs.phase==='voting'){ hasVoted=false; selectedVoteId=null; startVoteTimer(); }
+    }
+    updateUI();
   });
 
   ch.on('broadcast',{event:'join'}, m=>{
     if(!isHost) return;
-    var p = m.payload;
+    var p=m.payload;
     if(gs && !gs.players.find(x=>x.id===p.id)){
       gs.players.push({id:p.id, name:p.name, avatar:p.avatar, score:0});
-      broadcastState();
-      updateUI(null);
+      broadcastState(); updateUI();
     }
   });
 
   ch.on('broadcast',{event:'ready'}, m=>{
     if(!isHost) return;
-    var {playerId} = m.payload;
     if(gs && gs.phase==='reveal'){
-      if(!gs.readyPlayers) gs.readyPlayers=[];
-      if(!gs.readyPlayers.includes(playerId)) gs.readyPlayers.push(playerId);
-      if(gs.readyPlayers.length >= gs.players.length){
-        gs.phase='clues';
-        gs.readyPlayers=[];
-      }
-      broadcastState();
+      if(!gs.readyPlayers.includes(m.payload.playerId)) gs.readyPlayers.push(m.payload.playerId);
+      if(gs.readyPlayers.length >= gs.players.length) gs.phase='clues';
+      broadcastState(); updateUI();
     }
   });
 
   ch.on('broadcast',{event:'clue'}, m=>{
     if(!isHost) return;
-    var {playerId, playerName, text} = m.payload;
+    var {playerId,playerName,text}=m.payload;
     if(gs && gs.phase==='clues' && !gs.clues.find(c=>c.playerId===playerId)){
-      gs.clues.push({playerId, playerName, text});
-      if(gs.clues.length >= gs.players.length){
-        gs.phase='voting';
-      }
+      gs.clues.push({playerId,playerName,text});
+      gs.speakerIndex++;
+      if(gs.speakerIndex >= gs.speakerOrder.length){ gs.phase='voting'; gs.votePhaseStart=Date.now(); startHostVoteTimer(); }
+      broadcastState(); updateUI();
+    }
+  });
+
+  ch.on('broadcast',{event:'chat'}, m=>{
+    if(!isHost) return;
+    var {playerId,playerName,text}=m.payload;
+    if(gs && gs.phase==='voting'){
+      gs.chatMessages.push({playerId,playerName,text,ts:Date.now()});
       broadcastState();
     }
   });
 
   ch.on('broadcast',{event:'vote'}, m=>{
     if(!isHost) return;
-    var {voterId, targetId} = m.payload;
+    var {voterId,targetId}=m.payload;
     if(gs && gs.phase==='voting' && !gs.votes.find(v=>v.voterId===voterId)){
-      gs.votes.push({voterId, targetId});
-      if(gs.votes.length >= gs.players.length) calcResults();
+      gs.votes.push({voterId,targetId});
+      // Count eligible voters (non-eliminated)
+      var eligible = gs.players.filter(p=>!gs.eliminated.includes(p.id)).length;
+      if(gs.votes.length >= eligible){ clearTimeout(hostVoteTimeout); calcResults(); }
       else broadcastState();
     }
   });
@@ -400,23 +446,18 @@ function connectChannel(){
     if(status==='SUBSCRIBED'){
       setLoading(false);
       if(isHost){
-        gs = {
-          phase:'lobby',
-          players:[{id:myId, name:myName, avatar:myAvatar, score:0}],
-          hostId:myId,
-          imposterIds:[],
-          word:'', category:'',
-          clues:[], votes:[],
-          readyPlayers:[],
-          results:null,
+        gs={
+          phase:'lobby', players:[{id:myId,name:myName,avatar:myAvatar,score:0}],
+          hostId:myId, imposterIds:[], word:'', category:'',
+          clues:[], votes:[], readyPlayers:[], eliminated:[],
+          speakerOrder:[], speakerIndex:0,
+          chatMessages:[], votePhaseStart:0, results:null,
         };
-        updateUI(null);
+        updateUI();
       } else {
-        setTimeout(()=>{
-          ch.send({type:'broadcast',event:'join',payload:{id:myId,name:myName,avatar:myAvatar}});
-        }, 300);
+        setTimeout(()=>ch.send({type:'broadcast',event:'join',payload:{id:myId,name:myName,avatar:myAvatar}}),300);
         showScreen('sLobby');
-        document.getElementById('lobbyCode').textContent = roomCode;
+        document.getElementById('lobbyCode').textContent=roomCode;
         document.getElementById('startBtn').style.display='none';
         document.getElementById('lobbyWait').style.display='block';
         document.getElementById('lobbyPlayers').innerHTML='<div class="lobby-wait">Verbinde...</div>';
@@ -426,85 +467,53 @@ function connectChannel(){
   });
 }
 
-function broadcastState(){
-  if(!ch||!isHost) return;
-  ch.send({type:'broadcast',event:'state',payload:{s:gs}});
-}
+function broadcastState(){ if(!ch||!isHost) return; ch.send({type:'broadcast',event:'state',payload:{s:gs}}); }
+function startHeartbeat(){ clearInterval(heartbeatTimer); if(!isHost) return; heartbeatTimer=setInterval(()=>{ if(gs) broadcastState(); },3500); }
 
-function startHeartbeat(){
-  clearInterval(heartbeatTimer);
-  if(!isHost) return;
-  heartbeatTimer = setInterval(()=>{
-    if(gs) broadcastState();
-  }, 4000);
-}
-
-// ── HOST: START GAME ──
+// ── HOST: START ──
 window.hostStartGame = function(){
   if(!isHost||!gs) return;
-  if(gs.players.length < 2){ showToast('Mindestens 2 Spieler!'); return; }
+  if(gs.players.length<2){ showToast('Mindestens 2 Spieler!'); return; }
   startRound();
 };
 
 function startRound(){
-  var cats = Object.keys(WORDS);
-  var cat = pick(cats);
-  var word = pick(WORDS[cat]);
-  var imposter = pick(gs.players);
-  gs.imposterIds = [imposter.id];
-  gs.word = word;
-  gs.category = cat;
-  gs.phase = 'reveal';
-  gs.clues = [];
-  gs.votes = [];
-  gs.readyPlayers = [];
-  gs.results = null;
-  clueSent = false;
-  revealed = false;
-  readySent = false;
-  hasVoted = false;
-  selectedVote = null;
-  broadcastState();
-  updateUI(null);
+  var cats=Object.keys(WORDS), cat=pick(cats), word=pick(WORDS[cat]);
+  var alive=gs.players.filter(p=>!gs.eliminated.includes(p.id));
+  var imposter=pick(alive);
+  gs.imposterIds=[imposter.id];
+  gs.word=word; gs.category=cat;
+  gs.phase='reveal';
+  gs.clues=[]; gs.votes=[]; gs.readyPlayers=[];
+  gs.speakerOrder=shuffle(alive.map(p=>p.id));
+  gs.speakerIndex=0;
+  gs.chatMessages=[]; gs.votePhaseStart=0; gs.results=null;
+  // reset host-side local vars
+  revealed=false; readySent=false; clueSent=false; hasVoted=false; selectedVoteId=null;
+  broadcastState(); updateUI();
 }
 
-// ── HOST: PLAY AGAIN ──
-window.hostPlayAgain = function(){
-  if(!isHost||!gs) return;
-  startRound();
-};
-
-// ── LEAVE ROOM ──
+window.hostPlayAgain = function(){ if(!isHost||!gs) return; startRound(); };
 window.leaveRoom = function(){
-  clearInterval(heartbeatTimer);
+  clearInterval(heartbeatTimer); clearInterval(voteTimerInterval); clearTimeout(hostVoteTimeout);
   if(ch){ ch.unsubscribe(); ch=null; }
   gs=null; roomCode=''; isHost=false;
-  clueSent=false; revealed=false; readySent=false; hasVoted=false; selectedVote=null;
   showScreen('sMenu');
 };
 
-// ── REVEAL ROLE ──
+// ── REVEAL ──
 window.revealRole = function(){
   if(revealed) return;
-  revealed = true;
+  revealed=true;
   document.getElementById('revealCover').classList.add('hidden');
-  setTimeout(()=>{
-    document.getElementById('revealReadyBtn').style.display='block';
-  }, 1200);
+  setTimeout(()=>{ document.getElementById('revealReadyBtn').style.display='block'; },1200);
 };
-
-// ── SEND READY ──
 window.sendReady = function(){
-  if(readySent) return;
-  readySent = true;
+  if(readySent) return; readySent=true;
   if(isHost){
-    if(!gs.readyPlayers) gs.readyPlayers=[];
     if(!gs.readyPlayers.includes(myId)) gs.readyPlayers.push(myId);
-    if(gs.readyPlayers.length >= gs.players.length){
-      gs.phase='clues'; gs.readyPlayers=[];
-    }
-    broadcastState();
-    updateUI(null);
+    if(gs.readyPlayers.length>=gs.players.length) gs.phase='clues';
+    broadcastState(); updateUI();
   } else {
     ch.send({type:'broadcast',event:'ready',payload:{playerId:myId}});
     document.getElementById('revealReadyBtn').disabled=true;
@@ -512,22 +521,21 @@ window.sendReady = function(){
   }
 };
 
-// ── SEND CLUE ──
+// ── CLUE ──
 window.sendClue = function(){
   if(clueSent) return;
-  var text = document.getElementById('clueInp').value.trim();
+  var text=document.getElementById('clueInp').value.trim();
   if(!text){ document.getElementById('clueErr').textContent='Hinweis eingeben!'; return; }
-  if(text.length<1){ return; }
-  clueSent = true;
+  clueSent=true;
   document.getElementById('clueErr').textContent='';
   if(isHost){
-    var existing = gs.clues.find(c=>c.playerId===myId);
-    if(!existing){
-      gs.clues.push({playerId:myId, playerName:myName, text});
-      if(gs.clues.length >= gs.players.length) gs.phase='voting';
+    if(!gs.clues.find(c=>c.playerId===myId)){
+      gs.clues.push({playerId:myId,playerName:myName,text});
+      gs.speakerIndex++;
+      if(gs.speakerIndex>=gs.speakerOrder.length){ gs.phase='voting'; gs.votePhaseStart=Date.now(); startHostVoteTimer(); }
       broadcastState();
     }
-    updateUI(null);
+    updateUI();
   } else {
     ch.send({type:'broadcast',event:'clue',payload:{playerId:myId,playerName:myName,text}});
   }
@@ -535,90 +543,143 @@ window.sendClue = function(){
   document.getElementById('clueSentMsg').style.display='block';
 };
 
-// ── VOTE ──
-var selectedVoteId = null;
-window.selectVote = function(targetId){
-  if(hasVoted) return;
-  selectedVoteId = targetId;
-  document.querySelectorAll('.clue-card').forEach(c=>{
-    c.classList.toggle('selected', c.dataset.pid===targetId);
-  });
-  document.getElementById('voteConfirmBtn').style.display='block';
-  document.getElementById('voteErr').textContent='';
+// ── DISCUSSION CHAT ──
+window.sendDiscMsg = function(){
+  var inp=document.getElementById('discInp');
+  var text=inp.value.trim(); inp.value='';
+  if(!text) return;
+  if(isHost){
+    if(gs && gs.phase==='voting'){ gs.chatMessages.push({playerId:myId,playerName:myName,text,ts:Date.now()}); broadcastState(); updateUI(); }
+  } else {
+    ch.send({type:'broadcast',event:'chat',payload:{playerId:myId,playerName:myName,text}});
+    // Show immediately for self
+    appendDiscMsg({playerId:myId,playerName:myName,text});
+  }
 };
 
+function appendDiscMsg(msg){
+  var box=document.getElementById('discMsgs');
+  if(!box) return;
+  var div=document.createElement('div');
+  div.className='disc-msg'+(msg.playerId===myId?' disc-msg-me':'');
+  div.innerHTML='<span class="disc-msg-name">'+esc(msg.playerId===myId?'Du':msg.playerName)+'</span>'+esc(msg.text);
+  box.appendChild(div);
+  box.scrollTop=box.scrollHeight;
+}
+
+// ── VOTE ──
+var selectedVoteId2=null;
+window.selectVoteTarget = function(targetId){
+  if(hasVoted) return;
+  selectedVoteId2=targetId;
+  document.querySelectorAll('.vt').forEach(v=>{ v.classList.toggle('selected', v.dataset.vid===targetId); });
+  document.getElementById('voteConfirmBtn').style.display='block';
+};
 window.confirmVote = function(){
-  if(hasVoted||!selectedVoteId) return;
-  hasVoted = true;
-  if(isHost){
-    if(!gs.votes.find(v=>v.voterId===myId)){
-      gs.votes.push({voterId:myId, targetId:selectedVoteId});
-      if(gs.votes.length >= gs.players.length) calcResults();
-      else broadcastState();
-    }
-    updateUI(null);
-  } else {
-    ch.send({type:'broadcast',event:'vote',payload:{voterId:myId,targetId:selectedVoteId}});
-  }
+  if(hasVoted||!selectedVoteId2) return;
+  hasVoted=true;
   document.getElementById('voteConfirmBtn').style.display='none';
   document.getElementById('youVotedMsg').style.display='block';
+  if(isHost){
+    if(!gs.votes.find(v=>v.voterId===myId)){
+      gs.votes.push({voterId:myId,targetId:selectedVoteId2});
+      var eligible=gs.players.filter(p=>!gs.eliminated.includes(p.id)).length;
+      if(gs.votes.length>=eligible){ clearTimeout(hostVoteTimeout); calcResults(); }
+      else broadcastState();
+    }
+    updateUI();
+  } else {
+    ch.send({type:'broadcast',event:'vote',payload:{voterId:myId,targetId:selectedVoteId2}});
+  }
 };
 
-// ── CALCULATE RESULTS (host only) ──
+// ── VOTE TIMER ──
+var hostVoteTimeout = null;
+function startHostVoteTimer(){
+  clearTimeout(hostVoteTimeout);
+  hostVoteTimeout=setTimeout(()=>{ if(gs&&gs.phase==='voting') calcResults(); },30000);
+}
+
+function startVoteTimer(){
+  clearInterval(voteTimerInterval);
+  voteTimerInterval=setInterval(()=>{
+    if(!gs||gs.phase!=='voting'){ clearInterval(voteTimerInterval); return; }
+    var elapsed=Math.floor((Date.now()-gs.votePhaseStart)/1000);
+    var rem=Math.max(0,30-elapsed);
+    var el=document.getElementById('discTimer');
+    if(el){ el.textContent=rem; el.classList.toggle('urgent',rem<=10); }
+    if(rem<=0){ clearInterval(voteTimerInterval); if(isHost) calcResults(); }
+  },500);
+}
+
+// ── RESULTS ──
 function calcResults(){
-  var tally = {};
+  if(!gs||gs.phase!=='voting') return;
+  var tally={};
   gs.votes.forEach(v=>{ tally[v.targetId]=(tally[v.targetId]||0)+1; });
   var maxV=0, accusedId=null;
   Object.entries(tally).forEach(([id,cnt])=>{ if(cnt>maxV){maxV=cnt;accusedId=id;} });
-  var accused = gs.players.find(p=>p.id===accusedId);
-  var isImp = gs.imposterIds.includes(accusedId);
-  var winner = isImp ? 'players' : 'imposter';
-  gs.results = {accusedId, accusedName:accused?.name||'?', isImposter:isImp, winner};
-  if(winner==='players'){
+  var accused=gs.players.find(p=>p.id===accusedId);
+  var isImp=gs.imposterIds.includes(accusedId);
+
+  if(isImp){
+    // Players win
     gs.players.forEach(p=>{ if(!gs.imposterIds.includes(p.id)) p.score=(p.score||0)+1; });
+    gs.results={accusedId,accusedName:accused?.name||'?',accusedAvatar:accused?.avatar||'👤',isImposter:true,winner:'players',continueGame:false};
+    gs.phase='results';
+    broadcastState(); updateUI();
   } else {
-    gs.players.forEach(p=>{ if(gs.imposterIds.includes(p.id)) p.score=(p.score||0)+2; });
+    // Wrong person — eliminate them, continue if possible
+    if(accused) gs.eliminated.push(accusedId);
+    gs.results={accusedId,accusedName:accused?.name||'?',accusedAvatar:accused?.avatar||'👤',isImposter:false,winner:null,continueGame:true};
+    var alive=gs.players.filter(p=>!gs.eliminated.includes(p.id));
+    if(alive.length<=2){
+      // Too few players — imposter wins
+      gs.players.forEach(p=>{ if(gs.imposterIds.includes(p.id)) p.score=(p.score||0)+2; });
+      gs.results.winner='imposter'; gs.results.continueGame=false;
+      gs.phase='results';
+      broadcastState(); updateUI();
+    } else {
+      // Show elim flash, then new round
+      gs.phase='eliminating';
+      broadcastState(); updateUI();
+      setTimeout(()=>{
+        if(gs&&gs.phase==='eliminating') startRound();
+      },4000);
+    }
   }
-  gs.phase='results';
-  broadcastState();
-  updateUI(null);
 }
 
-// ── UI UPDATE ──
-function updateUI(prev){
+// ── UI ──
+function updateUI(){
   if(!gs) return;
   switch(gs.phase){
-    case 'lobby': renderLobby(); break;
-    case 'reveal': renderReveal(); break;
-    case 'clues': renderClues(); break;
-    case 'voting': renderVoting(); break;
-    case 'results': renderResults(); break;
+    case 'lobby':       renderLobby(); break;
+    case 'reveal':      renderReveal(); break;
+    case 'clues':       renderClues(); break;
+    case 'voting':      renderVoting(); break;
+    case 'eliminating': renderEliminating(); break;
+    case 'results':     renderResults(); break;
   }
 }
 
 // LOBBY
 function renderLobby(){
   showScreen('sLobby');
-  document.getElementById('lobbyCode').textContent = roomCode;
-  var list = document.getElementById('lobbyPlayers');
+  document.getElementById('lobbyCode').textContent=roomCode;
+  var list=document.getElementById('lobbyPlayers');
   list.innerHTML='';
   (gs.players||[]).forEach(p=>{
     var row=document.createElement('div');
     row.className='player-row'+(p.id===myId?' me':'')+(p.id===gs.hostId?' host-row':'');
-    row.innerHTML=
-      '<div class="player-avatar">'+p.avatar+'</div>'+
-      '<div class="player-name-row">'+esc(p.name)+'</div>'+
-      (p.id===gs.hostId?'<div class="player-tag tag-host">HOST</div>':'')+
-      (p.id===myId?'<div class="player-tag tag-you">DU</div>':'');
+    row.innerHTML='<div class="player-avatar">'+p.avatar+'</div><div class="player-name-row">'+esc(p.name)+'</div>'+(p.id===gs.hostId?'<div class="player-tag tag-host">HOST</div>':'')+(p.id===myId?'<div class="player-tag tag-you">DU</div>':'');
     list.appendChild(row);
   });
-  var count = (gs.players||[]).length;
+  var cnt=(gs.players||[]).length;
   if(isHost){
-    var startBtn=document.getElementById('startBtn');
-    startBtn.style.display='block';
-    startBtn.disabled=(count<2);
+    var sb2=document.getElementById('startBtn'); sb2.style.display='block'; sb2.disabled=(cnt<2);
     document.getElementById('lobbyWait').style.display='none';
-    document.getElementById('lobbyHint').textContent=count<2?'Mindestens 2 Spieler zum Starten':'';
+    document.getElementById('lobbyHint').textContent=cnt<2?'Mindestens 2 Spieler zum Starten':'';
   } else {
     document.getElementById('startBtn').style.display='none';
     document.getElementById('lobbyWait').style.display='block';
@@ -629,92 +690,139 @@ function renderLobby(){
 // REVEAL
 function renderReveal(){
   showScreen('sReveal');
-  if(!gs) return;
-  var amImp = gs.imposterIds.includes(myId);
-  var roleEl=document.getElementById('revealRole');
-  var wordEl=document.getElementById('revealWord');
-  var catEl=document.getElementById('revealCategory');
-  var warnEl=document.getElementById('revealWarning');
+  var amImp=gs.imposterIds.includes(myId);
+  var roleEl=document.getElementById('revealRole'), wordEl=document.getElementById('revealWord');
+  var catEl=document.getElementById('revealCategory'), warnEl=document.getElementById('revealWarning');
   if(amImp){
-    roleEl.textContent='🔴 DU BIST DER IMPOSTER!';
-    roleEl.className='reveal-role imp';
-    wordEl.textContent='❓ Kein Wort — fak es!';
-    wordEl.className='reveal-word imp-word';
-    warnEl.textContent='Finde das Wort heraus, ohne aufzufallen!';
-    catEl.textContent=gs.category;
+    roleEl.textContent='🔴 DU BIST DER IMPOSTER!'; roleEl.className='reveal-role imp';
+    wordEl.textContent='❓ Kein Wort — fak es!'; wordEl.className='reveal-word imp-word';
+    warnEl.textContent='Finde das Wort heraus, ohne aufzufallen!'; catEl.textContent=gs.category;
   } else {
-    roleEl.textContent='🟢 DU BIST EIN SPIELER';
-    roleEl.className='reveal-role player';
-    wordEl.textContent=gs.word;
-    wordEl.className='reveal-word';
-    catEl.textContent=gs.category;
-    warnEl.textContent='Gib Hinweise — verrat das Wort nicht!';
+    roleEl.textContent='🟢 DU BIST EIN SPIELER'; roleEl.className='reveal-role player';
+    wordEl.textContent=gs.word; wordEl.className='reveal-word';
+    catEl.textContent=gs.category; warnEl.textContent='Gib Hinweise — verrat das Wort nicht!';
   }
-  var ready=(gs.readyPlayers||[]).length;
-  var total=(gs.players||[]).length;
-  document.getElementById('revealReadyCount').textContent=ready+' / '+total+' bereit';
+  document.getElementById('revealReadyCount').textContent=(gs.readyPlayers||[]).length+' / '+gs.players.length+' bereit';
+  if(!revealed){
+    document.getElementById('revealCover').classList.remove('hidden');
+    document.getElementById('revealReadyBtn').style.display='none';
+  }
 }
 
-// CLUES
+// CLUES — 2-column player grid, turn-based
 function renderClues(){
   showScreen('sClues');
-  if(!gs) return;
-  var amImp = gs.imposterIds.includes(myId);
-  var rem=document.getElementById('clueMyWord');
-  var remBox=document.getElementById('clueWordReminder');
-  if(amImp){
-    rem.textContent='???';
-    rem.style.color='#ff4466';
-    remBox.style.borderColor='rgba(255,68,102,.3)';
-  } else {
-    rem.textContent=gs.word;
-    rem.style.color='#a855f7';
-    remBox.style.borderColor='rgba(168,85,247,.25)';
-  }
-  var statusList=document.getElementById('clueStatusList');
-  statusList.innerHTML='';
-  (gs.players||[]).forEach(p=>{
-    var hasSent=gs.clues.some(c=>c.playerId===p.id);
-    var row=document.createElement('div');
-    row.className='clue-status-row';
-    row.innerHTML=
-      '<div class="cs-dot '+(hasSent?'done':'wait')+'"></div>'+
-      '<div class="cs-name">'+(p.id===myId?'Du':esc(p.name))+'</div>'+
-      '<div class="cs-status">'+(hasSent?'✓ Gesendet':'...warte')+'</div>';
-    statusList.appendChild(row);
-  });
-  var mySent=gs.clues.some(c=>c.playerId===myId)||clueSent;
-  document.getElementById('clueInputArea').style.display=mySent?'none':'flex';
-  document.getElementById('clueSentMsg').style.display=mySent?'block':'none';
+  var amImp=gs.imposterIds.includes(myId);
+  var rem=document.getElementById('clueMyWord'), remBox=document.getElementById('clueWordReminder');
+  if(amImp){ rem.textContent='???'; rem.style.color='#ff4466'; remBox.style.borderColor='rgba(255,68,102,.3)'; }
+  else { rem.textContent=gs.word; rem.style.color='#a855f7'; remBox.style.borderColor='rgba(168,85,247,.25)'; }
+
+  var order=gs.speakerOrder||[];
+  var idx=gs.speakerIndex||0;
+  var activeSpeakerId=order[idx];
+
+  // Build 2-column grid
+  var grid=document.getElementById('cluePlayersGrid');
+  grid.innerHTML='';
+  var leftCol=order.slice(0,5), rightCol=order.slice(5,10);
+  var renderCol=function(ids){
+    var col=document.createElement('div');
+    col.style.cssText='display:flex;flex-direction:column;gap:7px';
+    ids.forEach(function(pid){
+      var p=gs.players.find(x=>x.id===pid);
+      if(!p) return;
+      var sentClue=gs.clues.find(c=>c.playerId===pid);
+      var isActive=pid===activeSpeakerId && !sentClue;
+      var isElim=gs.eliminated.includes(pid);
+      var tile=document.createElement('div');
+      tile.className='pt'+(isActive?' active':'')+(sentClue&&!isActive?' done':'')+(isElim?' elim':'');
+      var statusText=isElim?'❌ Raus':sentClue?'✓ '+esc(sentClue.text):isActive?'✍️ schreibt...':'⏳ wartet';
+      tile.innerHTML='<div class="pt-av">'+p.avatar+'</div><div class="pt-info"><div class="pt-name">'+esc(p.id===myId?'Du':p.name)+'</div><div class="pt-status">'+statusText+'</div></div>';
+      col.appendChild(tile);
+    });
+    return col;
+  };
+  if(leftCol.length) grid.appendChild(renderCol(leftCol));
+  if(rightCol.length) grid.appendChild(renderCol(rightCol));
+
+  // Show input only if it's my turn and I haven't sent yet
+  var myTurn=activeSpeakerId===myId && !gs.clues.find(c=>c.playerId===myId) && !clueSent;
+  var alreadySent=gs.clues.find(c=>c.playerId===myId)||clueSent;
+  document.getElementById('clueInputArea').style.display=myTurn?'flex':'none';
+  document.getElementById('clueSentMsg').style.display=alreadySent&&!myTurn?'block':'none';
+  document.getElementById('clueWaitMsg').style.display=(!myTurn&&!alreadySent)?'block':'none';
+  if(myTurn) setTimeout(()=>document.getElementById('clueInp').focus(),100);
 }
 
-// VOTING
+// VOTING — clues summary + discussion chat + vote tiles
 function renderVoting(){
   showScreen('sVote');
-  if(!gs) return;
-  var voted=(gs.votes||[]).length;
-  var total=(gs.players||[]).length;
-  document.getElementById('voteCountInfo').textContent=voted+' / '+total+' haben abgestimmt';
-  var cards=document.getElementById('clueCards');
-  cards.innerHTML='';
-  gs.clues.forEach(c=>{
-    var isSelf=c.playerId===myId;
-    var card=document.createElement('div');
-    card.className='clue-card'+(isSelf?' dim':'')+(hasVoted?' voted':'');
-    card.dataset.pid=c.playerId;
-    card.innerHTML=
-      '<div class="clue-card-name">'+esc(isSelf?'Du':c.playerName)+(isSelf?'<span class="me-tag">DU</span>':'')+'</div>'+
-      '<div class="clue-card-text">"'+esc(c.text)+'"</div>';
-    if(!isSelf&&!hasVoted) card.addEventListener('click',()=>window.selectVote(c.playerId));
-    cards.appendChild(card);
+
+  // Clues summary in 2 cols
+  var sum=document.getElementById('cluesSummary');
+  sum.innerHTML='';
+  (gs.clues||[]).forEach(c=>{
+    var div=document.createElement('div'); div.className='cs-item';
+    var p=gs.players.find(x=>x.id===c.playerId);
+    div.innerHTML='<div class="cs-pname">'+(p?p.avatar+' ':'')+esc(c.playerId===myId?'Du':c.playerName)+'</div><div class="cs-clue">'+esc(c.text)+'</div>';
+    sum.appendChild(div);
   });
+
+  // Chat messages
+  var msgBox=document.getElementById('discMsgs');
+  msgBox.innerHTML='';
+  (gs.chatMessages||[]).forEach(m=>appendDiscMsg(m));
+
+  // Timer
+  if(!voteTimerInterval||gs.votePhaseStart>0) startVoteTimer();
+
+  // Vote count
+  var eligible=gs.players.filter(p=>!gs.eliminated.includes(p.id)).length;
+  document.getElementById('voteCountInfo').textContent=(gs.votes||[]).length+' / '+eligible+' haben abgestimmt';
+
+  // Vote player tiles — 2 col grid, all non-eliminated players
+  var grid=document.getElementById('voteGrid');
+  grid.innerHTML='';
+  var votable=gs.players.filter(p=>!gs.eliminated.includes(p.id));
+  var leftV=votable.slice(0,5), rightV=votable.slice(5,10);
+  var renderVCol=function(players){
+    var col=document.createElement('div');
+    col.style.cssText='display:flex;flex-direction:column;gap:7px';
+    players.forEach(function(p){
+      var isSelf=p.id===myId;
+      var tile=document.createElement('div');
+      tile.className='vt'+(isSelf?' self':'')+(hasVoted?' voted':'');
+      tile.dataset.vid=p.id;
+      tile.innerHTML='<div class="vt-av">'+p.avatar+'</div><div class="vt-name">'+esc(isSelf?'Du':p.name)+'</div>';
+      if(!isSelf&&!hasVoted) tile.addEventListener('click',()=>window.selectVoteTarget(p.id));
+      col.appendChild(tile);
+    });
+    return col;
+  };
+  if(leftV.length) grid.appendChild(renderVCol(leftV));
+  if(rightV.length) grid.appendChild(renderVCol(rightV));
+
   document.getElementById('youVotedMsg').style.display=hasVoted?'block':'none';
   if(hasVoted) document.getElementById('voteConfirmBtn').style.display='none';
 }
 
+// ELIMINATING — flash overlay
+function renderEliminating(){
+  if(!gs||!gs.results) return;
+  var r=gs.results;
+  document.getElementById('efAvatar').textContent=r.accusedAvatar||'👤';
+  document.getElementById('efTitle').textContent=esc(r.accusedName)+' wurde rausgeflogen!';
+  document.getElementById('efNotImp').textContent='❌ NICHT DER IMPOSTER';
+  document.getElementById('efSub').textContent='Das Spiel geht weiter...';
+  document.getElementById('elimFlash').classList.add('show');
+  setTimeout(()=>document.getElementById('elimFlash').classList.remove('show'),3500);
+}
+
 // RESULTS
 function renderResults(){
+  document.getElementById('elimFlash').classList.remove('show');
   showScreen('sResults');
+  clearInterval(voteTimerInterval);
   if(!gs||!gs.results) return;
   var r=gs.results;
   var banner=document.getElementById('resultBanner');
@@ -722,22 +830,20 @@ function renderResults(){
   document.getElementById('resultIcon').textContent=r.winner==='players'?'🎉':'🕵️';
   document.getElementById('resultTitle').textContent=r.winner==='players'?'SPIELER GEWINNEN!':'IMPOSTER GEWINNT!';
   document.getElementById('resultSub').textContent=r.winner==='players'?
-    (r.accusedName+' wurde entlarvt!'):
-    (r.accusedName+' wurde fälschlicherweise beschuldigt!');
-  var imposter=gs.players.find(p=>gs.imposterIds.includes(p.id));
-  document.getElementById('imposterName').textContent=imposter?imposter.avatar+' '+imposter.name:'?';
+    (r.accusedName+' ('+r.accusedAvatar+') wurde entlarvt!'):
+    ('Zu wenige Spieler — Imposter entkommen!');
+  var imp=gs.players.find(p=>gs.imposterIds.includes(p.id));
+  document.getElementById('imposterName').textContent=imp?imp.avatar+' '+imp.name:'?';
   document.getElementById('resultWord').textContent=gs.word+' ('+gs.category+')';
   var scoresBox=document.getElementById('scoresBox');
   scoresBox.innerHTML='';
   var sorted=[...gs.players].sort((a,b)=>(b.score||0)-(a.score||0));
-  sorted.forEach((p,i)=>{
+  sorted.forEach(p=>{
     var isImp=gs.imposterIds.includes(p.id);
+    var isElim=gs.eliminated.includes(p.id)&&!isImp;
     var row=document.createElement('div');
     row.className='score-row'+(isImp?' imposter-row':'');
-    row.innerHTML=
-      '<div class="player-avatar">'+p.avatar+'</div>'+
-      '<div class="score-name">'+esc(p.id===myId?'Du':p.name)+(isImp?' 🕵️':'')+'</div>'+
-      '<div class="score-pts">'+p.score+'</div>';
+    row.innerHTML='<div class="player-avatar">'+p.avatar+'</div><div class="score-name">'+esc(p.id===myId?'Du':p.name)+(isImp?' 🕵️':'')+(isElim?' ❌':'')+'</div><div class="score-pts">'+p.score+'</div>';
     scoresBox.appendChild(row);
   });
   if(isHost){
@@ -749,14 +855,13 @@ function renderResults(){
   }
 }
 
-function esc(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
-
-// Keyboard shortcuts
+// ── KEYBOARD ──
 document.getElementById('nameInp').addEventListener('keydown',e=>{ if(e.key==='Enter') window.createRoom(); });
 document.getElementById('codeInp').addEventListener('keydown',e=>{ if(e.key==='Enter') window.joinRoom(); });
-document.addEventListener('keydown',e=>{ if(e.key==='Enter'){ var ci=document.getElementById('clueInp'); if(document.activeElement===ci) window.sendClue(); }});
 document.getElementById('codeInp').addEventListener('input',e=>{ e.target.value=e.target.value.toUpperCase(); });
 document.getElementById('nameInp').addEventListener('input',e=>{ e.target.value=e.target.value.toUpperCase(); });
+document.getElementById('clueInp').addEventListener('keydown',e=>{ if(e.key==='Enter') window.sendClue(); });
+document.getElementById('discInp').addEventListener('keydown',e=>{ if(e.key==='Enter') window.sendDiscMsg(); });
 </script>
 <script type="module">
 import{createClient}from'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
