@@ -1922,19 +1922,129 @@ function drawBattle(){
 }
 
 function drawTower(c,t){
-  var icon = t.kind==='king' ? '👑' : '🏯';
-  if(t.dead){ c.globalAlpha=.35; }
-  c.font='34px serif'; c.textAlign='center';
-  c.fillText(icon, t.x, t.y+12);
-  c.globalAlpha=1;
-  if(!t.dead){
-    var bw=46, bh=6, bx=t.x-bw/2, by=t.y-30;
-    c.fillStyle='rgba(0,0,0,.6)'; c.fillRect(bx,by,bw,bh);
+  var r = t.r; // radius defines the scale
+  var x = t.x, y = t.y;
+  var isKing = t.kind === 'king';
+  var isPlayer = t.side === 'p';
+  var dead = t.dead;
+
+  c.save();
+  c.globalAlpha = dead ? 0.3 : 1;
+  c.translate(x, y);
+
+  var wallColor  = isPlayer ? '#3a5a8c' : '#8c3a3a';
+  var lightColor = isPlayer ? '#5a8abf' : '#bf5a5a';
+  var darkColor  = isPlayer ? '#1e3a5f' : '#5f1e1e';
+  var battleColor= isPlayer ? '#4a7ab0' : '#b04a4a';
+
+  // ── Tower body ────────────────────────────────────────
+  var tw = isKing ? r*1.6 : r*1.3; // tower width
+  var th = isKing ? r*2.2 : r*1.8; // tower height
+  var tx = -tw/2;
+  var ty = -th/2;
+
+  // Shadow
+  c.fillStyle='rgba(0,0,0,.3)';
+  c.fillRect(tx+4, ty+6, tw, th);
+
+  // Main wall
+  c.fillStyle = wallColor;
+  c.fillRect(tx, ty, tw, th);
+
+  // Wall shading (lighter left side)
+  c.fillStyle = lightColor;
+  c.fillRect(tx, ty, tw*0.35, th);
+
+  // Stone bricks
+  c.strokeStyle = darkColor;
+  c.lineWidth = 1;
+  var brickH = r*0.28;
+  for(var row=0; row*brickH < th; row++){
+    var offset = (row%2===0) ? 0 : tw*0.3;
+    for(var col=-1; col*tw*0.6 < tw+tw*0.6; col++){
+      var bx = tx + offset + col*tw*0.6;
+      var by = ty + row*brickH;
+      c.strokeRect(bx, by, tw*0.6, brickH);
+    }
+  }
+
+  // ── Battlements (top) ────────────────────────────────
+  var merlonW = isKing ? r*0.35 : r*0.28;
+  var merlonH = isKing ? r*0.45 : r*0.35;
+  var gap     = r*0.18;
+  var merlonCount = isKing ? 4 : 3;
+  var totalMW = merlonCount*merlonW + (merlonCount-1)*gap;
+  var mStart  = -totalMW/2;
+  for(var m=0; m<merlonCount; m++){
+    var mx = mStart + m*(merlonW+gap);
+    c.fillStyle = battleColor;
+    c.fillRect(mx, ty-merlonH, merlonW, merlonH);
+    c.fillStyle = lightColor;
+    c.fillRect(mx, ty-merlonH, merlonW*0.3, merlonH);
+    c.strokeStyle = darkColor; c.lineWidth=1;
+    c.strokeRect(mx, ty-merlonH, merlonW, merlonH);
+  }
+
+  // ── Arrow slit / window ───────────────────────────────
+  c.fillStyle = darkColor;
+  if(isKing){
+    // King tower: arched window
+    c.beginPath();
+    c.rect(-r*.15, ty+th*.25, r*.3, r*.35);
+    c.arc(0, ty+th*.25, r*.15, Math.PI, 0);
+    c.fill();
+    // Gold crown symbol
+    c.font = 'bold '+(r*.55)+'px serif';
+    c.fillStyle = '#f1c40f';
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText('👑', 0, ty+th*.65);
+  } else {
+    // Crown tower: arrow slit
+    c.fillRect(-r*.09, ty+th*.3, r*.18, r*.4);
+    c.beginPath(); c.arc(0, ty+th*.3, r*.09, Math.PI, 0); c.fill();
+    // Cannon barrel poking out
+    c.fillStyle = darkColor;
+    c.fillRect(tw/2, ty+th*.5, r*.35, r*.18);
+    c.fillStyle = '#2c3e50';
+    c.beginPath(); c.arc(tw/2+r*.35, ty+th*.5+r*.09, r*.1, 0, 7); c.fill();
+  }
+
+  // ── Flag on top ───────────────────────────────────────
+  var flagX = isKing ? 0 : tw*0.1;
+  var poleH = isKing ? r*.9 : r*.7;
+  var poleY = ty - merlonH - poleH;
+  c.strokeStyle = darkColor; c.lineWidth=2;
+  c.beginPath(); c.moveTo(flagX, ty-merlonH); c.lineTo(flagX, poleY); c.stroke();
+  // flag
+  c.fillStyle = isPlayer ? '#e74c3c' : '#2ecc71';
+  c.beginPath();
+  c.moveTo(flagX, poleY);
+  c.lineTo(flagX + r*.5, poleY + r*.2);
+  c.lineTo(flagX, poleY + r*.4);
+  c.closePath(); c.fill();
+
+  // ── Dead rubble ───────────────────────────────────────
+  if(dead){
+    c.fillStyle='rgba(80,40,0,.6)';
+    for(var rb=0; rb<5; rb++){
+      c.fillRect(tx+(rb*tw*.22), ty+th*.8+(rb%2)*r*.1, r*.3+rb*r*.05, r*.18);
+    }
+  }
+
+  c.restore();
+
+  // ── HP bar (outside save/restore, no translate) ───────
+  if(!dead){
+    var bw = isKing ? 70 : 56, bh = 7;
+    var bx = x - bw/2, by = y - th/2 - (isKing ? r*.9+merlonH : r*.7+merlonH) - 18;
+    c.fillStyle='rgba(0,0,0,.7)'; c.fillRect(bx,by,bw,bh);
     var pct=Math.max(0,t.hp/t.maxhp);
-    c.fillStyle = t.side==='p' ? '#2ecc71' : '#e74c3c';
-    c.fillRect(bx,by,bw*pct,bh);
-    c.strokeStyle='rgba(255,255,255,.25)'; c.lineWidth=1; c.strokeRect(bx,by,bw,bh);
-    c.fillStyle='#fff'; c.font='8px sans-serif'; c.fillText(Math.ceil(t.hp), t.x, by-2);
+    var hpColor = pct>0.5 ? '#2ecc71' : pct>0.25 ? '#f39c12' : '#e74c3c';
+    c.fillStyle=hpColor; c.fillRect(bx,by,bw*pct,bh);
+    c.strokeStyle='rgba(255,255,255,.3)'; c.lineWidth=1; c.strokeRect(bx,by,bw,bh);
+    c.fillStyle='#fff'; c.font='bold 9px sans-serif'; c.textAlign='center';
+    c.fillText(Math.ceil(t.hp), x, by-2);
   }
 }
 
