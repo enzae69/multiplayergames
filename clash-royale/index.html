@@ -3068,20 +3068,21 @@ async function addFriend(){
   var inp = document.getElementById('addFriendInput');
   var target = inp.value.trim();
   if(!target){ showToast('⚠️ Name eingeben'); return; }
+  if(!_frUser){ showToast('⚠️ Erst einloggen!'); return; }
   if(target === _frUser){ showToast('⚠️ Du kannst dich nicht selbst adden'); return; }
-  var sb = getSb(); if(!sb){ showToast('⚠️ Nicht eingeloggt'); return; }
-  // Check for existing relationship
-  var ex = await sb.from('cr_friends').select('id,status').or(
-    'and(from_user.eq.'+_frUser+',to_user.eq.'+target+'),and(from_user.eq.'+target+',to_user.eq.'+_frUser+')'
-  ).maybeSingle();
-  if(ex.data){
-    showToast(ex.data.status==='accepted' ? 'ℹ️ Ihr seid bereits Freunde!' : 'ℹ️ Anfrage bereits gesendet!');
+  var sb = getSb(); if(!sb){ showToast('⚠️ Verbindungsfehler'); return; }
+  // Check for existing relationship (two separate queries, avoid nested and/or syntax issues)
+  var q1 = await sb.from('cr_friends').select('id,status').eq('from_user',_frUser).eq('to_user',target).maybeSingle();
+  var q2 = await sb.from('cr_friends').select('id,status').eq('from_user',target).eq('to_user',_frUser).maybeSingle();
+  var existing = (q1.data || q2.data);
+  if(existing){
+    showToast(existing.status==='accepted' ? 'ℹ️ Ihr seid bereits Freunde!' : 'ℹ️ Anfrage bereits gesendet!');
     return;
   }
   var ins = await sb.from('cr_friends').insert({from_user:_frUser, to_user:target, status:'pending'});
-  if(ins.error){ showToast('❌ Fehler: '+ins.error.message); return; }
+  if(ins.error){ showToast('❌ '+ins.error.message); return; }
   inp.value = '';
-  showToast('✅ Freundschaftsanfrage an '+target+' gesendet!');
+  showToast('✅ Anfrage an '+target+' gesendet!');
   frLoadFriends();
 }
 
