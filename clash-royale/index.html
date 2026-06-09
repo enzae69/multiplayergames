@@ -2141,18 +2141,24 @@ function drawTower(c,t){
 
   // ── HP bar (outside save/restore, world coords) ───────
   if(!dead){
-    var bw = isKing ? 74 : 60, bh = 8;
-    // Top of tower = y - th/2 - merlonH - poleH (all local), then 10px gap
-    var topOfTower = y - th/2 - merlonH - poleH;
-    var by = topOfTower - 14;
+    var bw = isKing ? 74 : 60, bh = 9;
+    // Place bar just above the tower wall top (y - th/2), with 4px gap
+    var barTopIdeal = y - th/2 - merlonH - 6;
+    // Clamp so bar is never drawn off-screen (min y=14 to leave room for text)
+    var by = Math.max(14, barTopIdeal);
     var bx = x - bw/2;
-    c.fillStyle='rgba(0,0,0,.75)'; c.fillRect(bx,by,bw,bh);
+    // background
+    c.fillStyle='rgba(0,0,0,.8)'; c.fillRect(bx-1,by-1,bw+2,bh+2);
     var pct=Math.max(0,t.hp/t.maxhp);
     var hpColor = pct>0.5 ? '#2ecc71' : pct>0.25 ? '#f39c12' : '#e74c3c';
     c.fillStyle=hpColor; c.fillRect(bx,by,bw*pct,bh);
-    c.strokeStyle='rgba(255,255,255,.4)'; c.lineWidth=1; c.strokeRect(bx,by,bw,bh);
+    // empty portion
+    c.fillStyle='#333'; c.fillRect(bx+bw*pct,by,bw*(1-pct),bh);
+    c.strokeStyle='rgba(255,255,255,.5)'; c.lineWidth=1; c.strokeRect(bx,by,bw,bh);
+    // HP text above bar (or below if clamped to top)
+    var textY = by > 16 ? by - 3 : by + bh + 11;
     c.fillStyle='#fff'; c.font='bold 10px sans-serif'; c.textAlign='center';
-    c.fillText(Math.ceil(t.hp)+' HP', x, by-3);
+    c.fillText(Math.ceil(t.hp)+' HP', x, textY);
   }
 }
 
