@@ -473,7 +473,7 @@ function startHeartbeat(){ clearInterval(heartbeatTimer); if(!isHost) return; he
 // ── HOST: START ──
 window.hostStartGame = function(){
   if(!isHost||!gs) return;
-  if(gs.players.length<2){ showToast('Mindestens 2 Spieler!'); return; }
+  if(gs.players.length<3){ showToast('Mindestens 3 Spieler!'); return; }
   startRound();
 };
 
@@ -677,9 +677,9 @@ function renderLobby(){
   });
   var cnt=(gs.players||[]).length;
   if(isHost){
-    var sb2=document.getElementById('startBtn'); sb2.style.display='block'; sb2.disabled=(cnt<2);
+    var sb2=document.getElementById('startBtn'); sb2.style.display='block'; sb2.disabled=(cnt<3);
     document.getElementById('lobbyWait').style.display='none';
-    document.getElementById('lobbyHint').textContent=cnt<2?'Mindestens 2 Spieler zum Starten':'';
+    document.getElementById('lobbyHint').textContent=cnt<3?'Mindestens 3 Spieler zum Starten':'';
   } else {
     document.getElementById('startBtn').style.display='none';
     document.getElementById('lobbyWait').style.display='block';
