@@ -637,22 +637,22 @@ body{
 
   <!-- CHESTS -->
   <div class="chests-row">
-    <div class="chest-slot silver" id="silverChestSlot" onclick="trySilverChest()">
+    <div class="chest-slot silver" id="silverChestSlot" onclick="tryChest('silver')">
       <div class="chest-icon">🎁</div>
-      <div class="chest-timer" id="silverChestTimer">ÖFFNEN</div>
+      <div class="chest-timer" id="timersilver">ÖFFNEN</div>
     </div>
-    <div class="chest-slot gold" onclick="openChest('gold')">
+    <div class="chest-slot gold" id="goldChestSlot" onclick="tryChest('gold')">
       <div class="open-ring"></div>
       <div class="chest-icon">📦</div>
-      <div class="chest-timer">02:14</div>
+      <div class="chest-timer" id="timergold">ÖFFNEN</div>
     </div>
-    <div class="chest-slot magical" onclick="openChest('magical')">
+    <div class="chest-slot magical" id="magicalChestSlot" onclick="tryChest('magical')">
       <div class="chest-icon">✨</div>
-      <div class="chest-timer">08:00:00</div>
+      <div class="chest-timer" id="timermagical">ÖFFNEN</div>
     </div>
-    <div class="chest-slot giant" onclick="openChest('giant')">
+    <div class="chest-slot giant" id="giantChestSlot" onclick="tryChest('giant')">
       <div class="chest-icon">🗃️</div>
-      <div class="chest-timer">12:00:00</div>
+      <div class="chest-timer" id="timergiant">ÖFFNEN</div>
     </div>
   </div>
 
@@ -1161,46 +1161,63 @@ var state = {
   owned: null, // set in init – list of owned card names
   silversToday: 0,
   silverResetDay: '',
-  lastSilverCollect: 0, // timestamp of last free silver chest
+  lastChest_silver: 0,
+  lastChest_gold: 0,
+  lastChest_magical: 0,
+  lastChest_giant: 0,
   power: 0,        // power points earned from chests
   winCount: 0,     // wins counter (every 2 wins → chest)
 };
 
-var SILVER_COOLDOWN = 5 * 60 * 1000; // 5 minutes
+var CHEST_COOLDOWNS = {
+  silver:  5 * 60 * 1000,        // 5 minutes
+  gold:    3 * 60 * 60 * 1000,   // 3 hours
+  magical: 8 * 60 * 60 * 1000,   // 8 hours
+  giant:   12 * 60 * 60 * 1000,  // 12 hours
+};
 
-function silverCooldownLeft(){
-  var left = SILVER_COOLDOWN - (Date.now() - (state.lastSilverCollect || 0));
-  return Math.max(0, left);
+function chestCooldownLeft(type){
+  var key = 'lastChest_'+type;
+  return Math.max(0, CHEST_COOLDOWNS[type] - (Date.now() - (state[key] || 0)));
 }
 
-function trySilverChest(){
-  var left = silverCooldownLeft();
+function fmtCooldown(ms){
+  if(ms <= 0) return 'ÖFFNEN';
+  var s = Math.floor(ms/1000);
+  var h = Math.floor(s/3600); s -= h*3600;
+  var m = Math.floor(s/60); s -= m*60;
+  if(h > 0) return h+'h '+m+'m';
+  if(m > 0) return m+':'+(s<10?'0':'')+s;
+  return '0:'+( s<10?'0':'')+s;
+}
+
+function tryChest(type){
+  var left = chestCooldownLeft(type);
   if(left > 0){
-    var m = Math.floor(left/60000), s = Math.floor((left%60000)/1000);
-    showToast('⏳ Noch '+m+':'+(s<10?'0':'')+s+' bis zur nächsten Silbertruhe');
+    showToast('⏳ Noch '+fmtCooldown(left)+' bis zur nächsten '+type+' Truhe');
     return;
   }
-  state.lastSilverCollect = Date.now();
+  state['lastChest_'+type] = Date.now();
+  if(type === 'silver'){
+    checkSilverReset();
+    if(state.silversToday < 6) state.silversToday++;
+  }
   saveProgress();
-  updateSilverChestUI();
-  openChest('silver');
+  updateAllChestUI();
+  openChest(type);
 }
 
-function updateSilverChestUI(){
-  var timer = document.getElementById('silverChestTimer');
-  var slot = document.getElementById('silverChestSlot');
-  if(!timer || !slot) return;
-  var left = silverCooldownLeft();
-  if(left > 0){
-    var m = Math.floor(left/60000), s = Math.floor((left%60000)/1000);
-    timer.textContent = m+':'+(s<10?'0':'')+s;
-    slot.style.opacity = '0.55';
-  } else {
-    timer.textContent = 'ÖFFNEN';
-    slot.style.opacity = '1';
-  }
+function updateAllChestUI(){
+  ['silver','gold','magical','giant'].forEach(function(type){
+    var timer = document.getElementById('timer'+type);
+    var slot  = document.getElementById(type+'ChestSlot');
+    if(!timer || !slot) return;
+    var left = chestCooldownLeft(type);
+    timer.textContent = fmtCooldown(left);
+    slot.style.opacity = left > 0 ? '0.5' : '1';
+  });
 }
-setInterval(updateSilverChestUI, 1000);
+setInterval(updateAllChestUI, 1000);
 
 function getCETDateStr(){
   // Returns current date string in German timezone (CET/CEST)
@@ -1250,7 +1267,10 @@ function saveProgress(){
       deck: MY_DECK.map(function(c){ return c.name; }),
       silversToday: state.silversToday,
       silverResetDay: state.silverResetDay,
-      lastSilverCollect: state.lastSilverCollect,
+      lastChest_silver: state.lastChest_silver,
+      lastChest_gold: state.lastChest_gold,
+      lastChest_magical: state.lastChest_magical,
+      lastChest_giant: state.lastChest_giant,
       power: state.power,
       winCount: state.winCount,
     }));
@@ -1268,7 +1288,9 @@ function loadProgress(){
     if(Array.isArray(d.owned) && d.owned.length){ state.owned = d.owned.slice(); }
     if(typeof d.silversToday === 'number') state.silversToday = d.silversToday;
     if(typeof d.silverResetDay === 'string') state.silverResetDay = d.silverResetDay;
-    if(typeof d.lastSilverCollect === 'number') state.lastSilverCollect = d.lastSilverCollect;
+    ['silver','gold','magical','giant'].forEach(function(t){
+      if(typeof d['lastChest_'+t] === 'number') state['lastChest_'+t] = d['lastChest_'+t];
+    });
     if(typeof d.power === 'number') state.power = d.power;
     if(typeof d.winCount === 'number') state.winCount = d.winCount;
     checkSilverReset(); // reset counter if new day
@@ -1331,22 +1353,53 @@ function isCardUnlocked(card){
   return getPlayerArena() >= arenaNeeded;
 }
 
+// Power cost to upgrade per rarity per level
+var UPGRADE_COST = {legendary:80, epic:40, rare:20, common:10};
+
+function upgradeCard(cardName, rarity, e){
+  e && e.stopPropagation();
+  ensureOwned();
+  var c = allCardObjs().find(function(o){ return o.card.name === cardName; });
+  if(!c) return;
+  var cost = UPGRADE_COST[rarity] * (c.card.lvl || 1);
+  if(state.power < cost){ showToast('⚡ Nicht genug Power! ('+cost+' benötigt)'); return; }
+  if((c.card.lvl||1) >= 14){ showToast('🏆 Maximales Level erreicht!'); return; }
+  state.power -= cost;
+  c.card.lvl = (c.card.lvl||1) + 1;
+  var pv = document.getElementById('powerVal'); if(pv) pv.textContent = state.power;
+  saveProgress();
+  renderCards();
+  showToast('⬆️ '+cardName+' → LVL '+c.card.lvl+'!  (-'+cost+'⚡)');
+}
+
 function buildCard(c, rarity){
   var rarityNames = {legendary:'LEGENDARY',epic:'EPIC',rare:'RARE',common:'COMMON'};
   var badgeClass  = 'badge-'+rarity;
   var owned       = isCardOwned(c);
+  var lvl         = c.lvl || 1;
+  var upgCost     = UPGRADE_COST[rarity] * lvl;
+  var canUpgrade  = owned && state.power >= upgCost && lvl < 14;
   var lockOverlay = owned ? '' :
     '<div style="position:absolute;inset:0;background:rgba(0,0,0,.7);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">'
     +'<span style="font-size:48px;color:#e74c3c;font-weight:900;text-shadow:0 0 10px rgba(0,0,0,.9);line-height:1">✕</span>'
     +'<span style="font-size:8px;color:#fff;font-weight:700;text-align:center;line-height:1.2">aus Truhen</span>'
     +'</div>';
-  return '<div class="card '+rarity+(owned?'':' locked-card')+'" style="position:relative" onclick="showToast(\''+(owned?c.emoji+' '+c.name:'🔒 '+c.name+' – aus Truhen erhalten!')+'\')">'
+  var upgradeBtn = owned
+    ? '<button onclick="upgradeCard(\''+c.name.replace(/'/g,"\\'")+"','"+rarity+'\',event)" style="'
+      +'position:absolute;bottom:0;left:0;right:0;border:none;border-radius:0 0 7px 7px;padding:3px 0;font-size:8px;font-weight:900;cursor:pointer;'
+      +(canUpgrade
+        ? 'background:linear-gradient(90deg,#f39c12,#e67e22);color:#fff;'
+        : 'background:rgba(255,255,255,.1);color:rgba(255,255,255,.4);')
+      +'">⚡'+upgCost+' UPGRADE</button>'
+    : '';
+  return '<div class="card '+rarity+(owned?'':' locked-card')+'" style="position:relative;padding-bottom:18px" onclick="showToast(\''+(owned?c.emoji+' '+c.name+' LVL '+lvl:'🔒 '+c.name+' – aus Truhen erhalten!')+'\')">'
     +'<div class="card-elixir">'+c.elixir+'</div>'
     +'<div class="card-emoji" style="'+(owned?'':'filter:grayscale(1);opacity:.35')+'">'+c.emoji+'</div>'
     +'<div class="card-name">'+c.name+'</div>'
-    +'<div class="card-level">'+(owned?'LVL '+c.lvl:'🔒')+'</div>'
+    +'<div class="card-level">'+(owned?'LVL '+lvl:'🔒')+'</div>'
     +'<div class="card-rarity-badge '+badgeClass+'">'+rarityNames[rarity]+'</div>'
     +lockOverlay
+    +upgradeBtn
     +'</div>';
 }
 
@@ -2908,7 +2961,7 @@ function init(){
   renderCards();
   renderClan();
   frCheckSession();
-  updateSilverChestUI();
+  updateAllChestUI();
 }
 
 init();
