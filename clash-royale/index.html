@@ -712,14 +712,7 @@ body{
       </div>
     </div>
 
-    <div class="cards-section-title">LEGENDARY</div>
-    <div class="cards-grid" id="legendaryGrid"></div>
-    <div class="cards-section-title">EPIC</div>
-    <div class="cards-grid" id="epicGrid"></div>
-    <div class="cards-section-title">RARE</div>
-    <div class="cards-grid" id="rareGrid"></div>
-    <div class="cards-section-title">COMMON</div>
-    <div class="cards-grid" id="commonGrid"></div>
+    <div id="collectionGrids"></div>
   </div>
 
   <!-- BOTTOM NAV -->
@@ -1358,17 +1351,40 @@ function buildCard(c, rarity){
 }
 
 function renderCards(){
-  ['legendary','epic','rare','common'].forEach(function(r){
-    var grid = document.getElementById(r+'Grid');
-    if(!grid) return;
-    grid.innerHTML = CARDS[r].map(function(c){ return buildCard(c, r); }).join('');
-  });
-
   var deckGrid = document.getElementById('deckGrid');
   if(deckGrid){
     deckGrid.innerHTML = MY_DECK.map(function(c){
       return buildCard(c, c.rarity||'common');
     }).join('');
+  }
+
+  // Collection: owned cards grouped by rarity (middle) → locked cards at the bottom
+  var container = document.getElementById('collectionGrids');
+  if(container){
+    var rarityNames = {legendary:'LEGENDARY',epic:'EPIC',rare:'RARE',common:'COMMON'};
+    var html = '';
+
+    // ── Owned cards, by rarity ──
+    var ownedCount = 0;
+    ['legendary','epic','rare','common'].forEach(function(r){
+      var ownedInR = CARDS[r].filter(function(c){ return isCardOwned(c); });
+      ownedCount += ownedInR.length;
+      if(!ownedInR.length) return;
+      html += '<div class="cards-section-title" style="color:#2ecc71">✅ '+rarityNames[r]+' ('+ownedInR.length+')</div>';
+      html += '<div class="cards-grid">'+ownedInR.map(function(c){ return buildCard(c, r); }).join('')+'</div>';
+    });
+
+    // ── Locked cards (all rarities) at the very bottom ──
+    var lockedAll = [];
+    ['legendary','epic','rare','common'].forEach(function(r){
+      CARDS[r].filter(function(c){ return !isCardOwned(c); }).forEach(function(c){ lockedAll.push({card:c, rarity:r}); });
+    });
+    if(lockedAll.length){
+      html += '<div class="cards-section-title" style="color:#e74c3c;margin-top:18px">🔒 NOCH NICHT FREIGESCHALTET ('+lockedAll.length+')</div>';
+      html += '<div class="cards-grid">'+lockedAll.map(function(o){ return buildCard(o.card, o.rarity); }).join('')+'</div>';
+    }
+
+    container.innerHTML = html;
   }
 
   var totalElixir = MY_DECK.reduce(function(s,c){ return s+c.elixir; }, 0);
