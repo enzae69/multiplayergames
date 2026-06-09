@@ -36,6 +36,20 @@ CREATE TABLE IF NOT EXISTS cr_matches (
 ALTER TABLE cr_matches ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "cr_matches_all" ON cr_matches FOR ALL USING (true) WITH CHECK (true);
 
+-- Lobby table (new multiplayer system)
+CREATE TABLE IF NOT EXISTS cr_lobbies (
+  code        text PRIMARY KEY,
+  host        text NOT NULL,
+  mode        text NOT NULL DEFAULT '1v1', -- '1v1' | '2v2'
+  max_players int NOT NULL DEFAULT 2,
+  players     jsonb NOT NULL DEFAULT '[]',
+  status      text NOT NULL DEFAULT 'waiting', -- 'waiting' | 'starting' | 'done'
+  created_at  timestamptz DEFAULT now()
+);
+ALTER TABLE cr_lobbies ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "cr_lobbies_all" ON cr_lobbies FOR ALL USING (true) WITH CHECK (true);
+
 -- Enable realtime for these tables
 ALTER PUBLICATION supabase_realtime ADD TABLE cr_invites;
 ALTER PUBLICATION supabase_realtime ADD TABLE cr_matches;
+ALTER PUBLICATION supabase_realtime ADD TABLE cr_lobbies;
