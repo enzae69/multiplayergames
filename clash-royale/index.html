@@ -1096,7 +1096,7 @@ body{
   <div class="tr-scroll" id="trScroll"></div>
 </div>
 
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <script>
 'use strict';
 
@@ -2998,19 +2998,56 @@ function init(){
 init();
 
 // ══════════════════════════════════════════════════════════════════
-// MULTIPLAYER — Lobby system via Supabase
+// MULTIPLAYER — MQTT over WebSocket (HiveMQ public broker, no auth)
+// Topics:  cr/lobby/{code}       → lobby state broadcast by host
+//          cr/lobby/{code}/join  → guests announce themselves
+//          cr/lobby/{code}/start → host triggers match start
+//          cr/game/{code}/{role} → game state (host/guest)
 // ══════════════════════════════════════════════════════════════════
-var _sb = null;
-// ── PeerJS Multiplayer (no backend needed) ────────────────────
-var _mpUser     = null;
-var _mpLobbyId  = null;
-var _mpLobbyRole= null;  // 'host' | 'guest'
-var _mpMode     = '1v1';
-var _mpPeer     = null;  // our PeerJS Peer instance
-var _mpConns    = [];    // host: all guest connections; guest: [hostConn]
-var _mpPlayers  = [];    // current player list in lobby
-var _mpSyncSeq  = 0;
+var _mpUser      = null;
+var _mpLobbyId   = null;
+var _mpLobbyRole = null;   // 'host' | 'guest'
+var _mpMode      = '1v1';
+var _mpPlayers   = [];
+var _mpSyncSeq   = 0;
+var _mpLastRemoteSeq = 0;
+var _mqClient    = null;
 
+var MQTT_BROKER = 'wss://broker.hivemq.com:8884/mqtt';
+
+function mpMqConnect(onReady){
+  if(_mqClient && _mqClient.connected){ onReady(); return; }
+  if(_mqClient){ try{ _mqClient.end(true); }catch(e){} }
+  var clientId = 'dihh_' + Math.random().toString(36).substr(2, 9);
+  _mqClient = mqtt.connect(MQTT_BROKER, {
+    clientId: clientId,
+    clean: true,
+    connectTimeout: 8000,
+    reconnectPeriod: 0,
+  });
+  _mqClient.on('connect', function(){ onReady(); });
+  _mqClient.on('error', function(err){ showToast('❌ MQTT: ' + (err.message||err)); });
+}
+
+function mpMqPublish(topic, data){
+  if(!_mqClient || !_mqClient.connected) return;
+  _mqClient.publish(topic, JSON.stringify(data), {qos:0, retain:false});
+}
+
+function mpMqSubscribe(topic, cb){
+  if(!_mqClient) return;
+  _mqClient.subscribe(topic, {qos:0});
+  _mqClient.on('message', function(t, payload){
+    if(t !== topic) return;
+    try{ cb(JSON.parse(payload.toString())); }catch(e){}
+  });
+}
+
+function mpMqDisconnect(){
+  if(_mqClient){ try{ _mqClient.end(true); }catch(e){} _mqClient = null; }
+}
+
+// ─────────────────────────────────────────────────────────────
 function mpSetName(){
   var inp = document.getElementById('mpNameInput');
   var name = inp.value.trim();
@@ -3048,84 +3085,60 @@ function mpSelectMode(mode){
   }
 }
 
-function mpDestroyPeer(){
-  _mpConns.forEach(function(c){ try{ c.close(); }catch(e){} });
-  _mpConns = [];
-  if(_mpPeer){ try{ _mpPeer.destroy(); }catch(e){} _mpPeer = null; }
-}
-
 function mpCreateLobby(){
   if(!_mpUser){ showToast('⚠️ Name eingeben'); return; }
-  mpDestroyPeer();
-  showToast('⏳ Lobby wird erstellt...');
-  _mpPeer = new Peer();
-  _mpPeer.on('error', function(err){ showToast('❌ PeerJS: '+err.type); });
-  _mpPeer.on('open', function(id){
-    _mpLobbyId   = id;
+  showToast('⏳ Verbinde...');
+  var code = Math.random().toString(36).substr(2,6).toUpperCase();
+  mpMqConnect(function(){
+    _mpLobbyId   = code;
     _mpLobbyRole = 'host';
-    _mpMode      = _mpMode || '1v1';
     _mpPlayers   = [_mpUser];
-    mpShowLobbyView(id, _mpMode, _mpPlayers, true);
-  });
-  _mpPeer.on('connection', function(conn){
-    conn.on('open', function(){
-      conn.on('data', function(msg){
-        if(msg.type === 'join'){
-          var max = _mpMode==='1v1' ? 2 : 4;
-          if(_mpPlayers.length >= max){ conn.send({type:'full'}); conn.close(); return; }
-          _mpPlayers.push(msg.name);
-          _mpConns.push(conn);
-          mpBroadcastLobby();
-          mpRenderSlots(_mpPlayers, max, true);
-        } else if(msg.type === 'game_state'){
-          mpApplyRemoteState(msg);
-        }
-      });
-      conn.on('close', function(){
-        _mpConns = _mpConns.filter(function(c){ return c !== conn; });
-        _mpPlayers = _mpPlayers.filter(function(p){ return p !== conn._peerName; });
-        mpRenderSlots(_mpPlayers, _mpMode==='1v1'?2:4, true);
-        mpBroadcastLobby();
-      });
-    });
-  });
-}
 
-function mpBroadcastLobby(){
-  var msg = {type:'lobby_update', players:_mpPlayers, mode:_mpMode};
-  _mpConns.forEach(function(c){ try{ c.send(msg); }catch(e){} });
+    // Listen for guests joining
+    mpMqSubscribe('cr/lobby/'+code+'/join', function(msg){
+      var max = _mpMode==='1v1' ? 2 : 4;
+      if(_mpPlayers.indexOf(msg.name) !== -1) return;
+      if(_mpPlayers.length >= max){ return; }
+      _mpPlayers.push(msg.name);
+      mpMqPublish('cr/lobby/'+code, {players:_mpPlayers, mode:_mpMode});
+      mpRenderSlots(_mpPlayers, max, true);
+    });
+
+    mpShowLobbyView(code, _mpMode, _mpPlayers, true);
+    showToast('✅ Lobby erstellt: ' + code);
+  });
 }
 
 function mpJoinLobby(){
-  var code = (document.getElementById('mpJoinCode').value||'').trim();
+  var code = (document.getElementById('mpJoinCode').value||'').trim().toUpperCase();
   if(!code){ showToast('⚠️ Code eingeben'); return; }
   if(!_mpUser){ showToast('⚠️ Name eingeben'); return; }
-  mpDestroyPeer();
   showToast('⏳ Verbinde...');
-  _mpPeer = new Peer();
-  _mpPeer.on('error', function(err){ showToast('❌ PeerJS: '+err.type); });
-  _mpPeer.on('open', function(){
-    var conn = _mpPeer.connect(code);
-    _mpConns = [conn];
-    conn._peerName = _mpUser;
-    conn.on('open', function(){
-      conn.send({type:'join', name:_mpUser});
-    });
-    conn.on('data', function(msg){
-      if(msg.type === 'full'){ showToast('❌ Lobby ist voll!'); mpDestroyPeer(); return; }
-      if(msg.type === 'lobby_update'){
-        _mpPlayers = msg.players;
-        _mpMode    = msg.mode;
-        mpShowLobbyView(code, msg.mode, msg.players, false);
-      } else if(msg.type === 'start'){
-        mpLaunchMatch();
-      } else if(msg.type === 'game_state'){
-        mpApplyRemoteState(msg);
-      }
-    });
-    conn.on('close', function(){ showToast('⚠️ Host hat die Lobby geschlossen'); mpLeaveLobby(); });
+  mpMqConnect(function(){
     _mpLobbyId   = code;
     _mpLobbyRole = 'guest';
+
+    // Listen for lobby updates from host
+    mpMqSubscribe('cr/lobby/'+code, function(msg){
+      if(msg.players){ _mpPlayers = msg.players; _mpMode = msg.mode || _mpMode; }
+      var max = _mpMode==='1v1' ? 2 : 4;
+      mpShowLobbyView(code, _mpMode, _mpPlayers, false);
+    });
+
+    // Listen for start signal
+    mpMqSubscribe('cr/lobby/'+code+'/start', function(){
+      mpLaunchMatch();
+    });
+
+    // Listen for game state from host
+    mpMqSubscribe('cr/game/'+code+'/host', function(rd){
+      mpApplyRemoteState(rd);
+    });
+
+    // Announce join
+    mpMqPublish('cr/lobby/'+code+'/join', {name:_mpUser});
+    _mpPlayers = [_mpUser];
+    mpShowLobbyView(code, _mpMode, _mpPlayers, false);
   });
 }
 
@@ -3163,8 +3176,11 @@ function mpRenderSlots(players, max, isHost){
 
 function mpStartMatch(){
   if(_mpLobbyRole !== 'host') return;
-  var msg = {type:'start'};
-  _mpConns.forEach(function(c){ try{ c.send(msg); }catch(e){} });
+  // Subscribe to guest game state before starting
+  mpMqSubscribe('cr/game/'+_mpLobbyId+'/guest', function(rd){
+    mpApplyRemoteState(rd);
+  });
+  mpMqPublish('cr/lobby/'+_mpLobbyId+'/start', {go:true});
   mpLaunchMatch();
 }
 
@@ -3173,23 +3189,24 @@ function mpLaunchMatch(){
   document.getElementById('mpLobbyView').style.display='none';
   window._mpActive = true;
   _mpSyncSeq = 0;
+  _mpLastRemoteSeq = 0;
   setTimeout(function(){ startBattle(); }, 500);
 }
 
 function mpLeaveLobby(){
-  mpDestroyPeer();
+  mpMqDisconnect();
   _mpLobbyId = null; _mpLobbyRole = null; _mpPlayers = [];
   document.getElementById('mpLobbyView').style.display='none';
   document.getElementById('mpMain').style.display='flex';
 }
 
-// ── Game state sync over PeerJS data channels ─────────────────
+// ── Game state sync ───────────────────────────────────────────
 function mpPushState(){
-  if(!window._mpActive || !B || B.over || !_mpConns.length) return;
+  if(!window._mpActive || !B || B.over || !_mpLobbyId || !_mqClient) return;
+  var myRole = _mpLobbyRole || 'guest';
+  var topic  = 'cr/game/'+_mpLobbyId+'/'+myRole;
   var myData = {
-    type: 'game_state',
     seq: ++_mpSyncSeq,
-    elixir: state.elixirF,
     units: B.units.filter(function(u){ return u.side==='p' && !u.dead; }).map(function(u){
       return {uid:u.uid,name:u.name,emoji:u.emoji,x:u.x,y:u.y,hp:u.hp,maxhp:u.maxhp};
     }),
@@ -3198,10 +3215,9 @@ function mpPushState(){
     }),
     time: B.time,
   };
-  _mpConns.forEach(function(c){ try{ c.send(myData); }catch(e){} });
+  mpMqPublish(topic, myData);
 }
 
-var _mpLastRemoteSeq = 0;
 function mpApplyRemoteState(rd){
   if(!B || !window._mpActive) return;
   if(rd.seq && rd.seq <= _mpLastRemoteSeq) return;
@@ -3249,8 +3265,7 @@ var _origFinishBattle = finishBattle;
 finishBattle = function(surrender){
   if(window._mpActive){
     window._mpActive = false;
-    // Don't destroy peer immediately — let the match end cleanly
-    setTimeout(function(){ if(!window._mpActive) mpDestroyPeer(); }, 2000);
+    setTimeout(function(){ if(!window._mpActive) mpMqDisconnect(); }, 3000);
   }
   _origFinishBattle(surrender);
 };
