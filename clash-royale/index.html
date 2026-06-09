@@ -1646,13 +1646,18 @@ function startBattle(){
       r:34, dead:false, active: king ? false : true
     };
   }
+  // Tower setback from each player's edge — identical for both sides (mirrored)
+  var crownBack = 0.20; // crown towers: 20% in from the edge
+  var kingBack  = 0.10; // king tower:  10% in from the edge
   var towers = [
-    tower('e','crown', laneL, H*0.20),
-    tower('e','crown', laneR, H*0.20),
-    tower('e','king',  W*0.5, H*0.10),
-    tower('p','crown', laneL, H*0.80),
-    tower('p','crown', laneR, H*0.80),
-    tower('p','king',  W*0.5, H*0.90),
+    // enemy (top): measured from top edge
+    tower('e','crown', laneL, H*crownBack),
+    tower('e','crown', laneR, H*crownBack),
+    tower('e','king',  W*0.5, H*kingBack),
+    // player (bottom): exact mirror — measured from bottom edge
+    tower('p','crown', laneL, H*(1-crownBack)),
+    tower('p','crown', laneR, H*(1-crownBack)),
+    tower('p','king',  W*0.5, H*(1-kingBack)),
   ];
 
   B = {
