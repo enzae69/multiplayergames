@@ -633,9 +633,9 @@ body{
 
   <!-- CHESTS -->
   <div class="chests-row">
-    <div class="chest-slot silver" onclick="openChest('silver')">
+    <div class="chest-slot silver" id="silverChestSlot" onclick="trySilverChest()">
       <div class="chest-icon">🎁</div>
-      <div class="chest-timer">ÖFFNEN</div>
+      <div class="chest-timer" id="silverChestTimer">ÖFFNEN</div>
     </div>
     <div class="chest-slot gold" onclick="openChest('gold')">
       <div class="open-ring"></div>
@@ -1164,7 +1164,44 @@ var state = {
   owned: null, // set in init – list of owned card names
   silversToday: 0,
   silverResetDay: '',
+  lastSilverCollect: 0, // timestamp of last free silver chest
 };
+
+var SILVER_COOLDOWN = 5 * 60 * 1000; // 5 minutes
+
+function silverCooldownLeft(){
+  var left = SILVER_COOLDOWN - (Date.now() - (state.lastSilverCollect || 0));
+  return Math.max(0, left);
+}
+
+function trySilverChest(){
+  var left = silverCooldownLeft();
+  if(left > 0){
+    var m = Math.floor(left/60000), s = Math.floor((left%60000)/1000);
+    showToast('⏳ Noch '+m+':'+(s<10?'0':'')+s+' bis zur nächsten Silbertruhe');
+    return;
+  }
+  state.lastSilverCollect = Date.now();
+  saveProgress();
+  updateSilverChestUI();
+  openChest('silver');
+}
+
+function updateSilverChestUI(){
+  var timer = document.getElementById('silverChestTimer');
+  var slot = document.getElementById('silverChestSlot');
+  if(!timer || !slot) return;
+  var left = silverCooldownLeft();
+  if(left > 0){
+    var m = Math.floor(left/60000), s = Math.floor((left%60000)/1000);
+    timer.textContent = m+':'+(s<10?'0':'')+s;
+    slot.style.opacity = '0.55';
+  } else {
+    timer.textContent = 'ÖFFNEN';
+    slot.style.opacity = '1';
+  }
+}
+setInterval(updateSilverChestUI, 1000);
 
 function getCETDateStr(){
   // Returns current date string in German timezone (CET/CEST)
@@ -1214,6 +1251,7 @@ function saveProgress(){
       deck: MY_DECK.map(function(c){ return c.name; }),
       silversToday: state.silversToday,
       silverResetDay: state.silverResetDay,
+      lastSilverCollect: state.lastSilverCollect,
     }));
   } catch(e){}
 }
@@ -1229,6 +1267,7 @@ function loadProgress(){
     if(Array.isArray(d.owned) && d.owned.length){ state.owned = d.owned.slice(); }
     if(typeof d.silversToday === 'number') state.silversToday = d.silversToday;
     if(typeof d.silverResetDay === 'string') state.silverResetDay = d.silverResetDay;
+    if(typeof d.lastSilverCollect === 'number') state.lastSilverCollect = d.lastSilverCollect;
     checkSilverReset(); // reset counter if new day
     ensureOwned();
     if(Array.isArray(d.deck) && d.deck.length === 8){
@@ -2811,6 +2850,7 @@ function init(){
   renderCards();
   renderClan();
   frCheckSession();
+  updateSilverChestUI();
 }
 
 init();
