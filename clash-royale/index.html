@@ -1926,6 +1926,21 @@ function updateUnits(dt){
   var alive = [];
   for(var i=0;i<B.units.length;i++){
     var u = B.units[i];
+    // Remote units: only interpolate position toward target, never process locally
+    if(u._remote){
+      if(u.hp > 0){
+        if(u._tx !== undefined){
+          var dx = u._tx - u.x, dy = u._ty - u.y;
+          var d = Math.hypot(dx, dy);
+          var step = Math.min(d, 120 * dt); // smooth lerp at 120px/s
+          if(d > 1){ u.x += dx/d*step; u.y += dy/d*step; }
+        }
+        alive.push(u);
+      } else {
+        spawnFx(u.x, u.y, '#888', .8);
+      }
+      continue;
+    }
     if(u.hp <= 0){ spawnFx(u.x, u.y, '#888', .8); continue; }
     if(u.cd > 0) u.cd -= dt;
 
@@ -1966,7 +1981,7 @@ function acquireTarget(u){
     var best=null, bd= u.building ? u.range+30 : 150;
     for(var i=0;i<B.units.length;i++){
       var o = B.units[i];
-      if(o.side!==enemySide || o.hp<=0) continue;
+      if(o.side!==enemySide || o.hp<=0 || o._remote) continue; // remote units not targeted locally
       if(o.fly && !u.air) continue; // can't hit air
       var d = dist(u,o);
       if(d < bd){ bd=d; best=o; }
@@ -3117,9 +3132,22 @@ function mpJoinLobby(){
   mpMqConnect(function(){
     _mpLobbyId   = code;
     _mpLobbyRole = 'guest';
+    var _gotAck   = false;
+
+    // Wait for host acknowledgement — if none in 6s → room not found
+    var _joinTimeout = setTimeout(function(){
+      if(!_gotAck){
+        mpMqDisconnect();
+        _mpLobbyId = null; _mpLobbyRole = null;
+        document.getElementById('mpLobbyView').style.display = 'none';
+        document.getElementById('mpMain').style.display = 'flex';
+        showToast('❌ No Room — Code nicht gefunden!');
+      }
+    }, 6000);
 
     // Listen for lobby updates from host
     mpMqSubscribe('cr/lobby/'+code, function(msg){
+      if(!_gotAck){ _gotAck = true; clearTimeout(_joinTimeout); }
       if(msg.players){ _mpPlayers = msg.players; _mpMode = msg.mode || _mpMode; }
       var max = _mpMode==='1v1' ? 2 : 4;
       mpShowLobbyView(code, _mpMode, _mpPlayers, false);
@@ -3135,7 +3163,7 @@ function mpJoinLobby(){
       mpApplyRemoteState(rd);
     });
 
-    // Announce join
+    // Announce join (host will respond with lobby update → triggers ack)
     mpMqPublish('cr/lobby/'+code+'/join', {name:_mpUser});
     _mpPlayers = [_mpUser];
     mpShowLobbyView(code, _mpMode, _mpPlayers, false);
@@ -3223,16 +3251,36 @@ function mpApplyRemoteState(rd){
   if(rd.seq && rd.seq <= _mpLastRemoteSeq) return;
   _mpLastRemoteSeq = rd.seq || 0;
   var H = B.H;
-  B.units = B.units.filter(function(u){ return u.side !== 'e' || u._local; });
+
+  // Build map of existing remote units by uid
+  var existing = {};
+  B.units.forEach(function(u){ if(u._remote) existing[u.uid] = u; });
+
+  // Mark all remote units for removal; re-add those still in remote state
+  var remoteUids = {};
+  (rd.units||[]).forEach(function(ru){ remoteUids[ru.uid] = true; });
+
+  // Remove remote units no longer present
+  B.units = B.units.filter(function(u){ return !u._remote || remoteUids[u.uid]; });
+
+  // Update existing or add new remote units
   (rd.units||[]).forEach(function(ru){
-    B.units.push({
-      uid:ru.uid, side:'e', name:ru.name, emoji:ru.emoji,
-      x:B.W - ru.x, y:H - ru.y,
-      hp:ru.hp, maxhp:ru.maxhp, dmg:0, range:0,
-      speed:0, atk:1, cd:999, fly:false, air:false, bld:false, splash:0,
-      building:false, life:0, r:11, target:null, dead:false, vx:0, vy:0,
-      _remote:true,
-    });
+    var rx = B.W - ru.x, ry = H - ru.y;
+    if(existing[ru.uid]){
+      // Smooth: set target position, let updateUnits interpolate
+      var e = existing[ru.uid];
+      e._tx  = rx; e._ty = ry;
+      e.hp   = ru.hp; e.maxhp = ru.maxhp;
+    } else {
+      B.units.push({
+        uid:ru.uid, side:'e', name:ru.name, emoji:ru.emoji,
+        x:rx, y:ry, _tx:rx, _ty:ry,
+        hp:ru.hp, maxhp:ru.maxhp, dmg:0, range:0,
+        speed:0, atk:0, cd:999, fly:false, air:false, bld:false, splash:0,
+        building:false, life:0, r:11, target:null, dead:false, vx:0, vy:0,
+        _remote:true,
+      });
+    }
   });
   if(rd.towers){
     var eTowers = B.towers.filter(function(t){ return t.side==='e'; });
