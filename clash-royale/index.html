@@ -1161,14 +1161,41 @@ var state = {
   battleActive: false,
   elixirInterval: null,
   battleInterval: null,
+  owned: null, // set in init – list of owned card names
 };
+
+// Cards every player starts with (Arena 0/1 basics)
+var STARTER_CARDS = ['Knight','Archers','Arrows','Goblins','Enzae Pimmelshot','Zap','Barbarians','Matafaka Rider'];
+
+function ensureOwned(){
+  if(!state.owned) state.owned = STARTER_CARDS.slice();
+}
+function isCardOwned(card){
+  ensureOwned();
+  return state.owned.indexOf(card.name) !== -1;
+}
+function grantCard(name){
+  ensureOwned();
+  if(state.owned.indexOf(name) === -1){ state.owned.push(name); return true; }
+  return false; // already owned (would be a duplicate / level-up)
+}
+// Flat list of every card with its rarity, for lookups
+function allCardObjs(){
+  var list = [];
+  ['legendary','epic','rare','common'].forEach(function(r){
+    CARDS[r].forEach(function(c){ list.push({card:c, rarity:r}); });
+  });
+  return list;
+}
 
 function saveProgress(){
   try {
+    ensureOwned();
     localStorage.setItem('cr_save', JSON.stringify({
       gems: state.gems,
       gold: state.gold,
       trophies: state.trophies,
+      owned: state.owned,
       deck: MY_DECK.map(function(c){ return c.name; }),
     }));
   } catch(e){}
@@ -1177,17 +1204,27 @@ function saveProgress(){
 function loadProgress(){
   try {
     var raw = localStorage.getItem('cr_save');
-    if(!raw) return;
+    if(!raw){ ensureOwned(); return; }
     var d = JSON.parse(raw);
     if(typeof d.gems === 'number') state.gems = d.gems;
     if(typeof d.gold === 'number') state.gold = d.gold;
     if(typeof d.trophies === 'number') state.trophies = d.trophies;
+    if(Array.isArray(d.owned) && d.owned.length){ state.owned = d.owned.slice(); }
+    ensureOwned();
     if(Array.isArray(d.deck) && d.deck.length === 8){
       var allCards = CARDS;
-      var rebuilt = d.deck.map(function(n){ return allCards.find(function(c){ return c.name===n; }); }).filter(Boolean);
+      var rebuilt = d.deck.map(function(n){
+        var found = null;
+        ['legendary','epic','rare','common'].forEach(function(r){
+          allCards[r].forEach(function(c){ if(c.name===n) found = {emoji:c.emoji,name:c.name,elixir:c.elixir,rarity:r}; });
+        });
+        return found;
+      }).filter(Boolean);
+      // only keep owned cards in deck
+      rebuilt = rebuilt.filter(function(c){ return state.owned.indexOf(c.name)!==-1; });
       if(rebuilt.length === 8) MY_DECK = rebuilt;
     }
-  } catch(e){}
+  } catch(e){ ensureOwned(); }
 }
 
 // ── NAVIGATION ────────────────────────────────────────────────────
@@ -1235,17 +1272,17 @@ function isCardUnlocked(card){
 function buildCard(c, rarity){
   var rarityNames = {legendary:'LEGENDARY',epic:'EPIC',rare:'RARE',common:'COMMON'};
   var badgeClass  = 'badge-'+rarity;
-  var unlocked    = isCardUnlocked(c);
-  var lockOverlay = unlocked ? '' :
-    '<div style="position:absolute;inset:0;background:rgba(0,0,0,.55);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">'
-    +'<span style="font-size:22px;color:#e74c3c;font-weight:900">✕</span>'
-    +'<span style="font-size:8px;color:#fff;font-weight:700;text-align:center;line-height:1.2">Arena '+(c.arena||0)+'</span>'
+  var owned       = isCardOwned(c);
+  var lockOverlay = owned ? '' :
+    '<div style="position:absolute;inset:0;background:rgba(0,0,0,.6);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">'
+    +'<span style="font-size:26px;color:#e74c3c;font-weight:900;text-shadow:0 0 8px rgba(0,0,0,.8)">✕</span>'
+    +'<span style="font-size:7px;color:#fff;font-weight:700;text-align:center;line-height:1.2">aus Truhen</span>'
     +'</div>';
-  return '<div class="card '+rarity+(unlocked?'':' locked-card')+'" style="position:relative" onclick="showToast(\''+(unlocked?c.emoji+' '+c.name:'🔒 Arena '+(c.arena||0)+' benötigt!')+'\')">'
+  return '<div class="card '+rarity+(owned?'':' locked-card')+'" style="position:relative" onclick="showToast(\''+(owned?c.emoji+' '+c.name:'🔒 '+c.name+' – aus Truhen erhalten!')+'\')">'
     +'<div class="card-elixir">'+c.elixir+'</div>'
-    +'<div class="card-emoji" style="'+(unlocked?'':'filter:grayscale(1);opacity:.4')+'">'+c.emoji+'</div>'
+    +'<div class="card-emoji" style="'+(owned?'':'filter:grayscale(1);opacity:.35')+'">'+c.emoji+'</div>'
     +'<div class="card-name">'+c.name+'</div>'
-    +'<div class="card-level">'+(unlocked?'LVL '+c.lvl:'🔒')+'</div>'
+    +'<div class="card-level">'+(owned?'LVL '+c.lvl:'🔒')+'</div>'
     +'<div class="card-rarity-badge '+badgeClass+'">'+rarityNames[rarity]+'</div>'
     +lockOverlay
     +'</div>';
@@ -1325,9 +1362,37 @@ var CHEST_REWARDS = {
 
 function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
 
+// How many cards each chest can drop
+var CHEST_CARD_COUNT = { silver:2, gold:3, magical:4, giant:6 };
+
+// Pick random cards available up to the player's arena. Prefer NEW cards.
+function rollChestCards(type){
+  var arena = getPlayerArena();
+  var pool = allCardObjs().filter(function(o){
+    return (o.card.arena||0) <= arena;
+  });
+  // If everything in arena is owned, allow peeking one arena ahead for excitement
+  var unowned = pool.filter(function(o){ return state.owned.indexOf(o.card.name)===-1; });
+  if(!unowned.length){
+    pool = allCardObjs().filter(function(o){ return (o.card.arena||0) <= arena+1; });
+    unowned = pool.filter(function(o){ return state.owned.indexOf(o.card.name)===-1; });
+  }
+  var n = CHEST_CARD_COUNT[type] || 2;
+  var picks = [];
+  // First, hand out new cards
+  var shuffledNew = unowned.slice().sort(function(){ return Math.random()-0.5; });
+  for(var i=0; i<shuffledNew.length && picks.length<n; i++) picks.push(shuffledNew[i]);
+  // Fill the rest with random owned cards (duplicates = "upgrade")
+  while(picks.length < n && pool.length){
+    picks.push(pool[Math.floor(Math.random()*pool.length)]);
+  }
+  return picks;
+}
+
 function openChest(type){
   chestStage = 0;
   var data = CHEST_REWARDS[type] || CHEST_REWARDS.silver;
+  window._chestCardRoll = rollChestCards(type);
   document.getElementById('chestOpenIcon').textContent = data.icon;
   document.getElementById('chestOpenTitle').textContent = data.title;
   document.getElementById('chestRewardGrid').style.display = 'none';
@@ -1346,15 +1411,35 @@ function openChest(type){
       document.getElementById('chestTapHint').style.display = 'none';
 
       var grid = document.getElementById('chestRewardGrid');
-      grid.innerHTML = data.rewards.map(function(r){
-        return '<div class="chest-reward-item"><div class="ri-emoji">'+r.e+'</div><div class="ri-val">'+r.v+'</div><div class="ri-lbl">'+r.l+'</div></div>';
-      }).join('');
+
+      // Resource rewards
+      var goldAmt = randInt(200,5000);
+      var gemAmt  = randInt(0,15);
+      var html = '<div class="chest-reward-item"><div class="ri-emoji">🪙</div><div class="ri-val">+'+goldAmt+'</div><div class="ri-lbl">Gold</div></div>';
+      if(gemAmt>0) html += '<div class="chest-reward-item"><div class="ri-emoji">💎</div><div class="ri-val">+'+gemAmt+'</div><div class="ri-lbl">Gems</div></div>';
+
+      // Card rewards
+      var roll = window._chestCardRoll || [];
+      roll.forEach(function(o){
+        var isNew = grantCard(o.card.name);
+        html += '<div class="chest-reward-item" style="position:relative">'
+          + (isNew ? '<div style="position:absolute;top:-6px;right:-2px;background:#e74c3c;color:#fff;font-size:8px;font-weight:900;padding:1px 5px;border-radius:8px">NEU!</div>' : '')
+          + '<div class="ri-emoji">'+o.card.emoji+'</div>'
+          + '<div class="ri-val" style="font-size:11px">'+o.card.name+'</div>'
+          + '<div class="ri-lbl">'+(isNew?'Neue Karte':'Karte')+'</div>'
+          + '</div>';
+      });
+
+      grid.innerHTML = html;
       grid.style.display = 'grid';
       document.getElementById('chestCloseBtn').style.display = 'block';
 
       // Give rewards
-      state.gold += randInt(200,5000);
+      state.gold += goldAmt;
+      state.gems += gemAmt;
       document.getElementById('goldVal').textContent = state.gold.toLocaleString().replace(/,/g,'.');
+      document.getElementById('gemsVal').textContent = state.gems.toLocaleString().replace(/,/g,'.');
+      renderCards();
       saveProgress();
     }
   };
@@ -2643,7 +2728,7 @@ function renderPickGrid(){
     group.forEach(function(card){
       var inD     = !!inDeck[card.name];
       var full    = draftDeck.length >= 8;
-      var locked  = !isCardUnlocked(card);
+      var locked  = !isCardOwned(card);
       var div = document.createElement('div');
       div.style.position = 'relative';
       div.className = 'de-card '+r
@@ -2653,13 +2738,13 @@ function renderPickGrid(){
         +'<div class="de-emoji" style="'+(locked?'filter:grayscale(1);opacity:.4':'')+'">'+card.emoji+'</div>'
         +'<div class="de-name">'+card.name+'</div>'
         +(locked
-          ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,.55);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center">'
-            +'<span style="font-size:18px;color:#e74c3c;font-weight:900">✕</span>'
-            +'<span style="font-size:8px;color:#fff;font-weight:700">Arena '+(card.arena||0)+'</span>'
+          ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,.6);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center">'
+            +'<span style="font-size:20px;color:#e74c3c;font-weight:900">✕</span>'
+            +'<span style="font-size:7px;color:#fff;font-weight:700">aus Truhen</span>'
             +'</div>'
           : '');
       if(locked){
-        div.onclick = function(){ showToast('🔒 Arena '+(card.arena||0)+' benötigt!'); };
+        div.onclick = function(){ showToast('🔒 '+card.name+' – aus Truhen erhalten!'); };
       } else if(!inD && !full){
         div.onclick = function(){
           draftDeck.push(card);
