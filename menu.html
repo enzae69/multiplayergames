@@ -285,6 +285,15 @@
         <button onclick="adminSendImage()" style="background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.35);color:#00f5ff;border-radius:8px;padding:8px;font-size:12px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;width:100%;touch-action:manipulation">SENDEN</button>
         <div id="adminImgMsg" style="font-size:10px;color:#ff4444;min-height:14px;text-align:center;letter-spacing:1px"></div>
       </div>
+      <div style="border-top:1px solid rgba(57,255,20,.15);padding-top:10px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-size:9px;letter-spacing:2px;color:rgba(245,197,24,.9)">⚔️ SPIEL HINZUFÜGEN</div>
+        <input id="adminGameName" type="text" placeholder="SPIELNAME" autocomplete="off" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;font-family:'Russo One',sans-serif;font-size:12px;outline:none;width:100%;letter-spacing:1px"/>
+        <input id="adminGameIcon" type="text" placeholder="ICON (emoji)" autocomplete="off" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;font-family:'Russo One',sans-serif;font-size:20px;outline:none;width:100%;text-align:center"/>
+        <input id="adminGameDesc" type="text" placeholder="BESCHREIBUNG" autocomplete="off" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;font-family:'Russo One',sans-serif;font-size:12px;outline:none;width:100%;letter-spacing:1px"/>
+        <input id="adminGameUrl" type="text" placeholder="URL (z.B. clash-royale/index.html)" autocomplete="off" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;font-family:'Russo One',sans-serif;font-size:11px;outline:none;width:100%;letter-spacing:.5px"/>
+        <button onclick="adminAddGame()" style="background:rgba(245,197,24,.12);border:1px solid rgba(245,197,24,.4);color:#f5c518;border-radius:8px;padding:8px;font-size:12px;cursor:pointer;font-family:'Russo One',sans-serif;letter-spacing:1px;width:100%;touch-action:manipulation">+ HINZUFÜGEN</button>
+        <div id="adminGameMsg" style="font-size:10px;color:#39ff14;min-height:14px;text-align:center;letter-spacing:1px"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -331,7 +340,7 @@
   </div>
 
   <div id="contentSpiele">
-    <div class="games-grid">
+    <div class="games-grid" id="gamesGrid">
       <a class="game-card laser" href="laser-tracer/index.html?v=4">
         <div class="game-badge badge-live">LIVE</div>
         <div class="game-icon" style="color:#00f5ff">⚡</div>
@@ -818,6 +827,54 @@ function adminSendImage() {
   if (globalCh) globalCh.send({type:'broadcast', event:'adminImage', payload:{username:username, url:url}});
   document.getElementById('adminImgUrl').value = '';
 }
+
+var _extraGames = JSON.parse(localStorage.getItem('adminExtraGames') || '[]');
+
+function adminAddGame() {
+  var name = (document.getElementById('adminGameName').value || '').trim();
+  var icon = (document.getElementById('adminGameIcon').value || '').trim();
+  var desc = (document.getElementById('adminGameDesc').value || '').trim();
+  var url  = (document.getElementById('adminGameUrl').value || '').trim();
+  var msg  = document.getElementById('adminGameMsg');
+  if (!name || !url) { msg.style.color = '#ff4444'; msg.textContent = 'Name und URL erforderlich'; return; }
+  var game = { name: name, icon: icon || '🎮', desc: desc, url: url, id: Date.now() };
+  _extraGames.push(game);
+  localStorage.setItem('adminExtraGames', JSON.stringify(_extraGames));
+  renderExtraGames();
+  document.getElementById('adminGameName').value = '';
+  document.getElementById('adminGameIcon').value = '';
+  document.getElementById('adminGameDesc').value = '';
+  document.getElementById('adminGameUrl').value = '';
+  msg.style.color = '#39ff14';
+  msg.textContent = '✓ ' + name + ' hinzugefügt!';
+  setTimeout(function(){ msg.textContent = ''; }, 3000);
+}
+
+function renderExtraGames() {
+  var grid = document.getElementById('gamesGrid');
+  document.querySelectorAll('.game-card.admin-added').forEach(function(el){ el.remove(); });
+  _extraGames.forEach(function(g) {
+    var a = document.createElement('a');
+    a.className = 'game-card admin-added';
+    a.style.cssText = 'border-color:rgba(245,197,24,.5);background:linear-gradient(145deg,rgba(20,10,0,.95),rgba(50,30,0,.9));position:relative';
+    a.href = g.url;
+    a.innerHTML = '<div class="game-badge badge-hot" style="background:rgba(57,255,20,.25);color:#39ff14;border:1px solid #39ff14">NEW</div>'
+      + '<div class="game-icon" style="color:#f5c518">' + g.icon + '</div>'
+      + '<div class="game-name">' + g.name + '</div>'
+      + (g.desc ? '<div class="game-desc">' + g.desc + '</div>' : '')
+      + '<button onclick="adminRemoveGame('+g.id+',event)" style="position:absolute;bottom:6px;right:6px;background:rgba(255,40,40,.18);border:1px solid rgba(255,60,60,.3);color:#ff6b6b;border-radius:6px;font-size:9px;padding:2px 7px;cursor:pointer;font-family:\'Russo One\',sans-serif">✕</button>';
+    grid.appendChild(a);
+  });
+}
+
+function adminRemoveGame(id, e) {
+  e && e.preventDefault();
+  _extraGames = _extraGames.filter(function(g){ return g.id !== id; });
+  localStorage.setItem('adminExtraGames', JSON.stringify(_extraGames));
+  renderExtraGames();
+}
+
+renderExtraGames();
 
 function adminSetSunCoins() {
   var username = (document.getElementById('adminSunUser').value || '').trim().toUpperCase();
