@@ -890,14 +890,10 @@ body{
       </div>
     </div>
 
-    <!-- Active lobbies -->
-    <div style="padding:0 16px 16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:2px">OFFENE LOBBYS</div>
-        <button onclick="mpLoadLobbies()" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer">↺ Aktualisieren</button>
-      </div>
-      <div id="mpLobbyList" style="display:flex;flex-direction:column;gap:8px">
-        <div style="color:rgba(255,255,255,.3);font-size:13px;text-align:center;padding:16px">Keine offenen Lobbys</div>
+    <!-- Hint -->
+    <div style="padding:0 16px 8px">
+      <div style="background:rgba(255,255,255,.04);border-radius:12px;padding:12px 14px;font-size:12px;color:rgba(255,255,255,.4);line-height:1.6">
+        💡 Erstelle eine Lobby und teile den Code mit deinen Freunden. Kein Account nötig!
       </div>
     </div>
   </div>
@@ -1100,7 +1096,7 @@ body{
   <div class="tr-scroll" id="trScroll"></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
 'use strict';
 
@@ -3005,19 +3001,15 @@ init();
 // MULTIPLAYER — Lobby system via Supabase
 // ══════════════════════════════════════════════════════════════════
 var _sb = null;
-var SUPA_URL = 'https://ozvyymrqibpyqccgszlz.supabase.co';
-var SUPA_KEY = 'sb_publishable_30WmZF8d8h_rUSrTGtBwnQ_Kn9gquwL';
-function getSb(){
-  if(_sb) return _sb;
-  if(typeof supabase !== 'undefined') _sb = supabase.createClient(SUPA_URL, SUPA_KEY);
-  return _sb;
-}
-
-var _mpUser = null;
-var _mpLobbyId = null;
-var _mpLobbyRole = null; // 'host'|'guest'
-var _mpMode = '1v1';
-var _mpLobbyChannel = null;
+// ── PeerJS Multiplayer (no backend needed) ────────────────────
+var _mpUser     = null;
+var _mpLobbyId  = null;
+var _mpLobbyRole= null;  // 'host' | 'guest'
+var _mpMode     = '1v1';
+var _mpPeer     = null;  // our PeerJS Peer instance
+var _mpConns    = [];    // host: all guest connections; guest: [hostConn]
+var _mpPlayers  = [];    // current player list in lobby
+var _mpSyncSeq  = 0;
 
 function mpSetName(){
   var inp = document.getElementById('mpNameInput');
@@ -3028,7 +3020,6 @@ function mpSetName(){
   document.getElementById('mpNameBox').style.display = 'none';
   document.getElementById('mpMain').style.display = 'flex';
   document.getElementById('mpUserHint').textContent = name;
-  mpLoadLobbies();
 }
 
 function mpCheckSession(){
@@ -3057,70 +3048,93 @@ function mpSelectMode(mode){
   }
 }
 
-async function mpCreateLobby(){
-  if(!_mpUser){ showToast('⚠️ Name eingeben'); return; }
-  var sb = getSb(); if(!sb){ showToast('⚠️ Verbindungsfehler'); return; }
-  var code = Math.random().toString(36).substr(2,5).toUpperCase();
-  var maxPlayers = _mpMode==='1v1' ? 2 : 4;
-  var res = await sb.from('cr_lobbies').insert({
-    code: code,
-    host: _mpUser,
-    mode: _mpMode,
-    max_players: maxPlayers,
-    players: [_mpUser],
-    status: 'waiting'
-  });
-  if(res.error){ showToast('❌ '+res.error.message); return; }
-  _mpLobbyId = code;
-  _mpLobbyRole = 'host';
-  mpShowLobbyView(code, _mpMode, [_mpUser], true);
-  mpSubscribeLobby(code);
+function mpDestroyPeer(){
+  _mpConns.forEach(function(c){ try{ c.close(); }catch(e){} });
+  _mpConns = [];
+  if(_mpPeer){ try{ _mpPeer.destroy(); }catch(e){} _mpPeer = null; }
 }
 
-async function mpJoinLobby(){
-  var code = (document.getElementById('mpJoinCode').value||'').trim().toUpperCase();
+function mpCreateLobby(){
+  if(!_mpUser){ showToast('⚠️ Name eingeben'); return; }
+  mpDestroyPeer();
+  showToast('⏳ Lobby wird erstellt...');
+  _mpPeer = new Peer();
+  _mpPeer.on('error', function(err){ showToast('❌ PeerJS: '+err.type); });
+  _mpPeer.on('open', function(id){
+    _mpLobbyId   = id;
+    _mpLobbyRole = 'host';
+    _mpMode      = _mpMode || '1v1';
+    _mpPlayers   = [_mpUser];
+    mpShowLobbyView(id, _mpMode, _mpPlayers, true);
+  });
+  _mpPeer.on('connection', function(conn){
+    conn.on('open', function(){
+      conn.on('data', function(msg){
+        if(msg.type === 'join'){
+          var max = _mpMode==='1v1' ? 2 : 4;
+          if(_mpPlayers.length >= max){ conn.send({type:'full'}); conn.close(); return; }
+          _mpPlayers.push(msg.name);
+          _mpConns.push(conn);
+          mpBroadcastLobby();
+          mpRenderSlots(_mpPlayers, max, true);
+        } else if(msg.type === 'game_state'){
+          mpApplyRemoteState(msg);
+        }
+      });
+      conn.on('close', function(){
+        _mpConns = _mpConns.filter(function(c){ return c !== conn; });
+        _mpPlayers = _mpPlayers.filter(function(p){ return p !== conn._peerName; });
+        mpRenderSlots(_mpPlayers, _mpMode==='1v1'?2:4, true);
+        mpBroadcastLobby();
+      });
+    });
+  });
+}
+
+function mpBroadcastLobby(){
+  var msg = {type:'lobby_update', players:_mpPlayers, mode:_mpMode};
+  _mpConns.forEach(function(c){ try{ c.send(msg); }catch(e){} });
+}
+
+function mpJoinLobby(){
+  var code = (document.getElementById('mpJoinCode').value||'').trim();
   if(!code){ showToast('⚠️ Code eingeben'); return; }
   if(!_mpUser){ showToast('⚠️ Name eingeben'); return; }
-  var sb = getSb(); if(!sb){ showToast('⚠️ Verbindungsfehler'); return; }
-  var res = await sb.from('cr_lobbies').select('*').eq('code',code).eq('status','waiting').maybeSingle();
-  if(!res.data){ showToast('❌ Lobby nicht gefunden oder voll'); return; }
-  var lobby = res.data;
-  var players = lobby.players || [];
-  if(players.indexOf(_mpUser)!==-1){ showToast('ℹ️ Du bist bereits in dieser Lobby'); }
-  else if(players.length >= lobby.max_players){ showToast('❌ Lobby ist voll!'); return; }
-  else players.push(_mpUser);
-  var upd = await sb.from('cr_lobbies').update({players: players}).eq('code', code);
-  if(upd.error){ showToast('❌ '+upd.error.message); return; }
-  _mpLobbyId = code;
-  _mpLobbyRole = 'guest';
-  mpShowLobbyView(code, lobby.mode, players, false);
-  mpSubscribeLobby(code);
-}
-
-async function mpLoadLobbies(){
-  var list = document.getElementById('mpLobbyList');
-  list.innerHTML = '<div style="color:rgba(255,255,255,.3);font-size:13px;text-align:center;padding:16px">Laden...</div>';
-  var sb = getSb();
-  if(!sb){ list.innerHTML='<div style="color:rgba(255,255,255,.3);font-size:13px;text-align:center;padding:16px">Keine Verbindung</div>'; return; }
-  var res = await sb.from('cr_lobbies').select('*').eq('status','waiting').order('created_at',{ascending:false}).limit(10);
-  var rows = (res.data||[]).filter(function(r){ return r.players.length < r.max_players; });
-  if(!rows.length){ list.innerHTML='<div style="color:rgba(255,255,255,.3);font-size:13px;text-align:center;padding:16px">Keine offenen Lobbys</div>'; return; }
-  list.innerHTML = rows.map(function(r){
-    return '<div style="background:rgba(255,255,255,.06);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px">'
-      +'<div style="flex:1"><div style="font-size:13px;font-weight:700;color:#fff">'+r.host+'\'s Lobby</div>'
-      +'<div style="font-size:11px;color:rgba(255,255,255,.4)">'+r.mode+' • '+r.players.length+'/'+r.max_players+' Spieler</div></div>'
-      +'<div style="font-size:16px;font-weight:900;color:var(--cr-gold);letter-spacing:2px">'+r.code+'</div>'
-      +'<button onclick="document.getElementById(\'mpJoinCode\').value=\''+r.code+'\';mpJoinLobby()" style="background:linear-gradient(135deg,#3a8fff,#1a5fd8);border:none;border-radius:8px;padding:7px 12px;color:#fff;font-size:12px;font-weight:700;cursor:pointer">JOIN</button>'
-      +'</div>';
-  }).join('');
+  mpDestroyPeer();
+  showToast('⏳ Verbinde...');
+  _mpPeer = new Peer();
+  _mpPeer.on('error', function(err){ showToast('❌ PeerJS: '+err.type); });
+  _mpPeer.on('open', function(){
+    var conn = _mpPeer.connect(code);
+    _mpConns = [conn];
+    conn._peerName = _mpUser;
+    conn.on('open', function(){
+      conn.send({type:'join', name:_mpUser});
+    });
+    conn.on('data', function(msg){
+      if(msg.type === 'full'){ showToast('❌ Lobby ist voll!'); mpDestroyPeer(); return; }
+      if(msg.type === 'lobby_update'){
+        _mpPlayers = msg.players;
+        _mpMode    = msg.mode;
+        mpShowLobbyView(code, msg.mode, msg.players, false);
+      } else if(msg.type === 'start'){
+        mpLaunchMatch();
+      } else if(msg.type === 'game_state'){
+        mpApplyRemoteState(msg);
+      }
+    });
+    conn.on('close', function(){ showToast('⚠️ Host hat die Lobby geschlossen'); mpLeaveLobby(); });
+    _mpLobbyId   = code;
+    _mpLobbyRole = 'guest';
+  });
 }
 
 function mpShowLobbyView(code, mode, players, isHost){
   document.getElementById('mpMain').style.display='none';
   document.getElementById('mpLobbyView').style.display='flex';
   document.getElementById('mpLobbyCode').textContent=code;
-  document.getElementById('mpLobbyModeLabel').textContent=mode.toUpperCase()+' MODE';
-  mpRenderSlots(players, mode==='1v1'?2:4, isHost);
+  document.getElementById('mpLobbyModeLabel').textContent=(mode||'1v1').toUpperCase()+' MODE';
+  mpRenderSlots(players, mode==='2v2'?4:2, isHost);
 }
 
 function mpRenderSlots(players, max, isHost){
@@ -3128,7 +3142,7 @@ function mpRenderSlots(players, max, isHost){
   var html = '';
   for(var i=0;i<max;i++){
     var p = players[i];
-    var team = i<max/2?'🔵':'🔴';
+    var team = i < max/2 ? '🔵' : '🔴';
     html += '<div style="background:rgba(255,255,255,.06);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px">'
       +'<div style="font-size:20px">'+team+'</div>'
       +'<div style="flex:1;font-size:14px;font-weight:700;color:'+(p?'#fff':'rgba(255,255,255,.25)')+'">'+( p||'Warte auf Spieler...')+'</div>'
@@ -3137,8 +3151,8 @@ function mpRenderSlots(players, max, isHost){
   }
   slots.innerHTML = html;
   var startBtn = document.getElementById('mpStartBtn');
-  var waitMsg = document.getElementById('mpWaitMsg');
-  if(isHost && players.length>=max){
+  var waitMsg  = document.getElementById('mpWaitMsg');
+  if(isHost && players.length >= max){
     startBtn.style.display='block'; waitMsg.style.display='none';
   } else {
     startBtn.style.display='none';
@@ -3147,60 +3161,83 @@ function mpRenderSlots(players, max, isHost){
   }
 }
 
-function mpSubscribeLobby(code){
-  var sb = getSb(); if(!sb) return;
-  if(_mpLobbyChannel) sb.removeChannel(_mpLobbyChannel);
-  _mpLobbyChannel = sb.channel('lobby_'+code)
-    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'cr_lobbies',filter:'code=eq.'+code}, function(payload){
-      var lobby = payload.new;
-      if(!lobby) return;
-      if(lobby.status==='starting'){
-        mpLaunchMatch(lobby);
-      } else {
-        mpRenderSlots(lobby.players, lobby.max_players, _mpLobbyRole==='host');
-      }
-    })
-    .subscribe();
+function mpStartMatch(){
+  if(_mpLobbyRole !== 'host') return;
+  var msg = {type:'start'};
+  _mpConns.forEach(function(c){ try{ c.send(msg); }catch(e){} });
+  mpLaunchMatch();
 }
 
-async function mpStartMatch(){
-  var sb = getSb(); if(!sb) return;
-  await sb.from('cr_lobbies').update({status:'starting'}).eq('code',_mpLobbyId);
-}
-
-function mpLaunchMatch(lobby){
+function mpLaunchMatch(){
   showToast('⚔️ Kampf startet!');
   document.getElementById('mpLobbyView').style.display='none';
-  // Start the actual battle
+  window._mpActive = true;
+  _mpSyncSeq = 0;
   setTimeout(function(){ startBattle(); }, 500);
 }
 
-async function mpLeaveLobby(){
-  var sb = getSb();
-  if(sb && _mpLobbyId && _mpUser){
-    var res = await sb.from('cr_lobbies').select('players').eq('code',_mpLobbyId).maybeSingle();
-    if(res.data){
-      var players = (res.data.players||[]).filter(function(p){ return p!==_mpUser; });
-      if(players.length===0){
-        await sb.from('cr_lobbies').delete().eq('code',_mpLobbyId);
-      } else {
-        await sb.from('cr_lobbies').update({players:players, host:players[0]}).eq('code',_mpLobbyId);
-      }
-    }
-  }
-  if(_mpLobbyChannel){ getSb().removeChannel(_mpLobbyChannel); _mpLobbyChannel=null; }
-  _mpLobbyId=null; _mpLobbyRole=null;
+function mpLeaveLobby(){
+  mpDestroyPeer();
+  _mpLobbyId = null; _mpLobbyRole = null; _mpPlayers = [];
   document.getElementById('mpLobbyView').style.display='none';
   document.getElementById('mpMain').style.display='flex';
-  mpLoadLobbies();
 }
+
+// ── Game state sync over PeerJS data channels ─────────────────
+function mpPushState(){
+  if(!window._mpActive || !B || B.over || !_mpConns.length) return;
+  var myData = {
+    type: 'game_state',
+    seq: ++_mpSyncSeq,
+    elixir: state.elixirF,
+    units: B.units.filter(function(u){ return u.side==='p' && !u.dead; }).map(function(u){
+      return {uid:u.uid,name:u.name,emoji:u.emoji,x:u.x,y:u.y,hp:u.hp,maxhp:u.maxhp};
+    }),
+    towers: B.towers.filter(function(t){ return t.side==='p'; }).map(function(t){
+      return {kind:t.kind,hp:t.hp,dead:t.dead};
+    }),
+    time: B.time,
+  };
+  _mpConns.forEach(function(c){ try{ c.send(myData); }catch(e){} });
+}
+
+var _mpLastRemoteSeq = 0;
+function mpApplyRemoteState(rd){
+  if(!B || !window._mpActive) return;
+  if(rd.seq && rd.seq <= _mpLastRemoteSeq) return;
+  _mpLastRemoteSeq = rd.seq || 0;
+  var H = B.H;
+  B.units = B.units.filter(function(u){ return u.side !== 'e' || u._local; });
+  (rd.units||[]).forEach(function(ru){
+    B.units.push({
+      uid:ru.uid, side:'e', name:ru.name, emoji:ru.emoji,
+      x:B.W - ru.x, y:H - ru.y,
+      hp:ru.hp, maxhp:ru.maxhp, dmg:0, range:0,
+      speed:0, atk:1, cd:999, fly:false, air:false, bld:false, splash:0,
+      building:false, life:0, r:11, target:null, dead:false, vx:0, vy:0,
+      _remote:true,
+    });
+  });
+  if(rd.towers){
+    var eTowers = B.towers.filter(function(t){ return t.side==='e'; });
+    rd.towers.forEach(function(rt, i){
+      if(eTowers[i]){
+        eTowers[i].hp   = rt.hp;
+        eTowers[i].dead = rt.dead;
+        if(rt.dead && !eTowers[i]._wasDead){ eTowers[i]._wasDead=true; B.eCrowns++; }
+      }
+    });
+  }
+  if(_mpLobbyRole === 'guest' && rd.time !== undefined) B.time = rd.time;
+}
+
+setInterval(function(){ if(window._mpActive && B && !B.over) mpPushState(); }, 500);
 
 function mpShowScreen(){
   mpCheckSession();
-  if(_mpUser && !_mpLobbyId) mpLoadLobbies();
 }
 
-// ── Patch switchNav to trigger mpShowScreen ───────────────────
+// ── Patch switchNav ───────────────────────────────────────────
 var _origSwitchNav = switchNav;
 switchNav = function(navItem, screenId){
   _origSwitchNav(navItem, screenId);
@@ -3212,10 +3249,8 @@ var _origFinishBattle = finishBattle;
 finishBattle = function(surrender){
   if(window._mpActive){
     window._mpActive = false;
-    var sb = getSb();
-    if(sb && _mpLobbyId) sb.from('cr_lobbies').update({status:'done'}).eq('code',_mpLobbyId).then(function(){});
-    if(_mpLobbyChannel && sb) sb.removeChannel(_mpLobbyChannel);
-    _mpLobbyChannel = null;
+    // Don't destroy peer immediately — let the match end cleanly
+    setTimeout(function(){ if(!window._mpActive) mpDestroyPeer(); }, 2000);
   }
   _origFinishBattle(surrender);
 };
