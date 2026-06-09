@@ -1590,16 +1590,16 @@ function startBattle(){
       side:side, kind:kind, x:x, y:y,
       hp:hp, maxhp:hp,
       range: king ? 130 : 145, dmg:dmg, atk:0.8, cd:0,
-      r:40, dead:false, active: king ? false : true
+      r:34, dead:false, active: king ? false : true
     };
   }
   var towers = [
-    tower('e','crown', laneL, H*0.21),
-    tower('e','crown', laneR, H*0.21),
-    tower('e','king',  W*0.5, H*0.10),
-    tower('p','crown', laneL, H*0.79),
-    tower('p','crown', laneR, H*0.79),
-    tower('p','king',  W*0.5, H*0.90),
+    tower('e','crown', laneL, H*0.24),
+    tower('e','crown', laneR, H*0.24),
+    tower('e','king',  W*0.5, H*0.14),
+    tower('p','crown', laneL, H*0.76),
+    tower('p','crown', laneR, H*0.76),
+    tower('p','king',  W*0.5, H*0.86),
   ];
 
   B = {
@@ -2141,23 +2141,18 @@ function drawTower(c,t){
 
   // ── HP bar (outside save/restore, world coords) ───────
   if(!dead){
-    var bw = isKing ? 74 : 60, bh = 9;
-    // Ideal: above the merlons. Fallback: just inside the tower body top.
-    var aboveMerlons = y - th/2 - merlonH - 8;
-    var insideTower  = y - th/2 + 4;
-    var by = aboveMerlons >= 4 ? aboveMerlons : insideTower;
+    var bw = isKing ? 68 : 54, bh = 9;
+    // Draw HP bar inside the tower body near the top — always visible
+    var by = y - th/2 + 6;
     var bx = x - bw/2;
-    // background
     c.fillStyle='rgba(0,0,0,.85)'; c.fillRect(bx-1,by-1,bw+2,bh+2);
     var pct=Math.max(0,t.hp/t.maxhp);
     var hpColor = pct>0.5 ? '#2ecc71' : pct>0.25 ? '#f39c12' : '#e74c3c';
     c.fillStyle=hpColor; c.fillRect(bx,by,bw*pct,bh);
     c.fillStyle='#333'; c.fillRect(bx+bw*pct,by,bw*(1-pct),bh);
     c.strokeStyle='rgba(255,255,255,.5)'; c.lineWidth=1; c.strokeRect(bx,by,bw,bh);
-    // HP text: above bar if space, else below
-    var textY = by >= 14 ? by - 3 : by + bh + 11;
-    c.fillStyle='#fff'; c.font='bold 10px sans-serif'; c.textAlign='center';
-    c.fillText(Math.ceil(t.hp)+' HP', x, textY);
+    c.fillStyle='#fff'; c.font='bold 9px sans-serif'; c.textAlign='center';
+    c.fillText(Math.ceil(t.hp)+' HP', x, by+bh+10);
   }
 }
 
