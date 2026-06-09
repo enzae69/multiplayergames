@@ -617,6 +617,10 @@ body{
       <span class="res-val" id="goldVal">50</span>
       <span class="plus-btn">+</span>
     </div>
+    <div class="top-resource" onclick="showToast('⚡ Power: '+state.power+' – aus Truhen erhalten!')" style="cursor:pointer">
+      <span class="icon">⚡</span>
+      <span class="res-val" id="powerVal">0</span>
+    </div>
     <div class="trophy-box">🏆 <span id="trophiesVal">0</span></div>
     <button class="settings-btn" onclick="switchNav(null,'friendsScreen');frShowScreen()" style="font-size:20px;background:rgba(255,255,255,.1);border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center">👥</button>
   </div>
@@ -1165,6 +1169,8 @@ var state = {
   silversToday: 0,
   silverResetDay: '',
   lastSilverCollect: 0, // timestamp of last free silver chest
+  power: 0,        // power points earned from chests
+  winCount: 0,     // wins counter (every 2 wins → chest)
 };
 
 var SILVER_COOLDOWN = 5 * 60 * 1000; // 5 minutes
@@ -1252,6 +1258,8 @@ function saveProgress(){
       silversToday: state.silversToday,
       silverResetDay: state.silverResetDay,
       lastSilverCollect: state.lastSilverCollect,
+      power: state.power,
+      winCount: state.winCount,
     }));
   } catch(e){}
 }
@@ -1268,6 +1276,8 @@ function loadProgress(){
     if(typeof d.silversToday === 'number') state.silversToday = d.silversToday;
     if(typeof d.silverResetDay === 'string') state.silverResetDay = d.silverResetDay;
     if(typeof d.lastSilverCollect === 'number') state.lastSilverCollect = d.lastSilverCollect;
+    if(typeof d.power === 'number') state.power = d.power;
+    if(typeof d.winCount === 'number') state.winCount = d.winCount;
     checkSilverReset(); // reset counter if new day
     ensureOwned();
     if(Array.isArray(d.deck) && d.deck.length === 8){
@@ -1333,9 +1343,9 @@ function buildCard(c, rarity){
   var badgeClass  = 'badge-'+rarity;
   var owned       = isCardOwned(c);
   var lockOverlay = owned ? '' :
-    '<div style="position:absolute;inset:0;background:rgba(0,0,0,.6);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">'
-    +'<span style="font-size:26px;color:#e74c3c;font-weight:900;text-shadow:0 0 8px rgba(0,0,0,.8)">✕</span>'
-    +'<span style="font-size:7px;color:#fff;font-weight:700;text-align:center;line-height:1.2">aus Truhen</span>'
+    '<div style="position:absolute;inset:0;background:rgba(0,0,0,.7);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">'
+    +'<span style="font-size:48px;color:#e74c3c;font-weight:900;text-shadow:0 0 10px rgba(0,0,0,.9);line-height:1">✕</span>'
+    +'<span style="font-size:8px;color:#fff;font-weight:700;text-align:center;line-height:1.2">aus Truhen</span>'
     +'</div>';
   return '<div class="card '+rarity+(owned?'':' locked-card')+'" style="position:relative" onclick="showToast(\''+(owned?c.emoji+' '+c.name:'🔒 '+c.name+' – aus Truhen erhalten!')+'\')">'
     +'<div class="card-elixir">'+c.elixir+'</div>'
@@ -1472,10 +1482,12 @@ function openChest(type){
       var grid = document.getElementById('chestRewardGrid');
 
       // Resource rewards
-      var goldAmt = randInt(200,5000);
-      var gemAmt  = randInt(0,15);
+      var goldAmt  = randInt(200,5000);
+      var gemAmt   = randInt(0,15);
+      var powerAmt = randInt(3,20);
       var html = '<div class="chest-reward-item"><div class="ri-emoji">🪙</div><div class="ri-val">+'+goldAmt+'</div><div class="ri-lbl">Gold</div></div>';
       if(gemAmt>0) html += '<div class="chest-reward-item"><div class="ri-emoji">💎</div><div class="ri-val">+'+gemAmt+'</div><div class="ri-lbl">Gems</div></div>';
+      html += '<div class="chest-reward-item"><div class="ri-emoji">⚡</div><div class="ri-val">+'+powerAmt+'</div><div class="ri-lbl">Power</div></div>';
 
       // Card rewards
       var roll = window._chestCardRoll || [];
@@ -1496,8 +1508,10 @@ function openChest(type){
       // Give rewards
       state.gold += goldAmt;
       state.gems += gemAmt;
+      state.power += powerAmt;
       document.getElementById('goldVal').textContent = state.gold.toLocaleString().replace(/,/g,'.');
       document.getElementById('gemsVal').textContent = state.gems.toLocaleString().replace(/,/g,'.');
+      var pv=document.getElementById('powerVal'); if(pv) pv.textContent=state.power.toLocaleString().replace(/,/g,'.');
       renderCards();
       saveProgress();
     }
@@ -2647,14 +2661,21 @@ function finishBattle(surrender){
     document.getElementById('resultTitle').style.color='#bbb';
     document.getElementById('resultReward').textContent='Keine Trophäen geändert';
   } else if(won){
-    dTrophies=randInt(26,33);
-    state.trophies+=dTrophies; state.gold+=randInt(150,400);
+    dTrophies=30; // fixed: every win = 30 trophies
+    var goldReward = randInt(150,400);
+    state.trophies+=dTrophies; state.gold+=goldReward;
     document.getElementById('resultEmoji').textContent='🏆';
     document.getElementById('resultTitle').textContent='SIEG!';
     document.getElementById('resultTitle').style.color='var(--cr-gold)';
+    // Win counter: every 2 wins → a gold chest
+    state.winCount = (state.winCount||0) + 1;
+    var chestMsg = '';
+    if(state.winCount % 2 === 0){
+      B._earnedChest = 'gold';
+      chestMsg = '  +📦 Truhe (2 Siege!)';
+    }
     // Silver chest: max 6 per day (German timezone), only on win
     checkSilverReset();
-    var goldReward = randInt(150,400);
     var silverMsg = '';
     if(state.silversToday < 6){
       state.silversToday++;
@@ -2664,7 +2685,7 @@ function finishBattle(surrender){
       B._earnedSilver = false;
       silverMsg = '  ❌ Heute schon 6/6 Silbertruhen';
     }
-    document.getElementById('resultReward').textContent='+'+dTrophies+' 🏆   +'+goldReward+' 🪙'+silverMsg;
+    document.getElementById('resultReward').textContent='+'+dTrophies+' 🏆   +'+goldReward+' 🪙'+silverMsg+chestMsg;
   } else {
     dTrophies=randInt(18,29);
     state.trophies=Math.max(0,state.trophies-dTrophies);
@@ -2683,11 +2704,15 @@ function leaveBattle(){
   if(window.CR3D) window.CR3D.stop();
   document.getElementById('battleGL').style.display='none';
   var earnedSilver = B && B._earnedSilver;
+  var earnedChest = B && B._earnedChest;
   B=null;
   switchNav(document.querySelectorAll('.bottom-nav')[0].querySelector('.nav-item'), 'homeScreen');
-  if(earnedSilver){
+  if(earnedSilver || earnedChest){
     saveProgress();
     setTimeout(function(){ openChest('silver'); }, 300);
+    if(earnedChest){
+      setTimeout(function(){ openChest(earnedChest); }, 900);
+    }
   }
 }
 
@@ -2695,6 +2720,7 @@ function syncTopBar(){
   document.getElementById('trophiesVal').textContent=state.trophies.toLocaleString().replace(/,/g,'.');
   document.getElementById('goldVal').textContent=state.gold.toLocaleString().replace(/,/g,'.');
   document.getElementById('gemsVal').textContent=state.gems.toLocaleString().replace(/,/g,'.');
+  var pv=document.getElementById('powerVal'); if(pv) pv.textContent=state.power.toLocaleString().replace(/,/g,'.');
   renderCards(); // refresh lock/unlock state based on current trophies
   saveProgress();
 }
@@ -2771,6 +2797,7 @@ function renderDraftStrip(){
       var idx = i;
       slot.innerHTML = '<div class="de-slot-elixir">'+card.elixir+'</div>'
         + '<span style="font-size:22px">'+card.emoji+'</span>'
+        + '<div style="font-size:7px;color:#fff;font-weight:700;text-align:center;line-height:1;max-width:46px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+card.name+'</div>'
         + '<div class="de-slot-x" data-i="'+i+'">✕</div>';
       slot.querySelector('.de-slot-x').onclick = function(e){
         e.stopPropagation();
@@ -2797,51 +2824,61 @@ function renderPickGrid(){
   var inDeck = {};
   draftDeck.forEach(function(c){ inDeck[c.name] = true; });
 
-  ['legendary','epic','rare','common'].forEach(function(r){
-    var group = all.filter(function(c){ return c.rarity===r; });
-    if(!group.length) return;
+  var ownedCards   = all.filter(function(c){ return isCardOwned(c); });
+  var lockedCards  = all.filter(function(c){ return !isCardOwned(c); });
+
+  function buildCardDiv(card){
+    var inD     = !!inDeck[card.name];
+    var full    = draftDeck.length >= 8;
+    var locked  = !isCardOwned(card);
+    var div = document.createElement('div');
+    div.style.position = 'relative';
+    div.className = 'de-card '+(card.rarity||'common')
+      + (inD ? ' selected' : '')
+      + ((!inD && (full || locked)) ? ' disabled-card' : '');
+    div.innerHTML = '<div class="de-elixir">'+card.elixir+'</div>'
+      +'<div class="de-emoji" style="'+(locked?'filter:grayscale(1);opacity:.35':'')+'">'+card.emoji+'</div>'
+      +'<div class="de-name">'+card.name+'</div>'
+      +(inD ? '<div style="position:absolute;top:3px;left:3px;background:#2ecc71;color:#fff;font-size:8px;font-weight:900;padding:1px 5px;border-radius:6px;z-index:3">IM DECK</div>' : '')
+      +(locked
+        ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,.7);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center">'
+          +'<span style="font-size:40px;color:#e74c3c;font-weight:900;text-shadow:0 0 10px rgba(0,0,0,.9);line-height:1">✕</span>'
+          +'<span style="font-size:8px;color:#fff;font-weight:700;margin-top:2px">aus Truhen</span>'
+          +'</div>'
+        : '');
+    if(locked){
+      div.onclick = function(){ showToast('🔒 '+card.name+' – aus Truhen erhalten!'); };
+    } else if(!inD && !full){
+      div.onclick = function(){
+        draftDeck.push(card);
+        renderDraftStrip(); renderPickGrid();
+      };
+    } else if(inD){
+      div.onclick = function(){
+        var idx = draftDeck.findIndex(function(c){ return c.name===card.name; });
+        if(idx>=0) draftDeck.splice(idx,1);
+        renderDraftStrip(); renderPickGrid();
+      };
+    }
+    return div;
+  }
+
+  function section(title, color, cards){
+    if(!cards.length) return;
     var lbl = document.createElement('div');
     lbl.className = 'de-section';
-    lbl.textContent = r.toUpperCase();
+    lbl.style.color = color;
+    lbl.style.fontSize = '12px';
+    lbl.textContent = title + ' (' + cards.length + ')';
     scroll.appendChild(lbl);
     var grid = document.createElement('div');
     grid.className = 'de-grid';
-    group.forEach(function(card){
-      var inD     = !!inDeck[card.name];
-      var full    = draftDeck.length >= 8;
-      var locked  = !isCardOwned(card);
-      var div = document.createElement('div');
-      div.style.position = 'relative';
-      div.className = 'de-card '+r
-        + (inD ? ' selected' : '')
-        + ((!inD && (full || locked)) ? ' disabled-card' : '');
-      div.innerHTML = '<div class="de-elixir">'+card.elixir+'</div>'
-        +'<div class="de-emoji" style="'+(locked?'filter:grayscale(1);opacity:.4':'')+'">'+card.emoji+'</div>'
-        +'<div class="de-name">'+card.name+'</div>'
-        +(locked
-          ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,.6);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center">'
-            +'<span style="font-size:20px;color:#e74c3c;font-weight:900">✕</span>'
-            +'<span style="font-size:7px;color:#fff;font-weight:700">aus Truhen</span>'
-            +'</div>'
-          : '');
-      if(locked){
-        div.onclick = function(){ showToast('🔒 '+card.name+' – aus Truhen erhalten!'); };
-      } else if(!inD && !full){
-        div.onclick = function(){
-          draftDeck.push(card);
-          renderDraftStrip(); renderPickGrid();
-        };
-      } else if(inD){
-        div.onclick = function(){
-          var idx = draftDeck.findIndex(function(c){ return c.name===card.name; });
-          if(idx>=0) draftDeck.splice(idx,1);
-          renderDraftStrip(); renderPickGrid();
-        };
-      }
-      grid.appendChild(div);
-    });
+    cards.forEach(function(card){ grid.appendChild(buildCardDiv(card)); });
     scroll.appendChild(grid);
-  });
+  }
+
+  section('✅ MEINE KARTEN', '#2ecc71', ownedCards);
+  section('🔒 NOCH NICHT FREIGESCHALTET', '#e74c3c', lockedCards);
 }
 
 function init(){
