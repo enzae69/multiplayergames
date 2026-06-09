@@ -1594,12 +1594,12 @@ function startBattle(){
     };
   }
   var towers = [
-    tower('e','crown', laneL, H*0.24),
-    tower('e','crown', laneR, H*0.24),
-    tower('e','king',  W*0.5, H*0.14),
-    tower('p','crown', laneL, H*0.76),
-    tower('p','crown', laneR, H*0.76),
-    tower('p','king',  W*0.5, H*0.86),
+    tower('e','crown', laneL, H*0.27),
+    tower('e','crown', laneR, H*0.27),
+    tower('e','king',  W*0.5, H*0.17),
+    tower('p','crown', laneL, H*0.73),
+    tower('p','crown', laneR, H*0.73),
+    tower('p','king',  W*0.5, H*0.83),
   ];
 
   B = {
@@ -2141,18 +2141,20 @@ function drawTower(c,t){
 
   // ── HP bar (outside save/restore, world coords) ───────
   if(!dead){
-    var bw = isKing ? 68 : 54, bh = 9;
-    // Draw HP bar inside the tower body near the top — always visible
-    var by = y - th/2 + 6;
+    var bw = isKing ? 72 : 58, bh = 10;
+    // Enemy towers (top half): draw bar BELOW tower body → always toward center
+    // Player towers (bottom half): draw bar ABOVE tower body → always toward center
+    var by = isPlayer ? (y - th/2 - bh - 4) : (y + th/2 + 4);
     var bx = x - bw/2;
-    c.fillStyle='rgba(0,0,0,.85)'; c.fillRect(bx-1,by-1,bw+2,bh+2);
+    c.fillStyle='rgba(0,0,0,.9)'; c.fillRect(bx-1,by-1,bw+2,bh+2);
     var pct=Math.max(0,t.hp/t.maxhp);
     var hpColor = pct>0.5 ? '#2ecc71' : pct>0.25 ? '#f39c12' : '#e74c3c';
     c.fillStyle=hpColor; c.fillRect(bx,by,bw*pct,bh);
-    c.fillStyle='#333'; c.fillRect(bx+bw*pct,by,bw*(1-pct),bh);
-    c.strokeStyle='rgba(255,255,255,.5)'; c.lineWidth=1; c.strokeRect(bx,by,bw,bh);
-    c.fillStyle='#fff'; c.font='bold 9px sans-serif'; c.textAlign='center';
-    c.fillText(Math.ceil(t.hp)+' HP', x, by+bh+10);
+    c.fillStyle='#444'; c.fillRect(bx+bw*pct,by,bw*(1-pct),bh);
+    c.strokeStyle='rgba(255,255,255,.6)'; c.lineWidth=1; c.strokeRect(bx,by,bw,bh);
+    c.fillStyle='#fff'; c.font='bold 10px sans-serif'; c.textAlign='center';
+    var textY = isPlayer ? by - 4 : by + bh + 12;
+    c.fillText(Math.ceil(t.hp)+' HP', x, textY);
   }
 }
 
