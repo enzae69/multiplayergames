@@ -152,11 +152,17 @@ canvas{display:block;position:fixed;inset:0;width:100%!important;height:100%!imp
       <span>🧍 CHARACTERS</span>
     </div>
     <div class="ab-grid">
-      <div class="ab-card ab-eq" style="border-color:#00f5ff">
+      <div class="ab-card ab-eq" style="border-color:#00f5ff" id="charCard_default" onclick="selectCharacter('default')">
         <div class="ab-icon">🧍</div>
         <div class="ab-name">DEFAULT</div>
         <div class="ab-desc">3D Mixamo Character</div>
-        <div style="font-size:9px;letter-spacing:1px;color:#39ff14;background:rgba(57,255,20,.1);border-radius:6px;padding:2px 8px">✓ AKTIV</div>
+        <div id="charStatus_default" style="font-size:9px;letter-spacing:1px;color:#39ff14;background:rgba(57,255,20,.1);border-radius:6px;padding:2px 8px">✓ AKTIV</div>
+      </div>
+      <div class="ab-card" id="charCard_lasertracer" onclick="selectCharacter('lasertracer')">
+        <div class="ab-icon">⚡</div>
+        <div class="ab-name">LASER TRACER</div>
+        <div class="ab-desc">Futuristischer Charakter</div>
+        <div id="charStatus_lasertracer" style="font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.4);background:rgba(255,255,255,.06);border-radius:6px;padding:2px 8px">AUSRÜSTEN</div>
       </div>
       <div class="ab-card" style="opacity:0.45;cursor:default">
         <div class="ab-icon">⚔️</div>
@@ -368,6 +374,33 @@ var watchX = 0, watchY = 0, watchZ = 10; // camera follows this point (self or s
 var spectatingId = null;   // peer ID being spectated when dead
 var isAdminUser    = false;
 var adminInvincible = false;
+
+// ── CHARACTER SELECTION ───────────────────────────────────────────────────
+var CHAR_MODELS = {
+  'default': 'Walking.fbx',
+  'lasertracer': 'https://github.com/enzae69/multiplayergames/releases/download/enzae/character.3.fbx'
+};
+function getActiveCharacter(){ return localStorage.getItem('activeCharacter') || 'default'; }
+function selectCharacter(id){
+  if(!CHAR_MODELS[id]) return;
+  localStorage.setItem('activeCharacter', id);
+  ['default','lasertracer'].forEach(k=>{
+    var card = document.getElementById('charCard_'+k);
+    var status = document.getElementById('charStatus_'+k);
+    if(!card||!status) return;
+    var active = k===id;
+    card.classList.toggle('ab-eq', active);
+    card.style.borderColor = active ? '#00f5ff' : '';
+    status.textContent = active ? '✓ AKTIV' : 'AUSRÜSTEN';
+    status.style.color = active ? '#39ff14' : 'rgba(255,255,255,.4)';
+    status.style.background = active ? 'rgba(57,255,20,.1)' : 'rgba(255,255,255,.06)';
+  });
+}
+// Init character cards on load
+(function(){
+  var cur = getActiveCharacter();
+  selectCharacter(cur);
+})();
 
 // ── SKIN COLORS ───────────────────────────────────────────────────────────
 var SKIN_COLORS = {
@@ -2019,7 +2052,8 @@ function loadFBX(url) {
 
 async function init() {
   try {
-    const baseFbx = await loadFBX('Walking.fbx');
+    const charModel = CHAR_MODELS[getActiveCharacter()] || 'Walking.fbx';
+    const baseFbx = await loadFBX(charModel);
 
     // Scale so character is ~2 game units tall
     const sizeVec = new THREE.Vector3();
