@@ -181,6 +181,13 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .spinner{width:40px;height:40px;border:3px solid rgba(168,85,247,.2);border-top-color:#a855f7;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:3px;color:rgba(168,85,247,.6)}
+.sl-empty{font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:2px;color:rgba(255,255,255,.25);text-align:center;padding:20px 0}
+.sl-row{display:flex;align-items:center;gap:10px;background:rgba(168,85,247,.07);border:1px solid rgba(168,85,247,.2);border-radius:12px;padding:12px 14px}
+.sl-info{flex:1;min-width:0}
+.sl-host{font-family:'Russo One',sans-serif;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sl-code{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:4px;color:rgba(168,85,247,.6);margin-top:2px}
+.sl-players{font-family:'Russo One',sans-serif;font-size:12px;color:rgba(255,255,255,.4);white-space:nowrap}
+.sl-join{width:auto;padding:10px 16px;font-size:13px;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -196,6 +203,19 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
   <div class="ef-sub" id="efSub">Das Spiel geht weiter...</div>
 </div>
 
+<!-- ── SERVER LIST MODAL ── -->
+<div id="serverListModal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);flex-direction:column;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#0d0d22;border:2px solid rgba(168,85,247,.4);border-radius:20px;width:100%;max-width:420px;padding:24px 20px;display:flex;flex-direction:column;gap:14px;max-height:80vh">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="font-family:'Russo One',sans-serif;font-size:16px;letter-spacing:3px;color:#a855f7">🌐 OFFENE RÄUME</div>
+      <button onclick="closeServerList()" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:22px;cursor:pointer;font-family:'Russo One',sans-serif">✕</button>
+    </div>
+    <div id="serverListItems" style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;max-height:50vh">
+      <div class="sl-empty">Suche nach Räumen...</div>
+    </div>
+  </div>
+</div>
+
 <!-- ── MENU ── -->
 <div class="screen active" id="sMenu">
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;width:100%">
@@ -209,6 +229,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
         <input class="inp" id="codeInp" placeholder="CODE" maxlength="4" autocomplete="off" spellcheck="false" style="text-align:center">
         <button class="btn btn-secondary" onclick="joinRoom()" style="width:auto;padding:15px 20px;font-size:14px">REIN</button>
       </div>
+      <button class="btn btn-secondary" onclick="openServerList()" style="margin-top:4px">🌐 SERVER LISTE</button>
       <div class="err" id="menuErr"></div>
     </div>
   </div>
@@ -343,8 +364,11 @@ let myId = crypto.randomUUID();
 let myName = '', myAvatar = '', roomCode = '';
 let isHost = false;
 let gs = null, ch = null;
-let heartbeatTimer = null;
+let heartbeatTimer = null, serverCh = null, serverHeartbeat = null;
 let voteTimerInterval = null;
+
+// Load saved name
+(function(){ var n=localStorage.getItem('imp_name'); if(n){ document.getElementById('nameInp').value=n; } })();
 
 // per-round client state (reset on new round)
 let revealed = false, readySent = false, clueSent = false, hasVoted = false;
@@ -363,6 +387,7 @@ function esc(s){ var d=document.createElement('div'); d.textContent=s; return d.
 window.createRoom = function(){
   var name=document.getElementById('nameInp').value.trim().toUpperCase();
   if(!name||name.length<2){ setMenuErr('Name eingeben!'); return; }
+  localStorage.setItem('imp_name', name);
   myName=name; myAvatar=pick(AVATARS); roomCode=randCode(); isHost=true;
   connectChannel();
 };
@@ -371,7 +396,18 @@ window.joinRoom = function(){
   var code=document.getElementById('codeInp').value.trim().toUpperCase();
   if(!name){ setMenuErr('Name eingeben!'); return; }
   if(!code||code.length<4){ setMenuErr('Code eingeben!'); return; }
+  localStorage.setItem('imp_name', name);
   myName=name; myAvatar=pick(AVATARS); roomCode=code; isHost=false;
+  closeServerList();
+  connectChannel();
+};
+window.joinRoomByCode = function(code){
+  var name=document.getElementById('nameInp').value.trim().toUpperCase();
+  if(!name||name.length<2){ setMenuErr('Name eingeben!'); return; }
+  localStorage.setItem('imp_name', name);
+  document.getElementById('codeInp').value=code;
+  myName=name; myAvatar=pick(AVATARS); roomCode=code; isHost=false;
+  closeServerList();
   connectChannel();
 };
 
@@ -456,6 +492,7 @@ function connectChannel(){
           chatMessages:[], votePhaseStart:0, results:null,
         };
         updateUI();
+        startServerBroadcast();
       } else {
         setTimeout(()=>ch.send({type:'broadcast',event:'join',payload:{id:myId,name:myName,avatar:myAvatar}}),300);
         showScreen('sLobby');
@@ -472,10 +509,50 @@ function connectChannel(){
 function broadcastState(){ if(!ch||!isHost) return; ch.send({type:'broadcast',event:'state',payload:{s:gs}}); }
 function startHeartbeat(){ clearInterval(heartbeatTimer); if(!isHost) return; heartbeatTimer=setInterval(()=>{ if(gs) broadcastState(); },3500); }
 
+// ── SERVER LIST ──
+var _servers = {}; // code -> {code, host, players, max, ts}
+function startServerBroadcast(){
+  if(!isHost) return;
+  if(!serverCh){
+    serverCh = sb.channel('imposter_servers',{config:{broadcast:{self:false}}});
+    serverCh.subscribe();
+  }
+  function pub(){ if(!gs||gs.phase!=='lobby') return; serverCh.send({type:'broadcast',event:'lobby',payload:{code:roomCode,host:myName,players:(gs.players||[]).length,max:10,ts:Date.now()}}); }
+  pub();
+  clearInterval(serverHeartbeat);
+  serverHeartbeat = setInterval(pub, 4000);
+}
+function stopServerBroadcast(){ clearInterval(serverHeartbeat); if(serverCh){ serverCh.unsubscribe(); serverCh=null; } }
+function openServerList(){
+  document.getElementById('serverListModal').style.display='flex';
+  _servers={};
+  renderServerList();
+  if(!serverCh){
+    serverCh = sb.channel('imposter_servers',{config:{broadcast:{self:false}}});
+    serverCh.on('broadcast',{event:'lobby'},m=>{
+      var p=m.payload; if(!p||!p.code) return;
+      _servers[p.code]=p; renderServerList();
+    });
+    serverCh.subscribe();
+  }
+}
+function closeServerList(){
+  document.getElementById('serverListModal').style.display='none';
+  if(!isHost && serverCh){ serverCh.unsubscribe(); serverCh=null; }
+}
+function renderServerList(){
+  var now=Date.now(), list=Object.values(_servers).filter(s=>now-s.ts<8000);
+  var el=document.getElementById('serverListItems');
+  if(!list.length){ el.innerHTML='<div class="sl-empty">Keine offenen Räume...</div>'; return; }
+  el.innerHTML=list.map(s=>`<div class="sl-row"><div class="sl-info"><div class="sl-host">${esc(s.host)}</div><div class="sl-code">${esc(s.code)}</div></div><div class="sl-players">${s.players}/10</div><button class="btn btn-primary sl-join" onclick="joinRoomByCode('${esc(s.code)}')">REIN</button></div>`).join('');
+}
+window.openServerList=openServerList; window.closeServerList=closeServerList;
+
 // ── HOST: START ──
 window.hostStartGame = function(){
   if(!isHost||!gs) return;
   if(gs.players.length<3){ showToast('Mindestens 3 Spieler!'); return; }
+  stopServerBroadcast();
   startRound();
 };
 
@@ -499,6 +576,7 @@ function startRound(){
 window.hostPlayAgain = function(){ if(!isHost||!gs) return; startRound(); };
 window.leaveRoom = function(){
   clearInterval(heartbeatTimer); clearInterval(voteTimerInterval); clearTimeout(hostVoteTimeout);
+  stopServerBroadcast();
   if(ch){ ch.unsubscribe(); ch=null; }
   gs=null; roomCode=''; isHost=false;
   showScreen('sMenu');
