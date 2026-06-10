@@ -382,9 +382,11 @@ function connectChannel(){
   ch.on('broadcast',{event:'state'}, m=>{
     if(isHost) return;
     var prevPhase = gs ? gs.phase : null;
+    var prevRound = gs ? (gs.round||0) : 0;
     gs = m.payload.s;
-    // Reset client vars on phase change
-    if(prevPhase !== gs.phase){
+    var newRound = gs.round !== prevRound;
+    // Reset client vars on phase change or new round
+    if(prevPhase !== gs.phase || newRound){
       if(gs.phase==='reveal'){ revealed=false; readySent=false; clueSent=false; hasVoted=false; selectedVoteId=null; }
       if(gs.phase==='clues'){ clueSent=false; }
       if(gs.phase==='voting'){ hasVoted=false; selectedVoteId=null; startVoteTimer(); }
@@ -484,6 +486,7 @@ function startRound(){
   gs.imposterIds=[imposter.id];
   gs.word=word; gs.category=cat;
   gs.phase='reveal';
+  gs.round=(gs.round||0)+1;
   gs.clues=[]; gs.votes=[]; gs.readyPlayers=[];
   gs.speakerOrder=shuffle(alive.map(p=>p.id));
   gs.speakerIndex=0;
