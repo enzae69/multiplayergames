@@ -307,14 +307,11 @@ function connectChannel(){
   ch.subscribe((status, err)=>{
     if(status === 'SUBSCRIBED'){
       setLoading(false);
-      // Send join, then wait 2s for a host response
+      // Send join, then wait briefly for a host response
       ch.send({type:'broadcast',event:'join',payload:{id:myId,name:myName,avatar:myAvatar,joinTs:Date.now()}});
       setTimeout(()=>{
-        if(!gs){
-          // No host found — become host
-          becomeHost();
-        }
-      }, 2000);
+        if(!gs) becomeHost();
+      }, 600);
     } else if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED'){
       setLoading(false);
       document.getElementById('menuErr').textContent = 'Verbindungsfehler: ' + status;
