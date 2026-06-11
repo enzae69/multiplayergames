@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>BASKETBALL</title>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:#1a1a2e;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;overflow:hidden;font-family:'Russo One',sans-serif}
+#wrap{position:relative;width:100%;max-width:800px}
+canvas{display:block;width:100%;image-rendering:pixelated}
+/* OVERLAY SCREENS */
+.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(10,8,20,.88);border-radius:0}
+.ov.hide{display:none}
+.bk-logo{font-family:'Press Start 2P',monospace;font-size:clamp(18px,5vw,32px);color:#f4a234;text-shadow:4px 4px 0 #8b4500,0 0 30px rgba(244,162,52,.6);letter-spacing:2px;text-align:center;line-height:1.4}
+.bk-sub{font-family:'Press Start 2P',monospace;font-size:clamp(7px,2vw,11px);color:rgba(255,255,255,.4);letter-spacing:2px;text-align:center}
+.bk-btn{font-family:'Press Start 2P',monospace;font-size:clamp(9px,2.5vw,14px);letter-spacing:1px;padding:14px 24px;border:3px solid;border-radius:4px;cursor:pointer;touch-action:manipulation;transition:transform .1s;text-transform:uppercase;min-width:220px;text-align:center}
+.bk-btn:active{transform:scale(.93)}
+.btn-orange{background:rgba(244,162,52,.15);border-color:#f4a234;color:#f4a234}
+.btn-orange:hover{background:rgba(244,162,52,.25)}
+.btn-blue{background:rgba(80,130,255,.15);border-color:#5082ff;color:#5082ff}
+.btn-green{background:rgba(57,255,20,.15);border-color:#39ff14;color:#39ff14}
+.btn-ghost{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.5);font-size:clamp(7px,1.8vw,10px)}
+/* SCORE HUD */
+#hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:8px 12px;pointer-events:none}
+.hud-score{font-family:'Press Start 2P',monospace;font-size:clamp(16px,5vw,28px);text-shadow:3px 3px 0 rgba(0,0,0,.6)}
+.hud-s1{color:#ff4444}
+.hud-s2{color:#f4a234}
+#hud-center{font-family:'Press Start 2P',monospace;font-size:clamp(7px,2vw,11px);color:rgba(255,255,255,.5);text-align:center;padding-top:4px}
+/* MOBILE CONTROLS */
+#mobileCtrl{position:absolute;bottom:0;left:0;right:0;display:none;height:100px;pointer-events:none}
+.mc-zone{position:absolute;bottom:0;height:100%;width:50%;display:flex;align-items:center;justify-content:center;pointer-events:auto;opacity:.3}
+.mc-zone:active{opacity:.6}
+.mc-icon{font-family:'Press Start 2P',monospace;font-size:24px;color:#fff;text-shadow:2px 2px 0 #000;user-select:none;-webkit-user-select:none}
+/* GOAL FLASH */
+#goalFlash{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .15s}
+/* ONLINE */
+.name-inp{font-family:'Press Start 2P',monospace;font-size:clamp(9px,2.5vw,12px);background:rgba(20,18,40,1);border:2px solid rgba(244,162,52,.4);color:#f4a234;padding:12px 16px;border-radius:4px;outline:none;width:100%;max-width:300px;text-align:center;letter-spacing:2px}
+.name-inp:focus{border-color:#f4a234}
+.code-display{font-family:'Press Start 2P',monospace;font-size:clamp(22px,7vw,40px);color:#39ff14;text-shadow:0 0 20px rgba(57,255,20,.6);letter-spacing:8px;cursor:pointer}
+.online-err{font-family:'Press Start 2P',monospace;font-size:8px;color:#ff4466;min-height:14px;text-align:center}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c" width="800" height="450"></canvas>
+
+  <!-- HUD -->
+  <div id="hud" class="hide">
+    <div class="hud-score hud-s1" id="sc1">0</div>
+    <div id="hud-center"></div>
+    <div class="hud-score hud-s2" id="sc2">0</div>
+  </div>
+
+  <!-- GOAL FLASH -->
+  <div id="goalFlash"></div>
+
+  <!-- MOBILE CONTROLS -->
+  <div id="mobileCtrl">
+    <div class="mc-zone" style="left:0" id="mcL" ontouchstart="mcJump(0)" ontouchend="mcRelease(0)"><div class="mc-icon">↑</div></div>
+    <div class="mc-zone" style="right:0" id="mcR" ontouchstart="mcJump(1)" ontouchend="mcRelease(1)"><div class="mc-icon">↑</div></div>
+  </div>
+
+  <!-- MENU -->
+  <div class="ov" id="ovMenu">
+    <div class="bk-logo">🏀 BASKET<br>BALL</div>
+    <div class="bk-sub">FIRST TO 5 WINS</div>
+    <button class="bk-btn btn-orange" onclick="startLocal()">👥 2 SPIELER LOKAL</button>
+    <button class="bk-btn btn-green" onclick="startBot()">🤖 VS BOT</button>
+    <button class="bk-btn btn-blue" onclick="showOnlineMenu()">🌐 ONLINE MULTIPLAYER</button>
+    <a href="../menu.html" class="bk-btn btn-ghost" style="text-decoration:none">← SPIELAUSWAHL</a>
+  </div>
+
+  <!-- ONLINE MENU -->
+  <div class="ov hide" id="ovOnline">
+    <div class="bk-logo" style="font-size:clamp(14px,3.5vw,22px)">🌐 ONLINE</div>
+    <input class="name-inp" id="onlineName" placeholder="DEIN NAME" maxlength="10" autocomplete="off" spellcheck="false">
+    <button class="bk-btn btn-orange" onclick="createOnline()">🏠 RAUM ERSTELLEN</button>
+    <div style="display:flex;gap:8px;align-items:center;width:100%;max-width:300px">
+      <input class="name-inp" id="joinCode" placeholder="CODE" maxlength="4" style="letter-spacing:6px;font-size:clamp(14px,4vw,20px)">
+      <button class="bk-btn btn-blue" style="min-width:80px;padding:12px 10px" onclick="joinOnline()">JOIN</button>
+    </div>
+    <div class="online-err" id="onlineErr"></div>
+    <button class="bk-btn btn-ghost" onclick="showMenu()">← ZURÜCK</button>
+  </div>
+
+  <!-- WAITING (host) -->
+  <div class="ov hide" id="ovWait">
+    <div class="bk-logo" style="font-size:clamp(13px,3vw,20px)">WARTE AUF GEGNER...</div>
+    <div class="bk-sub">DEIN CODE:</div>
+    <div class="code-display" id="waitCode" onclick="copyCode()">????</div>
+    <div class="bk-sub" style="font-size:8px">TIPPE ZUM KOPIEREN</div>
+    <button class="bk-btn btn-ghost" onclick="leaveOnline()">← VERLASSEN</button>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="ov hide" id="ovResult">
+    <div class="bk-logo" id="resultTitle">GEWONNEN!</div>
+    <div class="bk-sub" id="resultSub"></div>
+    <button class="bk-btn btn-orange" onclick="rematch()">↻ NOCHMAL</button>
+    <button class="bk-btn btn-ghost" onclick="showMenu()">← MENU</button>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+const sb = createClient('https://ozvyymrqibpyqccgszlz.supabase.co','sb_publishable_30WmZF8d8h_rUSrTGtBwnQ_Kn9gquwL');
+
+// ── CANVAS ──
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = 800, H = 450;
+
+// ── CONSTANTS ──
+const GROUND = 358;
+const GRAVITY = 0.55;
+const JUMP = -14.5;
+const PSPEED = 3.8;
+const BALL_R = 13;
+const BALL_BOUNCE = 0.6;
+const FRICTION = 0.985;
+const WIN_SCORE = 5;
+
+// Hoops: [x of rim center, y of rim]
+const HOOPS = [
+  {rx: 128, ry: 188, bx: 55,  by: 155, side: 0}, // left hoop → P1 defends, P2 scores
+  {rx: 672, ry: 188, bx: 745, by: 155, side: 1}  // right hoop → P2 defends, P1 scores
+];
+const HOOP_W = 58; // opening width
+
+// ── GAME STATE ──
+var mode = 'menu'; // 'local' | 'bot' | 'online'
+var onlineRole = ''; // 'host' | 'guest'
+var onlineCh = null;
+var isOnlineHost = false;
+
+function makePlayers(){
+  return [
+    {x:180, y:GROUND, vx:0, vy:0, w:20, h:40, onGround:true, dir:1,  color:'#cc2222', jersey:'#ff4444', name:'P1'},
+    {x:620, y:GROUND, vx:0, vy:0, w:20, h:40, onGround:true, dir:-1, color:'#cc8800', jersey:'#f4a234', name:'P2'}
+  ];
+}
+function makeBall(){
+  return {x:W/2, y:200, vx:(Math.random()-0.5)*4, vy:-2, held:-1};
+}
+
+var players = makePlayers();
+var ball = makeBall();
+var score = [0, 0];
+var gameOver = false;
+var goalCooldown = 0;
+var goalFlashTimer = 0;
+var keys = {};
+var botTimer = 0;
+var rallyTimer = 0; // auto-reset if no score for too long
+
+// ── INPUT ──
+document.addEventListener('keydown', e=>{
+  keys[e.code] = true;
+  if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
+});
+document.addEventListener('keyup', e=>{ keys[e.code] = false; });
+
+var mobileJump = [false, false];
+window.mcJump = (i)=>{ mobileJump[i]=true; };
+window.mcRelease = (i)=>{ mobileJump[i]=false; };
+
+// ── SCREENS ──
+function ov(id){ document.getElementById(id).classList.remove('hide'); }
+function hideOv(id){ document.getElementById(id).classList.add('hide'); }
+function hideAll(){ ['ovMenu','ovOnline','ovWait','ovResult'].forEach(hideOv); }
+window.showMenu = ()=>{ hideAll(); ov('ovMenu'); mode='menu'; gameOver=true; };
+window.showOnlineMenu = ()=>{ hideAll(); ov('ovOnline'); };
+
+function showHUD(show){ document.getElementById('hud').classList.toggle('hide',!show); document.getElementById('mobileCtrl').style.display=show?'flex':'none'; }
+function updateHUD(){ document.getElementById('sc1').textContent=score[0]; document.getElementById('sc2').textContent=score[1]; document.getElementById('hud-center').textContent='VS'; }
+
+// ── GAME START ──
+window.startLocal = ()=>{
+  hideAll(); mode='local'; players=makePlayers(); ball=makeBall(); score=[0,0]; gameOver=false;
+  players[0].name='P1 ← WASD'; players[1].name='P2 → ↑↓←→';
+  showHUD(true); updateHUD();
+};
+window.startBot = ()=>{
+  hideAll(); mode='bot'; players=makePlayers(); ball=makeBall(); score=[0,0]; gameOver=false;
+  players[0].name='DU'; players[1].name='BOT'; players[1].isBot=true;
+  showHUD(true); updateHUD();
+};
+window.rematch = ()=>{
+  if(mode==='online'){ if(isOnlineHost) hostStartOnline(); }
+  else { mode==='bot'?startBot():startLocal(); }
+};
+
+// ── ONLINE ──
+var savedName = localStorage.getItem('bk_name')||'';
+document.getElementById('onlineName').value = savedName;
+
+window.createOnline = async function(){
+  var name = document.getElementById('onlineName').value.trim().toUpperCase()||'P1';
+  localStorage.setItem('bk_name', name);
+  var code = Math.random().toString(36).slice(2,6).toUpperCase();
+  document.getElementById('waitCode').textContent = code;
+  hideAll(); ov('ovWait');
+  mode='online'; isOnlineHost=true; onlineRole='host';
+  players = makePlayers(); players[0].name=name;
+  score=[0,0]; gameOver=true;
+  connectOnline(code);
+};
+
+window.joinOnline = async function(){
+  var name = document.getElementById('onlineName').value.trim().toUpperCase()||'P2';
+  localStorage.setItem('bk_name', name);
+  var code = document.getElementById('joinCode').value.trim().toUpperCase();
+  if(!code||code.length<4){ document.getElementById('onlineErr').textContent='Code eingeben!'; return; }
+  mode='online'; isOnlineHost=false; onlineRole='guest';
+  players = makePlayers(); players[1].name=name;
+  connectOnline(code);
+};
+
+function connectOnline(code){
+  if(onlineCh){ onlineCh.unsubscribe(); onlineCh=null; }
+  onlineCh = sb.channel('bk_'+code, {config:{broadcast:{self:false}}});
+  onlineCh.on('broadcast',{event:'state'}, m=>{
+    if(isOnlineHost) return;
+    applyRemoteState(m.payload);
+  });
+  onlineCh.on('broadcast',{event:'input'}, m=>{
+    if(!isOnlineHost) return;
+    // Guest sends their key state
+    remoteKeys = m.payload.keys||{};
+  });
+  onlineCh.on('broadcast',{event:'join'}, m=>{
+    if(!isOnlineHost) return;
+    players[1].name = m.payload.name||'P2';
+    hideAll();
+    showHUD(true); updateHUD();
+    hostStartOnline();
+  });
+  onlineCh.subscribe(status=>{
+    if(status!=='SUBSCRIBED') return;
+    if(!isOnlineHost){
+      // Guest joins
+      onlineCh.send({type:'broadcast',event:'join',payload:{name:players[1].name}});
+      hideAll();
+      showHUD(true);
+      document.getElementById('hud-center').textContent='VERBINDE...';
+      gameOver=true;
+    }
+  });
+}
+
+var remoteKeys = {};
+function hostStartOnline(){
+  players=makePlayers(); ball=makeBall(); score=[0,0]; gameOver=false;
+  updateHUD();
+  broadcastOnlineState();
+}
+
+function broadcastOnlineState(){
+  if(!onlineCh||!isOnlineHost) return;
+  onlineCh.send({type:'broadcast',event:'state',payload:{
+    p: players.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,dir:p.dir,name:p.name})),
+    b: {x:ball.x,y:ball.y,vx:ball.vx,vy:ball.vy,held:ball.held},
+    s: score, go: gameOver
+  }});
+}
+
+function applyRemoteState(d){
+  if(!d.p) return;
+  // Guest mirrors the state (flipped: guest = player index 1 from host's perspective, but rendered as p0 locally)
+  // Actually: host is P1 (left), guest is P2 (right). State is sent as-is.
+  d.p.forEach((rp,i)=>{ if(players[i]){ players[i].x=rp.x; players[i].y=rp.y; players[i].vx=rp.vx; players[i].vy=rp.vy; players[i].dir=rp.dir; players[i].name=rp.name||players[i].name; }});
+  ball.x=d.b.x; ball.y=d.b.y; ball.vx=d.b.vx; ball.vy=d.b.vy; ball.held=d.b.held;
+  score=d.s||score;
+  var wasOver=gameOver; gameOver=d.go;
+  if(!wasOver&&gameOver) showResults();
+  updateHUD();
+}
+
+window.leaveOnline = ()=>{ if(onlineCh){onlineCh.unsubscribe();onlineCh=null;} showMenu(); };
+window.copyCode = ()=>{ var c=document.getElementById('waitCode').textContent; navigator.clipboard&&navigator.clipboard.writeText(c); showToast('Code kopiert!'); };
+
+// ── PHYSICS ──
+function resetBall(scorer){
+  ball = makeBall();
+  ball.x = W/2;
+  ball.y = 200;
+  ball.vx = scorer===0 ? -3 : 3;
+  ball.vy = -5;
+  ball.held = -1;
+}
+
+function resetPositions(){
+  players[0].x=180; players[0].y=GROUND; players[0].vx=0; players[0].vy=0; players[0].onGround=true;
+  players[1].x=620; players[1].y=GROUND; players[1].vx=0; players[1].vy=0; players[1].onGround=true;
+}
+
+function goal(scorer){
+  if(goalCooldown>0) return;
+  score[scorer]++;
+  goalCooldown=120;
+  goalFlashTimer=30;
+  var gf=document.getElementById('goalFlash');
+  gf.style.background=scorer===0?'rgba(255,68,68,.4)':'rgba(244,162,52,.4)';
+  gf.style.opacity='1';
+  setTimeout(()=>gf.style.opacity='0',200);
+  updateHUD();
+  setTimeout(()=>{ resetBall(scorer); resetPositions(); },800);
+  if(score[scorer]>=WIN_SCORE){ gameOver=true; setTimeout(showResults,600); }
+}
+
+function showResults(){
+  hideAll(); ov('ovResult');
+  var w = score[0]>=WIN_SCORE?0:1;
+  var title = document.getElementById('resultTitle');
+  var sub = document.getElementById('resultSub');
+  if(mode==='bot'&&w===1){ title.textContent='BOT GEWINNT 🤖'; title.style.color='#ff4466'; }
+  else if(mode==='bot'){ title.textContent='DU GEWINNST! 🏆'; title.style.color='#f4a234'; }
+  else { title.textContent=(players[w].name||('P'+(w+1)))+' GEWINNT! 🏆'; title.style.color=w===0?'#ff4444':'#f4a234'; }
+  sub.textContent = score[0]+' — '+score[1];
+  showHUD(false);
+}
+
+// ── BOT AI ──
+function botUpdate(dt){
+  var bot = players[1];
+  var bx = ball.x, by = ball.y;
+  var targetHoop = HOOPS[0]; // bot scores in left hoop
+  botTimer+=dt;
+
+  // Simple AI: move toward ball, jump when ball is above and nearby
+  var dx = bx - bot.x;
+  if(Math.abs(dx)>20) bot.vx = dx>0 ? PSPEED : -PSPEED;
+  else bot.vx*=0.7;
+
+  // Jump if ball is at jump height and bot is under it
+  if(bot.onGround && by < bot.y-60 && Math.abs(bx-bot.x)<120){
+    bot.vy = JUMP;
+    bot.onGround = false;
+  }
+  bot.dir = dx>0?1:-1;
+}
+
+// ── UPDATE ──
+var lastT = performance.now();
+function update(now){
+  var dt = Math.min((now-lastT)/16.67, 3);
+  lastT = now;
+  if(gameOver||mode==='menu') return;
+  if(goalCooldown>0){ goalCooldown-=dt; return; }
+
+  rallyTimer+=dt;
+  if(rallyTimer>3000){ rallyTimer=0; resetBall(0); } // unstuck ball after very long time
+
+  // ── PLAYER INPUT ──
+  var input = [
+    {
+      left: keys['KeyA']||keys['ArrowLeft']||(mode==='online'&&!isOnlineHost&&remoteKeys.left),
+      right: keys['KeyD']||keys['ArrowRight']||(mode==='online'&&!isOnlineHost&&remoteKeys.right),
+      jump: keys['KeyW']||keys['Space']||(mode==='online'&&!isOnlineHost&&remoteKeys.jump)||mobileJump[0],
+    },
+    {
+      left: keys['ArrowLeft']||(mode==='online'&&isOnlineHost&&remoteKeys.left),
+      right: keys['ArrowRight']||(mode==='online'&&isOnlineHost&&remoteKeys.right),
+      jump: keys['ArrowUp']||(mode==='online'&&isOnlineHost&&remoteKeys.jump)||mobileJump[1],
+    }
+  ];
+
+  // Online guest sends input to host
+  if(mode==='online'&&!isOnlineHost&&onlineCh){
+    onlineCh.send({type:'broadcast',event:'input',payload:{keys:{
+      left: keys['KeyA']||mobileJump[0],
+      right: keys['KeyD'],
+      jump: keys['KeyW']||keys['Space']||mobileJump[0],
+    }}});
+    return; // guest doesn't simulate, only renders from host state
+  }
+
+  players.forEach((p,i)=>{
+    if(p.isBot){ botUpdate(dt); }
+    else {
+      var inp = input[i];
+      if(inp.left){ p.vx=-PSPEED; p.dir=-1; }
+      else if(inp.right){ p.vx=PSPEED; p.dir=1; }
+      else { p.vx*=0.75; }
+      if(inp.jump&&p.onGround){ p.vy=JUMP; p.onGround=false; }
+    }
+
+    // Gravity
+    p.vy+=GRAVITY*dt;
+    p.x+=p.vx*dt;
+    p.y+=p.vy*dt;
+
+    // Ground
+    if(p.y>=GROUND){ p.y=GROUND; p.vy=0; p.vx*=0.7; p.onGround=true; }
+    else { p.onGround=false; }
+
+    // Wall bounds
+    p.x=Math.max(p.w/2, Math.min(W-p.w/2, p.x));
+
+    // Block hoops (can't go behind backboard)
+    if(p.x-p.w/2 < 70) p.x=70+p.w/2;
+    if(p.x+p.w/2 > W-70) p.x=W-70-p.w/2;
+  });
+
+  // ── BALL PHYSICS ──
+  if(ball.held >= 0){
+    var carrier = players[ball.held];
+    ball.x = carrier.x + carrier.dir * 14;
+    ball.y = carrier.y - carrier.h*0.4;
+    // Auto-release after 0.5s (no holding mechanic for simplicity)
+    ball.held = -1;
+  }
+
+  ball.vy += GRAVITY * 1.05 * dt;
+  ball.x += ball.vx * dt;
+  ball.y += ball.vy * dt;
+  ball.vx *= FRICTION;
+  ball.vy *= FRICTION;
+
+  // Ball bounce walls
+  if(ball.x-BALL_R<0){ ball.x=BALL_R; ball.vx=Math.abs(ball.vx)*BALL_BOUNCE; }
+  if(ball.x+BALL_R>W){ ball.x=W-BALL_R; ball.vx=-Math.abs(ball.vx)*BALL_BOUNCE; }
+  if(ball.y+BALL_R>GROUND+15){ ball.y=GROUND+15-BALL_R; ball.vy=-Math.abs(ball.vy)*BALL_BOUNCE; ball.vx*=0.85; }
+  if(ball.y-BALL_R<40){ ball.y=40+BALL_R; ball.vy=Math.abs(ball.vy)*0.5; }
+
+  // Ball-player collision
+  players.forEach((p,i)=>{
+    var dx=ball.x-p.x, dy=ball.y-(p.y-p.h/2);
+    var dist=Math.hypot(dx,dy);
+    var minD=BALL_R+p.w*0.7;
+    if(dist<minD&&dist>0){
+      var nx=dx/dist, ny=dy/dist;
+      // Push ball away + inherit some player momentum
+      var relVx=ball.vx-p.vx, relVy=ball.vy-p.vy;
+      var dot=relVx*nx+relVy*ny;
+      if(dot<0){
+        ball.vx-=1.8*dot*nx;
+        ball.vy-=1.8*dot*ny;
+        ball.vx+=p.vx*0.4;
+        ball.vy+=p.vy*0.4;
+      }
+      ball.x=p.x+nx*(minD+1);
+      ball.y=(p.y-p.h/2)+ny*(minD+1);
+      rallyTimer=0;
+    }
+  });
+
+  // Hoop collision (rim)
+  HOOPS.forEach(h=>{
+    // Left rim post
+    var lPost={x:h.rx-HOOP_W/2, y:h.ry};
+    var rPost={x:h.rx+HOOP_W/2, y:h.ry};
+    [lPost,rPost].forEach(post=>{
+      var dx=ball.x-post.x, dy=ball.y-post.y;
+      var d=Math.hypot(dx,dy);
+      if(d<BALL_R+5&&d>0){ var nx=dx/d,ny=dy/d; ball.x=post.x+nx*(BALL_R+6); ball.y=post.y+ny*(BALL_R+6); var dot=ball.vx*nx+ball.vy*ny; if(dot<0){ball.vx-=1.8*dot*nx;ball.vy-=1.8*dot*ny;} ball.vx*=0.7; ball.vy*=0.7; }
+    });
+    // Backboard
+    if(h.side===0){ // left hoop, backboard on left
+      if(ball.x-BALL_R<70&&ball.y>h.by&&ball.y<h.by+100){ ball.x=70+BALL_R; ball.vx=Math.abs(ball.vx)*0.6; }
+    } else {
+      if(ball.x+BALL_R>W-70&&ball.y>h.by&&ball.y<h.by+100){ ball.x=W-70-BALL_R; ball.vx=-Math.abs(ball.vx)*0.6; }
+    }
+  });
+
+  // ── GOAL DETECTION ──
+  // Ball passes through hoop opening from above
+  HOOPS.forEach((h,hi)=>{
+    var inX = ball.x > h.rx-HOOP_W/2+BALL_R*0.5 && ball.x < h.rx+HOOP_W/2-BALL_R*0.5;
+    var inY = ball.y > h.ry-2 && ball.y < h.ry+BALL_R+10;
+    var goingDown = ball.vy > 0;
+    if(inX && inY && goingDown){
+      // Scorer: hi===0 (left hoop) → P1 scores; hi===1 (right hoop) → P0 scores
+      var scorer = hi===0 ? 1 : 0;
+      goal(scorer);
+      rallyTimer=0;
+    }
+  });
+
+  if(mode==='online'&&isOnlineHost){
+    broadcastOnlineState();
+  }
+}
+
+// ── DRAW ──
+function drawPixelRect(x,y,w,h,color){
+  ctx.fillStyle=color;
+  ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));
+}
+
+function drawBackground(){
+  // Sky gradient
+  var sky=ctx.createLinearGradient(0,0,0,H*0.65);
+  sky.addColorStop(0,'#f5b87a'); sky.addColorStop(1,'#e8874a');
+  ctx.fillStyle=sky; ctx.fillRect(0,0,W,H*0.65);
+
+  // City silhouette
+  ctx.fillStyle='#d4723a';
+  var buildings=[
+    [60,60,40,140],[110,80,35,120],[155,50,50,150],[210,90,30,110],[250,70,45,130],
+    [500,65,40,135],[550,85,30,115],[590,55,50,145],[650,95,35,105],[695,75,40,125],
+    [740,50,45,150]
+  ];
+  buildings.forEach(([bx,by,bw,bh])=>{
+    ctx.fillRect(bx,H*0.65-bh,bw,bh);
+    // Windows
+    ctx.fillStyle='rgba(255,200,100,.3)';
+    for(var r=0;r<3;r++) for(var c=0;c<2;c++) ctx.fillRect(bx+5+c*12,H*0.65-bh+10+r*18,7,9);
+    ctx.fillStyle='#d4723a';
+  });
+
+  // Fence
+  ctx.fillStyle='#8B5E3C';
+  ctx.fillRect(0,H*0.65,W,22);
+  for(var fi=0;fi<W;fi+=14) ctx.fillRect(fi,H*0.65-8,10,30);
+
+  // Grass strip
+  ctx.fillStyle='#4a9e1f';
+  ctx.fillRect(0,H*0.65+14,W,18);
+  // Grass tufts
+  ctx.fillStyle='#3a8012';
+  for(var gi=0;gi<W;gi+=20){
+    ctx.fillRect(gi,H*0.65+14,8,10);
+    ctx.fillRect(gi+12,H*0.65+16,5,8);
+  }
+
+  // Court (asphalt)
+  ctx.fillStyle='#3a3a4a'; ctx.fillRect(0,GROUND-170,W,H-GROUND+170);
+
+  // Court lines
+  ctx.strokeStyle='rgba(200,200,220,.35)';
+  ctx.lineWidth=3;
+  // Center line
+  ctx.beginPath(); ctx.moveTo(W/2,GROUND-170); ctx.lineTo(W/2,GROUND+20); ctx.stroke();
+  // Center circle
+  ctx.beginPath(); ctx.arc(W/2,GROUND-60,55,0,Math.PI*2); ctx.stroke();
+  // Three-point arcs
+  ctx.beginPath(); ctx.arc(180,GROUND+5,130,Math.PI*1.1,Math.PI*0.9,false); ctx.stroke();
+  ctx.beginPath(); ctx.arc(620,GROUND+5,130,Math.PI*0.1,-Math.PI*0.9,true); ctx.stroke();
+  // Key boxes
+  ctx.strokeRect(60,GROUND-105,140,110);
+  ctx.strokeRect(600,GROUND-105,140,110);
+
+  // Ground
+  ctx.fillStyle='#2f2f3e'; ctx.fillRect(0,GROUND+18,W,H-GROUND-18);
+}
+
+function drawHoop(h){
+  var ox=h.bx, oy=h.by;
+  var rx=h.rx, ry=h.ry;
+  var side=h.side; // 0=left, 1=right
+
+  // Pole
+  ctx.fillStyle='#aaaaaa';
+  ctx.fillRect(ox+(side===0?8:-12),oy-10,8,GROUND-oy+20);
+
+  // Backboard
+  ctx.fillStyle='#dddddd';
+  if(side===0) ctx.fillRect(ox,oy,18,70);
+  else ctx.fillRect(ox-18,oy,18,70);
+
+  // Backboard outline
+  ctx.strokeStyle='#999'; ctx.lineWidth=2;
+  if(side===0) ctx.strokeRect(ox,oy,18,70);
+  else ctx.strokeRect(ox-18,oy,18,70);
+
+  // Backboard square (inner)
+  ctx.strokeStyle='#ff3333'; ctx.lineWidth=2;
+  if(side===0) ctx.strokeRect(ox+2,oy+12,14,22);
+  else ctx.strokeRect(ox-16,oy+12,14,22);
+
+  // Rim arm
+  ctx.fillStyle='#cc4400';
+  if(side===0){
+    ctx.fillRect(ox+14,ry-5,rx-ox-14,6);
+  } else {
+    ctx.fillRect(rx+HOOP_W/2,ry-5,ox-rx-HOOP_W/2,6);
+  }
+
+  // Rim (two posts)
+  ctx.fillStyle='#ff4400';
+  ctx.fillRect(rx-HOOP_W/2-5,ry-5,10,10); // left post
+  ctx.fillRect(rx+HOOP_W/2-5,ry-5,10,10); // right post
+
+  // Rim top
+  ctx.fillStyle='#ff6600';
+  ctx.fillRect(rx-HOOP_W/2-5,ry-8,HOOP_W+10,5);
+
+  // Net (simple lines)
+  ctx.strokeStyle='rgba(255,255,255,.7)'; ctx.lineWidth=1.5;
+  var netTop=ry+5, netBot=ry+36;
+  for(var ni=0;ni<=4;ni++){
+    var tx=rx-HOOP_W/2+(HOOP_W/4)*ni;
+    ctx.beginPath(); ctx.moveTo(tx,netTop); ctx.lineTo(rx-HOOP_W/4+tx*0.02,netBot); ctx.stroke();
+  }
+  ctx.beginPath(); ctx.moveTo(rx-HOOP_W/2,netTop+10); ctx.lineTo(rx+HOOP_W/2,netTop+10); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(rx-HOOP_W/2+4,netBot-2); ctx.lineTo(rx+HOOP_W/2-4,netBot-2); ctx.stroke();
+}
+
+function drawPlayer(p, idx){
+  var px=Math.round(p.x), py=Math.round(p.y);
+  var w=p.w, h=p.h;
+  var fc='#f5c5a0'; // face/skin
+  var jc=idx===0?'#cc2222':'#cc8800';
+  var jl=idx===0?'#ff4444':'#f4a234';
+  var pc=idx===0?'#222266':'#224422'; // pants
+
+  // Shadow
+  ctx.fillStyle='rgba(0,0,0,.3)';
+  ctx.fillRect(px-w/2,py,w,4);
+
+  // Shoes
+  ctx.fillStyle='#111111';
+  ctx.fillRect(px-w/2-2,py-5,w/2+2,6);
+  ctx.fillRect(px+2,py-5,w/2,6);
+
+  // Legs/pants
+  ctx.fillStyle=pc;
+  ctx.fillRect(px-w/2+2,py-h*0.38,w-4,h*0.28);
+
+  // Jersey
+  ctx.fillStyle=jc;
+  ctx.fillRect(px-w/2,py-h*0.72,w,h*0.36);
+
+  // Jersey stripe
+  ctx.fillStyle=jl;
+  ctx.fillRect(px-3,py-h*0.72,6,h*0.36);
+
+  // Jersey number
+  ctx.fillStyle='#ffffff';
+  ctx.font='bold 8px monospace';
+  ctx.textAlign='center';
+  ctx.fillText(idx===0?'1':'2',px,py-h*0.52);
+
+  // Head
+  ctx.fillStyle=fc;
+  ctx.fillRect(px-7,py-h,14,14);
+
+  // Hair
+  ctx.fillStyle=idx===0?'#220000':'#111100';
+  ctx.fillRect(px-7,py-h,14,5);
+
+  // Eyes
+  ctx.fillStyle='#222';
+  ctx.fillRect(px-4,py-h+7,3,3);
+  ctx.fillRect(px+1,py-h+7,3,3);
+
+  // Name tag
+  ctx.fillStyle=idx===0?'rgba(255,68,68,.8)':'rgba(244,162,52,.8)';
+  ctx.font='bold 8px "Press Start 2P",monospace';
+  ctx.textAlign='center';
+  var nm=p.name||('P'+(idx+1));
+  if(nm.length>6) nm=nm.slice(0,6);
+  var tw=ctx.measureText(nm).width;
+  ctx.fillRect(px-tw/2-4,py-h-16,tw+8,11);
+  ctx.fillStyle='#fff';
+  ctx.fillText(nm,px,py-h-7);
+}
+
+function drawBall(){
+  var bx=Math.round(ball.x), by=Math.round(ball.y);
+  // Shadow
+  ctx.fillStyle='rgba(0,0,0,.3)';
+  ctx.beginPath(); ctx.ellipse(bx,GROUND+10,BALL_R*0.9,4,0,0,Math.PI*2); ctx.fill();
+
+  // Ball body
+  ctx.fillStyle='#f4a234';
+  ctx.beginPath(); ctx.arc(bx,by,BALL_R,0,Math.PI*2); ctx.fill();
+
+  // Seam lines
+  ctx.strokeStyle='#8b4500'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(bx,by,BALL_R,0,Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bx,by-BALL_R); ctx.bezierCurveTo(bx+BALL_R*0.6,by-BALL_R*0.3,bx+BALL_R*0.6,by+BALL_R*0.3,bx,by+BALL_R); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bx,by-BALL_R); ctx.bezierCurveTo(bx-BALL_R*0.6,by-BALL_R*0.3,bx-BALL_R*0.6,by+BALL_R*0.3,bx,by+BALL_R); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bx-BALL_R,by); ctx.lineTo(bx+BALL_R,by); ctx.stroke();
+
+  // Shine
+  ctx.fillStyle='rgba(255,255,255,.35)';
+  ctx.beginPath(); ctx.ellipse(bx-4,by-5,4,3,Math.PI*0.3,0,Math.PI*2); ctx.fill();
+}
+
+function drawFrame(){
+  ctx.clearRect(0,0,W,H);
+  drawBackground();
+  HOOPS.forEach(drawHoop);
+
+  // Draw players behind ball
+  players.forEach((p,i)=>drawPlayer(p,i));
+  drawBall();
+
+  // Score display on court
+  if(mode!=='menu'){
+    ctx.font='bold 28px "Press Start 2P",monospace';
+    ctx.textAlign='center';
+    ctx.fillStyle='rgba(255,100,100,.9)';
+    ctx.fillText(score[0],W/2-80,55);
+    ctx.fillStyle='rgba(255,255,255,.4)';
+    ctx.font='bold 16px "Press Start 2P",monospace';
+    ctx.fillText('—',W/2,50);
+    ctx.fillStyle='rgba(244,162,52,.9)';
+    ctx.font='bold 28px "Press Start 2P",monospace';
+    ctx.fillText(score[1],W/2+80,55);
+  }
+}
+
+// ── TOAST ──
+function showToast(msg){ var t=document.createElement('div'); t.style.cssText='position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:rgba(10,8,20,.9);border:1px solid rgba(244,162,52,.4);color:#f4a234;font-family:"Press Start 2P",monospace;font-size:9px;padding:10px 18px;border-radius:4px;z-index:9999;pointer-events:none'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2000); }
+
+// ── LOOP ──
+function loop(now){
+  update(now);
+  drawFrame();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// Show menu initially
+document.getElementById('ovMenu').classList.remove('hide');
+
+// Mobile detection
+if('ontouchstart' in window){
+  document.getElementById('mobileCtrl').style.display='flex';
+  // For local mobile: tap zones
+  document.getElementById('mcL').ontouchstart = (e)=>{ e.preventDefault(); mobileJump[0]=true; };
+  document.getElementById('mcL').ontouchend = ()=>mobileJump[0]=false;
+  document.getElementById('mcR').ontouchstart = (e)=>{ e.preventDefault(); mobileJump[1]=true; };
+  document.getElementById('mcR').ontouchend = ()=>mobileJump[1]=false;
+}
+</script>
+</body>
+</html>
