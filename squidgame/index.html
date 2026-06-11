@@ -177,11 +177,16 @@ canvas{border-radius:12px;border:2px solid rgba(255,45,110,.2);max-width:100%}
 <!-- LOBBY -->
 <div class="screen" id="sLobby">
   <div class="sq-logo" style="font-size:clamp(28px,9vw,52px)">SQUID GAME</div>
-  <div class="sec-label">LOBBY — WARTE AUF SPIELER</div>
+  <div class="sec-label" id="lobbySubLabel">LOBBY — WARTE AUF SPIELER</div>
   <div id="playerList" style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:400px"></div>
+  <div id="lobbyWaitBox" style="display:none;flex-direction:column;align-items:center;gap:8px;background:rgba(255,45,110,.06);border:1px solid rgba(255,45,110,.2);border-radius:14px;padding:18px 24px;width:100%;max-width:400px">
+    <div style="font-size:28px">👥</div>
+    <div class="lobby-wait" style="font-size:13px">WARTE AUF MITSPIELER...</div>
+    <div style="font-family:'Russo One',sans-serif;font-size:10px;letter-spacing:3px;color:rgba(255,255,255,.25)">Teile die URL mit Freunden</div>
+  </div>
   <div class="err" id="lobbyErr"></div>
-  <button class="btn btn-red" id="startBtn" onclick="hostStart()" disabled>🎮 SPIEL STARTEN</button>
-  <div class="lobby-wait" id="lobbyWait">Warte auf den Host...</div>
+  <button class="btn btn-red" id="startBtn" onclick="hostStart()" disabled style="display:none">🎮 SPIEL STARTEN</button>
+  <div class="lobby-wait" id="lobbyWait" style="display:none">Warte auf den Host...</div>
   <button class="btn btn-ghost" style="max-width:200px;font-size:12px" onclick="leaveServer()">← VERLASSEN</button>
 </div>
 
@@ -812,12 +817,17 @@ function renderLobby(){
   var cnt = gs.players.filter(p=>p.alive).length;
   var startBtn = document.getElementById('startBtn');
   var lobbyWait = document.getElementById('lobbyWait');
+  var lobbyWaitBox = document.getElementById('lobbyWaitBox');
   if(isHost){
-    startBtn.style.display='block'; startBtn.disabled=(cnt<2);
-    lobbyWait.style.display='none';
-    document.getElementById('lobbyErr').textContent = cnt<2 ? 'Mindestens 2 Spieler zum Starten' : '';
+    var enough = cnt >= 2;
+    startBtn.style.display = enough ? 'block' : 'none';
+    startBtn.disabled = false;
+    lobbyWaitBox.style.display = enough ? 'none' : 'flex';
+    lobbyWait.style.display = 'none';
+    document.getElementById('lobbyErr').textContent = '';
   } else {
     startBtn.style.display='none'; lobbyWait.style.display='block';
+    lobbyWaitBox.style.display='none';
     document.getElementById('lobbyErr').textContent='';
   }
 }
