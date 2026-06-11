@@ -2,1104 +2,989 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>SQUID GAME</title>
-<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Exo+2:wght@400;700;900&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Squid Game — Multiplayer</title>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{background:#080810;color:#fff;font-family:'Exo 2',sans-serif;min-height:100vh;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,45,110,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,45,110,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
-.screen{display:none;flex-direction:column;align-items:center;min-height:100vh;padding:20px 14px 40px;position:relative;z-index:1;gap:12px}
-.screen.active{display:flex}
-.sq-logo{font-family:'Russo One',sans-serif;font-size:clamp(38px,12vw,72px);color:#fff;background:linear-gradient(135deg,#c00040,#ff2d6e);padding:6px 24px 12px;border-radius:14px;letter-spacing:6px;box-shadow:0 6px 0 #7a0025,0 12px 40px rgba(255,45,110,.5);border:3px solid rgba(255,255,255,.6);text-shadow:2px 2px 6px rgba(0,0,0,.5);line-height:1.1}
-.sq-sub{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:5px;color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:10px}
-.inp{background:rgba(12,12,28,1);border:2px solid rgba(255,45,110,.3);color:#fff;font-family:'Russo One',sans-serif;font-size:20px;padding:14px 18px;border-radius:12px;outline:none;width:100%;text-align:center;letter-spacing:3px;transition:border-color .2s;max-width:360px}
-.inp:focus{border-color:#ff2d6e;box-shadow:0 0 0 3px rgba(255,45,110,.15)}
-.inp::placeholder{color:rgba(255,255,255,.2);font-weight:400;letter-spacing:1px}
-.btn{font-family:'Russo One',sans-serif;font-size:16px;letter-spacing:2px;padding:16px 28px;border:none;border-radius:12px;cursor:pointer;touch-action:manipulation;transition:transform .12s,opacity .15s;text-transform:uppercase;width:100%;max-width:400px}
-.btn:active{transform:scale(.95)}
-.btn-red{background:linear-gradient(135deg,#9c0030,#ff2d6e);color:#fff;box-shadow:0 4px 20px rgba(255,45,110,.4)}
-.btn-teal{background:linear-gradient(135deg,#006b60,#00d9c0);color:#fff;box-shadow:0 4px 20px rgba(0,217,192,.4)}
-.btn-ghost{background:rgba(255,255,255,.07);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.15)}
-.btn:disabled{opacity:.3;cursor:default;pointer-events:none}
-.err{color:#ff4466;font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:1px;min-height:18px;text-align:center}
-.sec-label{font-family:'Russo One',sans-serif;font-size:10px;letter-spacing:4px;color:rgba(255,255,255,.3)}
-
-/* LOBBY */
-.player-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 14px;width:100%;max-width:400px}
-.player-row.me{border-color:rgba(255,45,110,.4);background:rgba(255,45,110,.06)}
-.player-row.host{border-color:rgba(255,200,0,.3);background:rgba(255,200,0,.04)}
-.player-av{font-size:20px;width:32px;text-align:center}
-.player-nm{font-family:'Russo One',sans-serif;font-size:14px;flex:1}
-.tag{font-family:'Russo One',sans-serif;font-size:9px;letter-spacing:2px;padding:2px 8px;border-radius:6px}
-.tag-host{background:rgba(255,200,0,.15);color:#ffc800;border:1px solid rgba(255,200,0,.3)}
-.tag-you{background:rgba(255,45,110,.15);color:#ff7aaa;border:1px solid rgba(255,45,110,.3)}
-.lobby-wait{font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:3px;color:rgba(255,45,110,.5);animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
-
-/* GAME HEADER */
-.game-header{width:100%;max-width:500px;display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.5);border:1px solid rgba(255,45,110,.2);border-radius:12px;padding:10px 16px}
-.game-title-sm{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:2px;color:#ff2d6e}
-.game-timer{font-family:'Russo One',sans-serif;font-size:24px;color:#fff;letter-spacing:2px}
-.game-timer.urgent{color:#ff2d6e;animation:blink .5s step-end infinite}
-@keyframes blink{50%{opacity:.3}}
-
-/* PLAYER STATUS BAR */
-.pbar{display:flex;flex-wrap:wrap;gap:6px;width:100%;max-width:500px;justify-content:center}
-.pchip{font-family:'Russo One',sans-serif;font-size:10px;letter-spacing:1px;padding:4px 10px;border-radius:20px;border:1px solid;white-space:nowrap;transition:opacity .3s}
-.pchip.alive{background:rgba(0,217,192,.1);border-color:rgba(0,217,192,.3);color:#00d9c0}
-.pchip.dead{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.25);text-decoration:line-through;opacity:.5}
-.pchip.me{border-color:rgba(255,45,110,.5);color:#ff7aaa}
-.pchip.me.alive{background:rgba(255,45,110,.1)}
-
-/* COUNTDOWN */
-.countdown-num{font-family:'Russo One',sans-serif;font-size:clamp(100px,30vw,200px);color:#ff2d6e;text-shadow:0 0 60px rgba(255,45,110,.7),0 0 120px rgba(255,45,110,.4);animation:pop .5s ease-out}
-@keyframes pop{0%{transform:scale(1.4);opacity:0}100%{transform:scale(1);opacity:1}}
-
-/* GAME AREAS */
-.game-area{width:100%;max-width:500px;display:flex;flex-direction:column;align-items:center;gap:14px}
-canvas{border-radius:12px;border:2px solid rgba(255,45,110,.2);max-width:100%}
-
-/* BIG GAME BUTTON */
-.big-btn{font-family:'Russo One',sans-serif;font-size:22px;letter-spacing:4px;padding:28px;border:none;border-radius:20px;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;width:100%;max-width:300px;transition:transform .08s,box-shadow .08s}
-.big-btn:active{transform:scale(.93)}
-.big-btn-red{background:linear-gradient(135deg,#9c0030,#ff2d6e);color:#fff;box-shadow:0 8px 0 #6a001f,0 12px 30px rgba(255,45,110,.5)}
-.big-btn-teal{background:linear-gradient(135deg,#005950,#00d9c0);color:#fff;box-shadow:0 8px 0 #003d38,0 12px 30px rgba(0,217,192,.5)}
-.big-btn-gold{background:linear-gradient(135deg,#8a6000,#ffc800);color:#1a1000;box-shadow:0 8px 0 #5a3d00,0 12px 30px rgba(255,200,0,.5)}
-.big-btn:disabled{opacity:.3;pointer-events:none}
-
-/* PROGRESS BAR */
-.progress-wrap{width:100%;max-width:400px;background:rgba(255,255,255,.08);border-radius:20px;height:20px;overflow:hidden;border:1px solid rgba(255,255,255,.1)}
-.progress-fill{height:100%;border-radius:20px;transition:width .3s}
-.progress-red{background:linear-gradient(90deg,#9c0030,#ff2d6e)}
-.progress-teal{background:linear-gradient(90deg,#005950,#00d9c0)}
-.progress-gold{background:linear-gradient(90deg,#8a6000,#ffc800)}
-
-/* ELIM / RESULTS */
-.elim-box{background:rgba(180,0,30,.15);border:2px solid rgba(255,45,110,.4);border-radius:18px;padding:24px;width:100%;max-width:400px;text-align:center}
-.elim-title{font-family:'Russo One',sans-serif;font-size:22px;color:#ff2d6e;letter-spacing:3px;margin-bottom:12px}
-.elim-list{display:flex;flex-direction:column;gap:6px}
-.elim-item{font-family:'Russo One',sans-serif;font-size:14px;color:rgba(255,255,255,.6);letter-spacing:1px}
-
-.winner-box{display:flex;flex-direction:column;align-items:center;gap:16px}
-.winner-crown{font-size:80px;animation:crown-bounce 1s ease-in-out infinite alternate}
-@keyframes crown-bounce{0%{transform:translateY(0) rotate(-5deg)}100%{transform:translateY(-12px) rotate(5deg)}}
-.winner-name{font-family:'Russo One',sans-serif;font-size:clamp(28px,9vw,52px);color:#ffc800;text-shadow:0 0 30px rgba(255,200,0,.8);letter-spacing:4px;text-align:center}
-.winner-sub{font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:5px;color:rgba(255,200,0,.5)}
-
-/* HP BAR */
-.hp-row{display:flex;align-items:center;gap:8px;width:100%;max-width:400px}
-.hp-name{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:1px;width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
-.hp-bar-wrap{flex:1;background:rgba(255,255,255,.08);border-radius:10px;height:14px;overflow:hidden}
-.hp-bar-fill{height:100%;border-radius:10px;transition:width .2s;background:linear-gradient(90deg,#00d9c0,#00ff9d)}
-.hp-val{font-family:'Russo One',sans-serif;font-size:10px;color:rgba(255,255,255,.4);width:30px;text-align:right;flex-shrink:0}
-
-/* MARBLES */
-.marble-count{font-family:'Russo One',sans-serif;font-size:48px;color:#ffc800;text-shadow:0 0 20px rgba(255,200,0,.6)}
-.pick-row{display:flex;gap:10px;width:100%;max-width:360px}
-.pick-btn{flex:1;font-family:'Russo One',sans-serif;font-size:18px;letter-spacing:2px;padding:20px;border:2px solid rgba(255,255,255,.2);border-radius:14px;background:rgba(255,255,255,.06);color:#fff;cursor:pointer;touch-action:manipulation;transition:all .15s}
-.pick-btn.selected,.pick-btn:active{background:rgba(255,45,110,.2);border-color:#ff2d6e;color:#ff7aaa}
-
-/* GLASS BRIDGE */
-.bridge-row{display:flex;gap:10px;width:100%;max-width:360px;justify-content:center;margin:4px 0}
-.glass-tile{flex:1;max-width:140px;padding:20px 10px;border-radius:12px;font-family:'Russo One',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;touch-action:manipulation;border:2px solid;transition:all .2s;text-align:center}
-.glass-tile.unknown{background:rgba(100,200,255,.08);border-color:rgba(100,200,255,.25);color:rgba(100,200,255,.8)}
-.glass-tile.safe{background:rgba(0,217,192,.15);border-color:#00d9c0;color:#00d9c0;pointer-events:none}
-.glass-tile.broken{background:rgba(255,45,110,.15);border-color:#ff2d6e;color:#ff2d6e;pointer-events:none}
-.glass-tile:disabled{pointer-events:none;opacity:.5}
-
-/* MINGLE */
-.mingle-num{font-family:'Russo One',sans-serif;font-size:clamp(60px,20vw,120px);color:#00d9c0;text-shadow:0 0 40px rgba(0,217,192,.7)}
-.mingle-label{font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:5px;color:rgba(0,217,192,.5)}
-.mingle-grid{display:flex;flex-wrap:wrap;gap:8px;width:100%;max-width:400px;justify-content:center}
-.mingle-chip{font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:1px;padding:10px 16px;border-radius:10px;border:2px solid rgba(0,217,192,.25);background:rgba(0,217,192,.06);color:#00d9c0;cursor:pointer;touch-action:manipulation;transition:all .15s}
-.mingle-chip.in-group{border-color:#00d9c0;background:rgba(0,217,192,.18);color:#fff}
-.mingle-chip.me{border-color:#ff2d6e;color:#ff7aaa}
-
-/* TUG */
-.rope-wrap{width:100%;max-width:400px;height:40px;background:rgba(255,255,255,.06);border-radius:20px;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.1)}
-.rope-fill-a{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#ff2d6e,#ff7a9d);border-radius:20px 0 0 20px;transition:width .2s}
-.rope-fill-b{position:absolute;right:0;top:0;bottom:0;background:linear-gradient(270deg,#00d9c0,#7affed);border-radius:0 20px 20px 0;transition:width .2s}
-.rope-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:'Russo One',sans-serif;font-size:20px}
-.team-label{font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:3px;padding:6px 14px;border-radius:8px}
-.team-a{color:#ff2d6e;border:1px solid rgba(255,45,110,.3);background:rgba(255,45,110,.08)}
-.team-b{color:#00d9c0;border:1px solid rgba(0,217,192,.3);background:rgba(0,217,192,.08)}
-
-/* LIGHT */
-.light-circle{width:120px;height:120px;border-radius:50%;border:6px solid;transition:all .3s;display:flex;align-items:center;justify-content:center;font-size:50px}
-.light-green{background:rgba(0,217,192,.15);border-color:#00d9c0;box-shadow:0 0 40px rgba(0,217,192,.5)}
-.light-red{background:rgba(255,45,110,.2);border-color:#ff2d6e;box-shadow:0 0 40px rgba(255,45,110,.7);animation:danger-pulse .4s ease-in-out infinite alternate}
-@keyframes danger-pulse{0%{box-shadow:0 0 40px rgba(255,45,110,.7)}100%{box-shadow:0 0 80px rgba(255,45,110,1)}}
-
-/* RLGL tracks */
-.track-container{width:100%;max-width:480px}
-.track-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.track-name{font-family:'Russo One',sans-serif;font-size:10px;color:rgba(255,255,255,.4);width:60px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
-.track-bar{flex:1;height:18px;background:rgba(255,255,255,.06);border-radius:10px;overflow:hidden;position:relative}
-.track-fill{height:100%;border-radius:10px;transition:width .15s}
-.track-me .track-fill{background:linear-gradient(90deg,#9c0030,#ff2d6e)}
-.track-other .track-fill{background:linear-gradient(90deg,#005950,#00d9c0)}
-.track-dead .track-fill{background:rgba(255,255,255,.1)}
-.track-dead .track-name{color:rgba(255,255,255,.2);text-decoration:line-through}
-.finish-flag{font-size:14px;flex-shrink:0}
-
-/* SPECTATOR */
-.spec-badge{background:rgba(255,200,0,.1);border:1px solid rgba(255,200,0,.3);color:#ffc800;font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:3px;padding:6px 14px;border-radius:8px;text-align:center}
-
-/* LOADING */
-#loading{position:fixed;inset:0;background:#080810;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s}
-#loading.hide{opacity:0;pointer-events:none}
-.spinner{width:44px;height:44px;border:3px solid rgba(255,45,110,.2);border-top-color:#ff2d6e;border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.load-txt{font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:3px;color:rgba(255,45,110,.5)}
-
-/* TOAST */
-#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(10,10,20,.96);border:1px solid rgba(255,45,110,.4);color:#fff;font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:2px;padding:12px 22px;border-radius:12px;z-index:8000;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
-#toast.show{opacity:1}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:#0a0a12;color:#fff;font-family:'Exo 2',sans-serif;min-height:100vh;overflow-x:hidden;}
+h1,h2,h3{font-family:'Russo One',sans-serif;}
+.hidden{display:none!important;}
+:root{--pink:#ff2d6e;--teal:#00d9c0;--dark:#0a0a12;--card:#12121e;--border:#2a2a3e;}
+#loading{position:fixed;inset:0;background:var(--dark);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;}
+#loading .logo{font-family:'Russo One',sans-serif;font-size:2.5rem;color:var(--pink);letter-spacing:2px;}
+#loading .sub{color:var(--teal);margin-top:8px;font-size:1rem;}
+.spinner{width:48px;height:48px;border:4px solid var(--border);border-top-color:var(--pink);border-radius:50%;animation:spin 0.8s linear infinite;margin-top:24px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#header{background:var(--card);border-bottom:2px solid var(--pink);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+#header .back{color:var(--teal);text-decoration:none;font-size:0.9rem;}
+#header .game-title{font-family:'Russo One',sans-serif;font-size:1rem;color:var(--pink);}
+#header .player-count{font-size:0.8rem;color:#aaa;}
+.screen{padding:16px;max-width:600px;margin:0 auto;min-height:calc(100vh - 60px);}
+#menu-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;min-height:100vh;}
+#menu-screen .logo-big{font-family:'Russo One',sans-serif;font-size:3rem;color:var(--pink);text-align:center;text-shadow:0 0 30px rgba(255,45,110,0.5);}
+#menu-screen .tagline{color:var(--teal);text-align:center;font-size:1.1rem;}
+input[type=text]{background:var(--card);border:2px solid var(--border);color:#fff;padding:14px 16px;border-radius:10px;font-size:1.1rem;font-family:'Exo 2',sans-serif;width:100%;max-width:320px;outline:none;transition:border-color 0.2s;}
+input[type=text]:focus{border-color:var(--pink);}
+.btn{background:var(--pink);color:#fff;border:none;padding:16px 32px;border-radius:12px;font-family:'Russo One',sans-serif;font-size:1.1rem;cursor:pointer;transition:all 0.15s;min-height:56px;touch-action:manipulation;}
+.btn:active{transform:scale(0.96);opacity:0.9;}
+.btn.teal{background:var(--teal);color:var(--dark);}
+.btn.big{min-height:80px;font-size:1.3rem;width:100%;}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+.player-list{display:flex;flex-direction:column;gap:8px;margin:16px 0;}
+.player-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;}
+.player-item .avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;flex-shrink:0;}
+.player-item .pname{font-size:1rem;font-weight:600;}
+.player-item .badge{margin-left:auto;font-size:0.7rem;padding:3px 8px;border-radius:20px;background:var(--pink);color:#fff;}
+.player-item.dead .pname{color:#555;text-decoration:line-through;}
+.player-item.dead .avatar{filter:grayscale(1);opacity:0.4;}
+#countdown-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 60px);}
+#countdown-screen .num{font-family:'Russo One',sans-serif;font-size:8rem;color:var(--pink);text-shadow:0 0 60px rgba(255,45,110,0.7);animation:pulse 1s ease-in-out infinite;}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
+.game-screen{padding:16px;max-width:600px;margin:0 auto;}
+.game-header{text-align:center;margin-bottom:16px;}
+.game-header h2{font-family:'Russo One',sans-serif;font-size:1.4rem;color:var(--pink);}
+.timer{font-family:'Russo One',sans-serif;font-size:2.5rem;color:var(--teal);text-align:center;margin:8px 0;}
+.timer.danger{color:var(--pink);animation:pulse 0.5s ease-in-out infinite;}
+canvas{width:100%;border-radius:10px;display:block;}
+.light-indicator{text-align:center;font-family:'Russo One',sans-serif;font-size:2rem;padding:16px;border-radius:12px;margin:12px 0;transition:all 0.3s;}
+.light-green{background:rgba(0,217,192,0.15);border:2px solid var(--teal);color:var(--teal);}
+.light-red{background:rgba(255,45,110,0.15);border:2px solid var(--pink);color:var(--pink);}
+.action-btn{background:var(--pink);color:#fff;border:none;border-radius:16px;font-family:'Russo One',sans-serif;font-size:1.4rem;cursor:pointer;touch-action:manipulation;user-select:none;width:100%;padding:24px;min-height:120px;transition:all 0.1s;margin-top:12px;}
+.action-btn:active{transform:scale(0.97);filter:brightness(1.2);}
+.action-btn.teal-btn{background:var(--teal);color:var(--dark);}
+.action-btn:disabled{opacity:0.35;cursor:not-allowed;}
+.progress-wrap{background:var(--border);border-radius:8px;height:24px;overflow:hidden;margin:4px 0;}
+.progress-fill{height:100%;border-radius:8px;transition:width 0.2s;background:var(--pink);}
+.progress-fill.teal{background:var(--teal);}
+.player-bars{display:flex;flex-direction:column;gap:6px;margin:12px 0;}
+.player-bar-row{display:flex;align-items:center;gap:8px;font-size:0.85rem;}
+.player-bar-row .bar-name{width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0;}
+.player-bar-row .bar-wrap{flex:1;background:var(--border);border-radius:6px;height:18px;overflow:hidden;}
+.player-bar-row .bar-fill{height:100%;border-radius:6px;transition:width 0.3s;}
+.player-bar-row .bar-val{width:44px;text-align:right;flex-shrink:0;font-size:0.75rem;color:#aaa;}
+.marble-pick{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0;}
+.marble-pick .btn{min-height:100px;font-size:1.2rem;}
+.glass-grid{display:flex;flex-direction:column;gap:6px;margin:12px 0;}
+.glass-row{display:flex;gap:8px;}
+.glass-tile{flex:1;height:48px;border-radius:8px;border:2px solid var(--border);background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;font-size:0.8rem;color:#aaa;transition:all 0.3s;}
+.glass-tile.safe{background:rgba(0,217,192,0.2);border-color:var(--teal);color:var(--teal);}
+.glass-tile.broken{background:rgba(255,45,110,0.15);border-color:var(--pink);color:var(--pink);}
+.glass-pick{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0;}
+.glass-pick .btn{min-height:100px;font-size:1.2rem;}
+.mingle-players{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0;}
+.mingle-player-btn{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:12px 16px;cursor:pointer;font-family:'Exo 2',sans-serif;font-size:0.9rem;color:#fff;transition:all 0.2s;touch-action:manipulation;}
+.mingle-player-btn.selected{border-color:var(--teal);background:rgba(0,217,192,0.1);color:var(--teal);}
+.mingle-player-btn:disabled{opacity:0.35;cursor:not-allowed;}
+.hp-list{display:flex;flex-direction:column;gap:10px;margin:12px 0;}
+.hp-row{display:flex;flex-direction:column;gap:4px;}
+.hp-row .hp-name{font-size:0.9rem;display:flex;justify-content:space-between;}
+.hp-row .hp-wrap{background:var(--border);border-radius:6px;height:20px;overflow:hidden;}
+.hp-row .hp-fill{height:100%;background:var(--teal);border-radius:6px;transition:width 0.3s;}
+.hp-row .hp-fill.low{background:var(--pink);}
+.overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;gap:16px;}
+#elim-overlay{background:rgba(255,45,110,0.92);}
+#elim-overlay .big-text{font-family:'Russo One',sans-serif;font-size:3.5rem;color:#fff;text-shadow:0 0 40px rgba(0,0,0,0.5);}
+#elim-overlay .sub-text{font-size:1.2rem;color:rgba(255,255,255,0.8);}
+#winner-overlay{background:rgba(10,10,18,0.97);}
+#winner-overlay .big-text{font-family:'Russo One',sans-serif;font-size:3rem;color:gold;text-shadow:0 0 40px gold;}
+#winner-overlay .winner-name{font-family:'Russo One',sans-serif;font-size:2rem;color:#fff;margin-top:8px;}
+#winner-overlay .sub-text{font-size:1rem;color:#aaa;}
+.confetti-wrap{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:499;}
+.confetti-piece{position:absolute;opacity:0;animation:conffall 3s ease-in forwards;}
+@keyframes conffall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+.spectator-banner{background:rgba(255,45,110,0.1);border:1px solid var(--pink);border-radius:8px;padding:10px 16px;color:var(--pink);text-align:center;font-size:0.9rem;margin:8px 0;}
+.info-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin:8px 0;font-size:0.9rem;color:#aaa;line-height:1.5;}
+.info-box strong{color:#fff;}
+.player-queue{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;}
+.queue-item{padding:4px 10px;border-radius:20px;background:var(--card);border:1px solid var(--border);font-size:0.8rem;}
+.queue-item.active-player{border-color:var(--teal);color:var(--teal);}
+.queue-item.dead{color:#555;text-decoration:line-through;}
+.waiting{text-align:center;color:#aaa;padding:24px;font-size:1rem;}
 </style>
 </head>
 <body>
-<div id="loading"><div class="spinner"></div><div class="load-txt">VERBINDE...</div></div>
-<div id="toast"></div>
 
-<!-- MENU -->
-<div class="screen active" id="sMenu">
-  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;width:100%">
-    <div class="sq-logo">SQUID GAME</div>
-    <div class="sq-sub">456 Players • 7 Games • 1 Survivor</div>
-    <input class="inp" id="nameInp" placeholder="Dein Name" maxlength="12" autocomplete="off" spellcheck="false">
-    <button class="btn btn-red" onclick="joinServer()">▶ SERVER BEITRETEN</button>
-    <div class="err" id="menuErr"></div>
-    <a href="../menu.html" class="btn btn-ghost" style="text-decoration:none;text-align:center;font-size:13px">← SPIELAUSWAHL</a>
+<div id="loading">
+  <div class="logo">SQUID GAME</div>
+  <div class="sub">Connecting to server…</div>
+  <div class="spinner"></div>
+</div>
+
+<div id="header" class="hidden">
+  <a href="../menu.html" class="back">← Menu</a>
+  <div class="game-title" id="header-title">SQUID GAME</div>
+  <div class="player-count" id="header-players"></div>
+</div>
+
+<div id="menu-screen" class="hidden">
+  <div class="logo-big">SQUID GAME</div>
+  <div class="tagline">Survive 7 deadly games</div>
+  <input type="text" id="name-input" placeholder="Enter your name" maxlength="18">
+  <button class="btn big" onclick="joinServer()">JOIN SERVER</button>
+</div>
+
+<div id="lobby-screen" class="screen hidden">
+  <div style="text-align:center;margin-bottom:16px;">
+    <h2 style="font-size:1.8rem;color:var(--pink)">WAITING ROOM</h2>
+    <p id="lobby-status" style="color:#aaa;font-size:0.9rem;">Waiting for players…</p>
   </div>
+  <div class="player-list" id="lobby-player-list"></div>
+  <button class="btn big" id="start-btn" onclick="hostStartGame()" style="display:none">▶ START GAME</button>
+  <div class="info-box" id="lobby-info">Waiting for the host to start the game.</div>
 </div>
 
-<!-- LOBBY -->
-<div class="screen" id="sLobby">
-  <div class="sq-logo" style="font-size:clamp(28px,9vw,52px)">SQUID GAME</div>
-  <div class="sec-label">LOBBY — WARTE AUF SPIELER</div>
-  <div id="playerList" style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:400px"></div>
-  <div class="err" id="lobbyErr"></div>
-  <button class="btn btn-red" id="startBtn" onclick="hostStart()" disabled>🎮 SPIEL STARTEN</button>
-  <div class="lobby-wait" id="lobbyWait">Warte auf den Host...</div>
-  <button class="btn btn-ghost" style="max-width:200px;font-size:12px" onclick="leaveServer()">← VERLASSEN</button>
+<div id="countdown-screen" class="hidden">
+  <div class="num" id="countdown-num">3</div>
 </div>
 
-<!-- COUNTDOWN -->
-<div class="screen" id="sCountdown" style="justify-content:center">
-  <div class="sq-logo" style="font-size:clamp(22px,7vw,40px)" id="cdGameName">GAME 1/7</div>
-  <div class="countdown-num" id="cdNum">3</div>
-  <div style="font-family:'Russo One',sans-serif;font-size:14px;letter-spacing:4px;color:rgba(255,255,255,.4)" id="cdSub">RED LIGHT GREEN LIGHT</div>
+<div id="g1-screen" class="game-screen hidden">
+  <div class="game-header"><h2>GAME 1/7 — RED LIGHT GREEN LIGHT</h2><div class="timer" id="g1-timer">60</div></div>
+  <div class="light-indicator light-green" id="g1-light">🟢 GREEN LIGHT</div>
+  <canvas id="g1-canvas" height="180"></canvas>
+  <div id="g1-spectator" class="spectator-banner hidden">👁 Spectating</div>
+  <button class="action-btn" id="g1-move-btn"
+    ontouchstart="setMoving(true)" ontouchend="setMoving(false)"
+    onmousedown="setMoving(true)" onmouseup="setMoving(false)" onmouseleave="setMoving(false)">
+    HOLD TO MOVE
+  </button>
 </div>
 
-<!-- GAME SCREEN -->
-<div class="screen" id="sGame">
-  <div class="game-header">
-    <div class="game-title-sm" id="ghTitle">GAME 1/7</div>
-    <div class="game-timer" id="ghTimer">60</div>
+<div id="g2-screen" class="game-screen hidden">
+  <div class="game-header"><h2>GAME 2/7 — DALGONA</h2><div class="timer" id="g2-timer">60</div></div>
+  <div class="info-box">Your shape: <strong id="g2-my-shape">?</strong> — Tap 80 times to survive!</div>
+  <div class="progress-wrap" style="height:32px;margin:8px 0;"><div class="progress-fill teal" id="g2-my-bar" style="width:0%"></div></div>
+  <div style="text-align:center;color:#aaa;font-size:0.85rem;margin-bottom:8px;" id="g2-tap-count">0 / 80 taps</div>
+  <button class="action-btn teal-btn" id="g2-chip-btn" onclick="sendChip()">CHIP !</button>
+  <div class="player-bars" id="g2-player-bars"></div>
+  <div id="g2-spectator" class="spectator-banner hidden">👁 Spectating</div>
+</div>
+
+<div id="g3-screen" class="game-screen hidden">
+  <div class="game-header"><h2>GAME 3/7 — TUG OF WAR</h2><div class="timer" id="g3-timer">30</div></div>
+  <div class="info-box" id="g3-team-info">Team: <strong>?</strong></div>
+  <canvas id="g3-canvas" height="120"></canvas>
+  <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:#aaa;margin:4px 8px;">
+    <span style="color:var(--pink)">Team A ←</span><span style="color:var(--teal)">→ Team B</span>
   </div>
-  <div class="pbar" id="pbar"></div>
-  <div class="game-area" id="gameArea"></div>
-  <div class="spec-badge" id="specBadge" style="display:none">👁 ZUSCHAUER</div>
+  <button class="action-btn" id="g3-pull-btn" onclick="sendPull()">PULL !</button>
+  <div id="g3-spectator" class="spectator-banner hidden">👁 Spectating</div>
 </div>
 
-<!-- ELIM SCREEN -->
-<div class="screen" id="sElim" style="justify-content:center">
-  <div class="elim-box">
-    <div class="elim-title" id="elimTitle">ELIMINIERT</div>
-    <div class="sec-label" style="margin-bottom:10px" id="elimGameName"></div>
-    <div class="elim-list" id="elimList"></div>
-    <div style="margin-top:14px;font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:3px;color:rgba(0,217,192,.5)" id="elimSurvivors"></div>
+<div id="g4-screen" class="game-screen hidden">
+  <div class="game-header"><h2>GAME 4/7 — MARBLES</h2></div>
+  <div class="info-box" id="g4-status">Round <strong id="g4-round">1</strong>/5</div>
+  <div id="g4-pair-info" class="info-box hidden">vs <strong id="g4-opponent">?</strong> — Your marbles: <strong id="g4-my-marbles">5</strong></div>
+  <div id="g4-result-info" class="info-box hidden"></div>
+  <div id="g4-odd-one-out" class="info-box hidden" style="color:var(--teal)">✓ You auto-advance this round!</div>
+  <div class="marble-pick" id="g4-pick" style="display:none">
+    <button class="btn" onclick="sendMarblePick('odd')">ODD</button>
+    <button class="btn teal" onclick="sendMarblePick('even')">EVEN</button>
   </div>
+  <div class="player-bars" id="g4-marble-bars"></div>
+  <div id="g4-spectator" class="spectator-banner hidden">👁 Spectating</div>
 </div>
 
-<!-- RESULTS -->
-<div class="screen" id="sResults" style="justify-content:center">
-  <div class="winner-box">
-    <div class="winner-crown">👑</div>
-    <div class="winner-sub">GEWINNER</div>
-    <div class="winner-name" id="winnerName">—</div>
-    <div style="font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:2px;color:rgba(255,255,255,.3);text-align:center" id="winnerSub"></div>
-    <button class="btn btn-red" style="margin-top:20px" onclick="leaveServer()">← ZURÜCK ZUM MENU</button>
+<div id="g5-screen" class="game-screen hidden">
+  <div class="game-header"><h2>GAME 5/7 — GLASS BRIDGE</h2><div class="timer" id="g5-timer">10</div></div>
+  <div class="info-box" id="g5-status">Players pick a side to cross.</div>
+  <div class="player-queue" id="g5-queue"></div>
+  <div class="glass-grid" id="g5-grid"></div>
+  <div class="glass-pick" id="g5-pick" style="display:none">
+    <button class="btn" onclick="sendGlass('left')">← LEFT</button>
+    <button class="btn teal" onclick="sendGlass('right')">RIGHT →</button>
   </div>
+  <div id="g5-spectator" class="spectator-banner hidden">👁 Spectating</div>
+  <div id="g5-waiting" class="waiting hidden">Waiting for your turn…</div>
 </div>
+
+<div id="g6-screen" class="game-screen hidden">
+  <div class="game-header"><h2>GAME 6/7 — MINGLE</h2><div class="timer" id="g6-timer">10</div></div>
+  <div class="info-box" id="g6-status">Form a group of <strong id="g6-group-size">?</strong>!</div>
+  <div class="mingle-players" id="g6-players"></div>
+  <div id="g6-spectator" class="spectator-banner hidden">👁 Spectating</div>
+</div>
+
+<div id="g7-screen" class="game-screen hidden">
+  <div class="game-header"><h2>GAME 7/7 — LAST STAND</h2><div class="timer" id="g7-timer">30</div></div>
+  <div class="hp-list" id="g7-hp-list"></div>
+  <button class="action-btn" id="g7-attack-btn" onclick="sendAttack()">⚔ ATTACK</button>
+  <div id="g7-spectator" class="spectator-banner hidden">👁 Spectating</div>
+</div>
+
+<div id="elim-overlay" class="overlay hidden">
+  <div class="big-text">ELIMINATED</div>
+  <div class="sub-text" id="elim-sub">Better luck next time.</div>
+</div>
+
+<div id="winner-overlay" class="overlay hidden">
+  <div class="big-text">🏆 WINNER</div>
+  <div class="winner-name" id="winner-name"></div>
+  <div class="sub-text">The last survivor of the Squid Game</div>
+  <button class="btn" onclick="location.reload()" style="margin-top:16px">PLAY AGAIN</button>
+</div>
+<div class="confetti-wrap" id="confetti-wrap"></div>
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-const sb = createClient('https://ozvyymrqibpyqccgszlz.supabase.co','sb_publishable_30WmZF8d8h_rUSrTGtBwnQ_Kn9gquwL');
 
-const AVATARS = ['🐙','🦑','🃏','🔺','🟥','⭕','🎭','🏮','🎯','🃏'];
-const GAME_NAMES = ['','RED LIGHT GREEN LIGHT','HONEYCOMB','TUG OF WAR','MARBLES','GLASS BRIDGE','MINGLE','LAST STAND'];
+const SUPABASE_URL = 'https://ozvyymrqibpyqccgszlz.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_30WmZF8d8h_rUSrTGtBwnQ_Kn9gquwL';
+const CHANNEL_NAME = 'squidgame_main';
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const COLORS = ['#ff2d6e','#00d9c0','#ffd700','#a78bfa','#fb923c','#34d399','#60a5fa','#f472b6'];
 
-let myId = 'p_' + Math.random().toString(36).slice(2,10);
-let myName = '', myAvatar = '';
+let myId = crypto.randomUUID();
+let myName = '';
+let channel = null;
 let isHost = false;
-let gs = null, ch = null;
-let hostTickInterval = null, hostTimerInterval = null;
+let gs = null;
+let hostTickInterval = null;
 let hostPingInterval = null;
-let noHostTimeout = null;
-let localMoving = false;
+let lastHostPingTime = Date.now();
+let g4Picked = false;
+let g5Picked = false;
 
-// Load saved name
-(()=>{ var n=localStorage.getItem('sq_name'); if(n) document.getElementById('nameInp').value=n; })();
-
-function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-function setLoading(v){ document.getElementById('loading').classList.toggle('hide',!v); }
-function showToast(msg,dur=2500){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._tm); t._tm=setTimeout(()=>t.classList.remove('show'),dur); }
-function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-function shuffle(arr){ var a=[...arr]; for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]; } return a; }
-
-// ── CONNECT ──
-window.joinServer = function(){
-  var name = document.getElementById('nameInp').value.trim().toUpperCase();
-  if(!name||name.length<2){ document.getElementById('menuErr').textContent='Name eingeben!'; return; }
-  localStorage.setItem('sq_name', name);
-  myName = name;
-  myAvatar = pick(AVATARS);
-  connectChannel();
+window.onload = () => {
+  const saved = localStorage.getItem('sq_name');
+  if (saved) document.getElementById('name-input').value = saved;
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('menu-screen').classList.remove('hidden');
 };
 
-function connectChannel(){
-  setLoading(true);
-  ch = sb.channel('squidgame_main', {config:{broadcast:{self:false}}});
+window.joinServer = async () => {
+  myName = document.getElementById('name-input').value.trim();
+  if (!myName) { alert('Enter your name!'); return; }
+  localStorage.setItem('sq_name', myName);
+  document.getElementById('menu-screen').classList.add('hidden');
+  show('loading');
+  document.querySelector('#loading .sub').textContent = 'Joining server…';
+  await connectChannel();
+};
 
-  ch.on('broadcast',{event:'state'}, m=>{
-    if(isHost) return;
-    var prev = gs ? gs.phase : null;
-    gs = m.payload.s;
-    clearTimeout(noHostTimeout);
-    scheduleHostCheck();
-    var prevPhase = prev;
-    if(prevPhase !== gs.phase) onPhaseChange(prevPhase, gs.phase);
-    updateUI();
-  });
+const show = id => document.getElementById(id).classList.remove('hidden');
+const hide = id => document.getElementById(id).classList.add('hidden');
 
-  ch.on('broadcast',{event:'ping'}, m=>{
-    if(isHost) return;
-    if(gs){ gs.lastHostPing = m.payload.ts; }
-    clearTimeout(noHostTimeout);
-    scheduleHostCheck();
-  });
-
-  ch.on('broadcast',{event:'input'}, m=>{
-    if(!isHost) return;
-    handleInput(m.payload);
-  });
-
-  ch.on('broadcast',{event:'join'}, m=>{
-    if(!isHost) return;
-    var p = m.payload;
-    if(!gs) return;
-    if(gs.players.find(x=>x.id===p.id)) return;
-    // Mid-game: spectator only
-    var alive = gs.phase === 'lobby';
-    gs.players.push({id:p.id, name:p.name, avatar:p.avatar, alive, team:null, marbles:5, hp:100, joinTs:p.joinTs});
-    broadcastState();
-    updateUI();
-  });
-
-  ch.subscribe(status=>{
-    if(status !== 'SUBSCRIBED') return;
-    setLoading(false);
-    // Send join, then wait 2s for a host response
-    ch.send({type:'broadcast',event:'join',payload:{id:myId,name:myName,avatar:myAvatar,joinTs:Date.now()}});
-    setTimeout(()=>{
-      if(!gs){
-        // No host found — become host
-        becomeHost();
+async function connectChannel() {
+  channel = sb.channel(CHANNEL_NAME, { config: { broadcast: { self: false } } });
+  channel
+    .on('broadcast', { event: 'state' }, ({ payload }) => { if (payload?.s) handleStateUpdate(payload.s); })
+    .on('broadcast', { event: 'input' }, ({ payload }) => { if (isHost) handlePlayerInput(payload); })
+    .on('broadcast', { event: 'join' }, ({ payload }) => { if (isHost) handleNewJoin(payload); })
+    .on('broadcast', { event: 'ping' }, ({ payload }) => {
+      lastHostPingTime = payload.ts || Date.now();
+      if (gs) gs.lastHostPing = lastHostPingTime;
+    })
+    .subscribe(async status => {
+      if (status === 'SUBSCRIBED') {
+        await channel.send({ type: 'broadcast', event: 'join', payload: { id: myId, name: myName } });
+        setTimeout(() => {
+          if (!gs) becomeHost(true);
+          hide('loading');
+          show('header');
+        }, 2500);
       }
-    }, 2000);
-  });
+    });
 }
 
-function scheduleHostCheck(){
-  clearTimeout(noHostTimeout);
-  noHostTimeout = setTimeout(()=>{
-    if(!isHost && gs){
-      // Host is gone — check if we should take over
-      var sorted = [...gs.players].sort((a,b)=>a.joinTs-b.joinTs);
-      if(!sorted.length || sorted[0].id === myId){
-        becomeHost();
-      }
-    }
-  }, 9000);
-}
-
-function becomeHost(){
+function becomeHost(fresh) {
   isHost = true;
-  if(!gs){
-    gs = {
-      phase:'lobby',
-      players:[{id:myId,name:myName,avatar:myAvatar,alive:true,team:null,marbles:5,hp:100,joinTs:Date.now()}],
-      hostId:myId,
-      gameData:{},
-      round:0,
-      timerEnd:0,
-      lastHostPing:Date.now(),
-      eliminated:[],
-    };
+  if (fresh || !gs) {
+    gs = { phase: 'lobby', players: [{ id: myId, name: myName, alive: true, team: null }],
+      hostId: myId, gameData: {}, countdownVal: 3, lastHostPing: Date.now(), round: 0 };
   } else {
     gs.hostId = myId;
-    if(!gs.players.find(p=>p.id===myId)){
-      gs.players.push({id:myId,name:myName,avatar:myAvatar,alive:false,team:null,marbles:5,hp:100,joinTs:Date.now()});
-    }
   }
   startHostPing();
   broadcastState();
-  updateUI();
+  renderPhase();
 }
 
-function startHostPing(){
+function startHostPing() {
   clearInterval(hostPingInterval);
-  hostPingInterval = setInterval(()=>{
-    if(!isHost){ clearInterval(hostPingInterval); return; }
-    ch.send({type:'broadcast',event:'ping',payload:{ts:Date.now()}});
+  hostPingInterval = setInterval(async () => {
+    const ts = Date.now();
+    if (gs) gs.lastHostPing = ts;
+    await channel.send({ type: 'broadcast', event: 'ping', payload: { ts } });
   }, 2000);
 }
 
-function broadcastState(){ if(!ch||!isHost) return; ch.send({type:'broadcast',event:'state',payload:{s:gs}}); }
+async function broadcastState() {
+  if (!gs) return;
+  await channel.send({ type: 'broadcast', event: 'state', payload: { s: JSON.parse(JSON.stringify(gs)) } });
+}
 
-function sendInput(payload){ if(!ch) return; ch.send({type:'broadcast',event:'input',payload:{...payload,playerId:myId}}); }
+function handleStateUpdate(newGs) {
+  const wasPhase = gs?.phase;
+  gs = newGs;
+  lastHostPingTime = gs.lastHostPing || Date.now();
+  if (!isHost && Date.now() - lastHostPingTime > 8000 && myId < gs.hostId) {
+    becomeHost(false); return;
+  }
+  if (wasPhase !== gs.phase) renderPhase();
+  else renderCurrentPhase();
+}
 
-window.leaveServer = function(){
-  clearInterval(hostTickInterval); clearInterval(hostTimerInterval); clearInterval(hostPingInterval);
-  clearTimeout(noHostTimeout);
-  if(ch){ ch.unsubscribe(); ch=null; }
-  gs=null; isHost=false; localMoving=false;
-  showScreen('sMenu');
-};
-
-// ── HOST: START GAME ──
-window.hostStart = function(){
-  if(!isHost||!gs) return;
-  var alive = gs.players.filter(p=>p.alive);
-  if(alive.length < 2){ showToast('Mindestens 2 Spieler!'); return; }
-  gs.round = 0;
-  gs.eliminated = [];
-  startCountdown(1);
-};
-
-function startCountdown(gameNum){
-  clearInterval(hostTickInterval); clearInterval(hostTimerInterval);
-  gs.phase = 'countdown';
-  gs.gameData = {cdVal:3, gameNum};
-  gs.round = gameNum;
+function handleNewJoin({ id, name }) {
+  if (!isHost || !gs || gs.players.find(p => p.id === id)) return;
+  gs.players.push({ id, name, alive: gs.phase === 'lobby', team: null });
   broadcastState();
-  var cd = 3;
-  var iv = setInterval(()=>{
-    cd--;
-    if(cd <= 0){
-      clearInterval(iv);
-      startGame(gameNum);
-    } else {
-      gs.gameData.cdVal = cd;
-      broadcastState();
-    }
+}
+
+window.hostStartGame = () => {
+  if (!isHost) return;
+  if (alive().length < 2) { alert('Need at least 2 players!'); return; }
+  startCountdown();
+};
+
+function startCountdown() {
+  clearHostTick();
+  gs.phase = 'countdown'; gs.countdownVal = 3;
+  broadcastState(); renderPhase();
+  let c = 3;
+  const iv = setInterval(() => {
+    c--; gs.countdownVal = c;
+    if (c <= 0) { clearInterval(iv); startGame(gs.round); }
+    else { broadcastState(); renderCurrentPhase(); }
   }, 1000);
 }
 
-function startGame(n){
-  gs.phase = 'g'+n;
-  gs.round = n;
-  var duration = [0,60,60,30,0,0,20,30][n];
-  gs.timerEnd = Date.now() + duration * 1000;
-  gs.gameData = initGameData(n);
-  broadcastState();
-  clearInterval(hostTickInterval);
-  hostTickInterval = setInterval(()=>hostTick(), 200);
+function startGame(round) {
+  clearHostTick();
+  gs.phase = ['g1','g2','g3','g4','g5','g6','g7'][round];
+  gs.gameData = {};
+  broadcastState(); renderPhase();
+  ({ g1: hostRunG1, g2: hostRunG2, g3: hostRunG3, g4: hostRunG4, g5: hostRunG5, g6: hostRunG6, g7: hostRunG7 })[gs.phase]?.();
 }
 
-function initGameData(n){
-  var alive = gs.players.filter(p=>p.alive);
-  if(n===1){
-    var d = {light:'green', lightEnd: Date.now() + 3000, progress:{}, moving:{}};
-    alive.forEach(p=>{ d.progress[p.id]=0; d.moving[p.id]=false; });
-    return d;
-  }
-  if(n===2){
-    var shapes = ['⭕','△','★','☂'];
-    var d = {taps:{}, shape:{}};
-    alive.forEach(p=>{ d.taps[p.id]=0; d.shape[p.id]=pick(shapes); });
-    return d;
-  }
-  if(n===3){
-    var d = {score:0, teamA:[], teamB:[]};
-    var s = shuffle(alive);
-    s.forEach((p,i)=>{ if(i%2===0){ d.teamA.push(p.id); p.team='A'; } else { d.teamB.push(p.id); p.team='B'; } });
-    return d;
-  }
-  if(n===4){
-    var d = {pairs:{}, picks:{}, rounds:[], roundNum:0, marbles:{}};
-    alive.forEach(p=>{ d.marbles[p.id]=p.marbles||5; });
-    var sh = shuffle(alive);
-    for(var i=0;i<sh.length-1;i+=2) d.pairs[sh[i].id]=sh[i+1].id, d.pairs[sh[i+1].id]=sh[i].id;
-    if(sh.length%2) d.solo = sh[sh.length-1].id;
-    d.picks = {};
-    d.roundNum = 0;
-    d.waitingPick = true;
-    return d;
-  }
-  if(n===5){
-    var d = {rows:[], revealed:[], frontier:0, currentPlayer:null, playerOrder:[]};
-    for(var i=0;i<10;i++) d.rows.push(Math.random()<0.5?'left':'right');
-    d.revealed = new Array(10).fill(null);
-    d.playerOrder = alive.map(p=>p.id);
-    d.currentPlayerIdx = 0;
-    d.currentPlayer = d.playerOrder[0];
-    d.turnEnd = Date.now() + 12000;
-    return d;
-  }
-  if(n===6){
-    var groups = [3,2,4,2];
-    var roundSizes = groups.slice(0,2);
-    var d = {roundNum:0, groupSize: roundSizes[0], groups:{}, roundEnd: Date.now()+12000, roundSizes};
-    alive.forEach(p=>{ d.groups[p.id]=null; });
-    return d;
-  }
-  if(n===7){
-    var d = {hp:{}};
-    alive.forEach(p=>{ d.hp[p.id]=100; });
-    return d;
-  }
-  return {};
-}
+const clearHostTick = () => { if (hostTickInterval) { clearInterval(hostTickInterval); hostTickInterval = null; } };
+const alive = () => gs.players.filter(p => p.alive);
 
-function hostTick(){
-  if(!isHost||!gs) return;
-  var now = Date.now();
-  var n = gs.round;
-  var phase = gs.phase;
-  if(phase !== 'g'+n) return;
-
-  var timeLeft = Math.max(0, Math.ceil((gs.timerEnd - now)/1000));
-
-  if(n===1) tickG1(now, timeLeft);
-  else if(n===2) tickG2(now, timeLeft);
-  else if(n===3) tickG3(now, timeLeft);
-  else if(n===5) tickG5(now);
-  else if(n===6) tickG6(now);
-  else if(n===7) tickG7(now, timeLeft);
-
-  // Timer-based end
-  if([1,2,3,7].includes(n) && timeLeft <= 0) endGame(n);
-
-  broadcastState();
-}
-
-function tickG1(now){
-  var d = gs.gameData;
-  // Advance moving players
-  gs.players.filter(p=>p.alive&&d.moving[p.id]).forEach(p=>{
-    d.progress[p.id] = Math.min(100, (d.progress[p.id]||0) + 0.35);
-    if(d.progress[p.id] >= 100){
-      // Finished - mark as safe
-      d.progress[p.id] = 100;
+function eliminatePhase(round) {
+  clearHostTick();
+  gs.phase = `g${round+1}_elim`;
+  broadcastState(); renderPhase();
+  setTimeout(() => {
+    const survivors = alive();
+    if (survivors.length <= 1 || round >= 6) {
+      gs.phase = 'winner';
+      gs.gameData.winnerId = survivors[0]?.id || gs.players[0].id;
+      broadcastState(); renderPhase();
+    } else {
+      gs.round = round + 1;
+      startCountdown();
     }
-  });
-  // Switch light
-  if(now >= d.lightEnd){
-    if(d.light === 'green'){
-      d.light = 'red';
-      d.lightEnd = now + (2000 + Math.random()*2000);
-      // Eliminate moving players
-      gs.players.filter(p=>p.alive).forEach(p=>{
-        if(d.moving[p.id]){
-          p.alive = false;
-          if(!gs.eliminated) gs.eliminated=[];
-          gs.eliminated.push({id:p.id,name:p.name,game:1});
+  }, 4000);
+}
+
+function hostRunG1() {
+  const ids = alive().map(p => p.id);
+  gs.gameData = { light: 'green', timeLeft: 60, moving: {}, progress: {}, finished: {} };
+  ids.forEach(id => { gs.gameData.progress[id] = 0; gs.gameData.moving[id] = false; gs.gameData.finished[id] = false; });
+  let nextToggle = 2 + Math.random() * 2, elapsed = 0;
+  broadcastState();
+  hostTickInterval = setInterval(() => {
+    elapsed += 0.1;
+    gs.gameData.timeLeft = Math.max(0, 60 - elapsed);
+    nextToggle -= 0.1;
+    if (nextToggle <= 0) {
+      gs.gameData.light = gs.gameData.light === 'green' ? 'red' : 'green';
+      nextToggle = 2 + Math.random() * 2;
+      if (gs.gameData.light === 'red') alive().forEach(p => { if (gs.gameData.moving[p.id]) p.alive = false; });
+    }
+    if (gs.gameData.light === 'green') {
+      alive().forEach(p => {
+        if (gs.gameData.moving[p.id] && !gs.gameData.finished[p.id]) {
+          gs.gameData.progress[p.id] = Math.min(100, (gs.gameData.progress[p.id] || 0) + 1);
+          if (gs.gameData.progress[p.id] >= 100) gs.gameData.finished[p.id] = true;
         }
       });
-    } else {
-      d.light = 'green';
-      d.lightEnd = now + (2000 + Math.random()*3000);
     }
-  }
-}
-
-function tickG2(){ /* tap counts handled by input */ }
-
-function tickG3(){ /* pull counts handled by input */ }
-
-function tickG5(now){
-  var d = gs.gameData;
-  if(!d.currentPlayer) return;
-  if(now >= d.turnEnd){
-    // Auto-eliminate current player (too slow)
-    var p = gs.players.find(x=>x.id===d.currentPlayer);
-    if(p && p.alive){
-      p.alive = false;
-      if(!gs.eliminated) gs.eliminated=[];
-      gs.eliminated.push({id:p.id,name:p.name,game:5});
-    }
-    advanceBridge(d, false);
-  }
-}
-
-function tickG6(now){
-  var d = gs.gameData;
-  if(now >= d.roundEnd){
-    // Evaluate groups
-    var groupSize = d.groupSize;
-    // Build groups map: groupId -> [playerIds]
-    var groupMap = {};
-    Object.entries(d.groups).forEach(([pid,gid])=>{
-      if(!gid){ groupMap['solo_'+pid]=[pid]; return; }
-      if(!groupMap[gid]) groupMap[gid]=[];
-      groupMap[gid].push(pid);
-    });
-    // Eliminate wrong-sized
-    Object.values(groupMap).forEach(members=>{
-      if(members.length !== groupSize){
-        members.forEach(pid=>{
-          var p = gs.players.find(x=>x.id===pid);
-          if(p&&p.alive){ p.alive=false; if(!gs.eliminated)gs.eliminated=[]; gs.eliminated.push({id:p.id,name:p.name,game:6}); }
-        });
-      }
-    });
-    d.roundNum++;
-    if(d.roundNum >= d.roundSizes.length){
-      endGame(6);
-      return;
-    }
-    // Next round
-    d.groupSize = d.roundSizes[d.roundNum];
-    var alive = gs.players.filter(p=>p.alive);
-    d.groups = {};
-    alive.forEach(p=>{ d.groups[p.id]=null; });
-    d.roundEnd = Date.now() + 12000;
-  }
-}
-
-function tickG7(now, timeLeft){
-  var d = gs.gameData;
-  // Check if only 1 alive
-  var alive = gs.players.filter(p=>p.alive);
-  if(alive.length <= 1) endGame(7);
-}
-
-function advanceBridge(d, success){
-  if(success){
-    d.frontier = (d.frontier||0) + 1;
-  }
-  // Move to next player
-  d.currentPlayerIdx = (d.currentPlayerIdx||0) + 1;
-  if(d.currentPlayerIdx >= d.playerOrder.length){
-    endGame(5); return;
-  }
-  // Find next alive player in order
-  while(d.currentPlayerIdx < d.playerOrder.length){
-    var pid = d.playerOrder[d.currentPlayerIdx];
-    if(gs.players.find(p=>p.id===pid&&p.alive)) break;
-    d.currentPlayerIdx++;
-  }
-  if(d.currentPlayerIdx >= d.playerOrder.length){ endGame(5); return; }
-  d.currentPlayer = d.playerOrder[d.currentPlayerIdx];
-  d.turnEnd = Date.now() + 12000;
-}
-
-function handleInput(payload){
-  if(!isHost||!gs) return;
-  var {playerId, type} = payload;
-  var p = gs.players.find(x=>x.id===playerId);
-  var n = gs.round;
-
-  if(type==='move' && n===1 && gs.phase==='g1'){
-    gs.gameData.moving[playerId] = payload.val;
-  }
-  if(type==='tap' && n===2 && gs.phase==='g2'){
-    if(p&&p.alive) gs.gameData.taps[playerId] = (gs.gameData.taps[playerId]||0)+1;
-  }
-  if(type==='pull' && n===3 && gs.phase==='g3'){
-    if(!p||!p.alive) return;
-    var d=gs.gameData;
-    if(d.teamA.includes(playerId)) d.score-=1;
-    else if(d.teamB.includes(playerId)) d.score+=1;
-  }
-  if(type==='marble' && n===4 && gs.phase==='g4'){
-    if(!p||!p.alive) return;
-    var d=gs.gameData;
-    d.picks[playerId]=payload.val;
-    // Check if both in pair have picked
-    var partnerId=d.pairs[playerId];
-    if(partnerId && d.picks[partnerId]){
-      // Reveal result
-      var count = Math.floor(Math.random()*10)+1;
-      var actual = count%2===0?'even':'odd';
-      var pWin = d.picks[playerId]===actual;
-      var ptWin = d.picks[partnerId]===actual;
-      if(pWin && !ptWin){ d.marbles[playerId]++; d.marbles[partnerId]--; }
-      else if(!pWin && ptWin){ d.marbles[partnerId]++; d.marbles[playerId]--; }
-      var round = {p1:playerId,p2:partnerId,count,actual,p1pick:d.picks[playerId],p2pick:d.picks[partnerId]};
-      d.rounds.push(round);
-      d.picks={};
-      d.roundNum++;
-      if(d.roundNum>=5) endGame(4);
-    }
-  }
-  if(type==='glass' && n===5 && gs.phase==='g5'){
-    var d=gs.gameData;
-    if(d.currentPlayer!==playerId) return;
-    var row=d.rows[d.frontier||0];
-    var correct = payload.val===row;
-    if(!correct){
-      if(!gs.eliminated)gs.eliminated=[];
-      gs.eliminated.push({id:playerId,name:p?p.name:'?',game:5});
-      if(p) p.alive=false;
-      d.revealed[d.frontier||0]=row;
-    }
-    advanceBridge(d, correct);
-  }
-  if(type==='mingle' && n===6 && gs.phase==='g6'){
-    if(!p||!p.alive) return;
-    var d=gs.gameData;
-    var targetId=payload.targetId;
-    var gSize=d.groupSize;
-    // Find or create group
-    var myGroup=d.groups[playerId];
-    var targetGroup=d.groups[targetId];
-    if(!myGroup && !targetGroup){
-      var gId='g_'+Math.random().toString(36).slice(2,6);
-      d.groups[playerId]=gId; d.groups[targetId]=gId;
-    } else if(myGroup && !targetGroup){
-      // Check group size
-      var cnt=Object.values(d.groups).filter(g=>g===myGroup).length;
-      if(cnt<gSize) d.groups[targetId]=myGroup;
-    } else if(!myGroup && targetGroup){
-      var cnt=Object.values(d.groups).filter(g=>g===targetGroup).length;
-      if(cnt<gSize) d.groups[playerId]=targetGroup;
-    }
-  }
-  if(type==='attack' && n===7 && gs.phase==='g7'){
-    if(!p||!p.alive) return;
-    var d=gs.gameData;
-    var alive=gs.players.filter(x=>x.alive&&x.id!==playerId);
-    if(!alive.length) return;
-    var target=pick(alive);
-    d.hp[target.id]=Math.max(0,(d.hp[target.id]||100)-15);
-    if(d.hp[target.id]<=0){
-      target.alive=false;
-      if(!gs.eliminated)gs.eliminated=[];
-      gs.eliminated.push({id:target.id,name:target.name,game:7});
-    }
-  }
-}
-
-function endGame(n){
-  clearInterval(hostTickInterval);
-  // Determine who gets eliminated this round
-  var newElim = [];
-  if(n===1){
-    // Bottom 50% by progress eliminated (those who didn't cross)
-    var alive=gs.players.filter(p=>p.alive);
-    var sorted=alive.slice().sort((a,b)=>(gs.gameData.progress[b.id]||0)-(gs.gameData.progress[a.id]||0));
-    var cutoff=Math.ceil(sorted.length/2);
-    sorted.slice(cutoff).forEach(p=>{
-      p.alive=false; newElim.push({id:p.id,name:p.name,game:n});
-    });
-  }
-  if(n===2){
-    var d=gs.gameData;
-    gs.players.filter(p=>p.alive).forEach(p=>{
-      if((d.taps[p.id]||0)<80){ p.alive=false; newElim.push({id:p.id,name:p.name,game:n}); }
-    });
-  }
-  if(n===3){
-    var d=gs.gameData;
-    if(d.score < 0){
-      // Team A loses
-      d.teamA.forEach(pid=>{
-        var p=gs.players.find(x=>x.id===pid&&x.alive);
-        if(p){ p.alive=false; newElim.push({id:p.id,name:p.name,game:n}); }
-      });
-    } else {
-      d.teamB.forEach(pid=>{
-        var p=gs.players.find(x=>x.id===pid&&x.alive);
-        if(p){ p.alive=false; newElim.push({id:p.id,name:p.name,game:n}); }
-      });
-    }
-  }
-  if(n===4){
-    var d=gs.gameData;
-    gs.players.filter(p=>p.alive).forEach(p=>{
-      if((d.marbles[p.id]||5)<=0){ p.alive=false; newElim.push({id:p.id,name:p.name,game:n}); }
-    });
-    if(d.solo){
-      // Solo player auto-survived - just keep them
-    }
-  }
-  if(n===5){
-    // Those who didn't cross are already eliminated in-tick
-    newElim = (gs.eliminated||[]).filter(e=>e.game===5);
-  }
-  if(n===6){
-    newElim = (gs.eliminated||[]).filter(e=>e.game===6);
-  }
-  if(n===7){
-    var alive=gs.players.filter(p=>p.alive);
-    // Highest HP wins
-    if(alive.length>1){
-      var d=gs.gameData;
-      var sorted=alive.sort((a,b)=>(d.hp[b.id]||0)-(d.hp[a.id]||0));
-      sorted.slice(1).forEach(p=>{ p.alive=false; newElim.push({id:p.id,name:p.name,game:n}); });
-    }
-  }
-
-  if(!gs.eliminated) gs.eliminated=[];
-  newElim.forEach(e=>{ if(!gs.eliminated.find(x=>x.id===e.id)) gs.eliminated.push(e); });
-
-  var survivors = gs.players.filter(p=>p.alive);
-  // Check win condition
-  if(survivors.length<=1 || n===7){
-    gs.phase = 'winner';
-    gs.winner = survivors.length ? survivors[0] : null;
     broadcastState();
-    updateUI();
-    return;
-  }
-  // Show elim screen then advance
-  gs.phase = 'elim';
-  gs.elimForGame = n;
-  gs.elimNewList = newElim;
-  broadcastState();
-  setTimeout(()=>{
-    if(!isHost) return;
-    if(n<7){
-      startCountdown(n+1);
-    } else {
-      gs.phase='winner';
-      gs.winner=survivors[0]||null;
-      broadcastState();
-      updateUI();
+    if (gs.gameData.timeLeft <= 0) {
+      clearHostTick();
+      const notFinished = alive().filter(p => !gs.gameData.finished[p.id]);
+      notFinished.sort((a, b) => (gs.gameData.progress[a.id] || 0) - (gs.gameData.progress[b.id] || 0));
+      for (let i = 0; i < Math.floor(notFinished.length / 2); i++) notFinished[i].alive = false;
+      eliminatePhase(0);
     }
-  }, 5000);
+  }, 100);
 }
 
-// ── PHASE CHANGE (guests) ──
-function onPhaseChange(prev, next){
-  // guest side: stop/start timers etc
-  localMoving = false;
+function hostRunG2() {
+  const shapes = ['circle','triangle','star','umbrella'];
+  const ids = alive().map(p => p.id);
+  gs.gameData = { timeLeft: 60, taps: {}, shapes: {} };
+  ids.forEach((id, i) => { gs.gameData.taps[id] = 0; gs.gameData.shapes[id] = shapes[i % shapes.length]; });
+  let elapsed = 0; broadcastState();
+  hostTickInterval = setInterval(() => {
+    elapsed += 0.1; gs.gameData.timeLeft = Math.max(0, 60 - elapsed);
+    broadcastState();
+    if (gs.gameData.timeLeft <= 0) {
+      clearHostTick();
+      alive().forEach(p => { if ((gs.gameData.taps[p.id] || 0) < 80) p.alive = false; });
+      eliminatePhase(1);
+    }
+  }, 100);
 }
 
-// ── UPDATE UI ──
-function updateUI(){
-  if(!gs) return;
-  var phase = gs.phase;
-
-  if(phase==='lobby'){ renderLobby(); return; }
-  if(phase==='countdown'){ renderCountdown(); return; }
-  if(phase==='elim'){ renderElim(); return; }
-  if(phase==='winner'){ renderWinner(); return; }
-  if(phase.startsWith('g')){ renderGame(); return; }
+function hostRunG3() {
+  alive().forEach((p, i) => { p.team = i % 2 === 0 ? 'A' : 'B'; gs.players.find(x => x.id === p.id).team = p.team; });
+  gs.gameData = { timeLeft: 30, score: 0 };
+  let elapsed = 0; broadcastState();
+  hostTickInterval = setInterval(() => {
+    elapsed += 0.1; gs.gameData.timeLeft = Math.max(0, 30 - elapsed);
+    broadcastState();
+    if (gs.gameData.timeLeft <= 0) {
+      clearHostTick();
+      const s = gs.gameData.score;
+      if (s <= -5) alive().forEach(p => { if (p.team === 'B') p.alive = false; });
+      else if (s >= 5) alive().forEach(p => { if (p.team === 'A') p.alive = false; });
+      eliminatePhase(2);
+    }
+  }, 100);
 }
 
-function renderLobby(){
-  showScreen('sLobby');
-  var list = document.getElementById('playerList');
-  list.innerHTML = gs.players.map(p=>{
-    var me = p.id===myId, host = p.id===gs.hostId;
-    var cls = 'player-row'+(me?' me':'')+(host&&!me?' host':'');
-    var tags = '';
-    if(host) tags += '<span class="tag tag-host">HOST</span>';
-    if(me) tags += '<span class="tag tag-you">DU</span>';
-    return `<div class="${cls}"><div class="player-av">${p.avatar}</div><div class="player-nm">${esc(p.name)}</div>${tags}</div>`;
-  }).join('');
-  var cnt = gs.players.filter(p=>p.alive).length;
-  var startBtn = document.getElementById('startBtn');
-  var lobbyWait = document.getElementById('lobbyWait');
-  if(isHost){
-    startBtn.style.display='block'; startBtn.disabled=(cnt<2);
-    lobbyWait.style.display='none';
-    document.getElementById('lobbyErr').textContent = cnt<2 ? 'Mindestens 2 Spieler zum Starten' : '';
+function hostRunG4() {
+  const alv = alive();
+  const sh = [...alv].sort(() => Math.random() - 0.5);
+  let oddOne = sh.length % 2 !== 0 ? sh.pop() : null;
+  const pairs = [];
+  for (let i = 0; i < sh.length; i += 2) pairs.push([sh[i].id, sh[i+1].id]);
+  gs.gameData = { round: 1, maxRounds: 5, marbles: {}, pairs, oddOne: oddOne?.id || null,
+    picks: {}, revealed: false, revealResult: {}, roundTimer: 15 };
+  alv.forEach(p => { gs.gameData.marbles[p.id] = 5; });
+  broadcastState(); runG4Round();
+}
+
+function runG4Round() {
+  clearHostTick();
+  gs.gameData.picks = {}; gs.gameData.revealed = false; gs.gameData.revealResult = {}; gs.gameData.roundTimer = 15;
+  broadcastState();
+  let elapsed = 0;
+  hostTickInterval = setInterval(() => {
+    elapsed += 0.1; gs.gameData.roundTimer = Math.max(0, 15 - elapsed);
+    const allPicked = gs.gameData.pairs.every(([a, b]) => gs.gameData.picks[a] && gs.gameData.picks[b]);
+    if (allPicked || gs.gameData.roundTimer <= 0) { clearHostTick(); revealG4Round(); }
+    else broadcastState();
+  }, 100);
+}
+
+function revealG4Round() {
+  gs.gameData.revealed = true;
+  const result = {};
+  gs.gameData.pairs.forEach(([a, b]) => {
+    const mc = Math.floor(Math.random() * 10) + 1, isOdd = mc % 2 !== 0;
+    const pA = gs.gameData.picks[a] || (Math.random() < 0.5 ? 'odd' : 'even');
+    const pB = gs.gameData.picks[b] || (Math.random() < 0.5 ? 'odd' : 'even');
+    const aC = (pA === 'odd') === isOdd, bC = (pB === 'odd') === isOdd;
+    result[a] = { marbles: mc, pick: pA, correct: aC };
+    result[b] = { marbles: mc, pick: pB, correct: bC };
+    gs.gameData.marbles[a] = (gs.gameData.marbles[a] || 5) + (aC ? 1 : -1);
+    gs.gameData.marbles[b] = (gs.gameData.marbles[b] || 5) + (bC ? 1 : -1);
+  });
+  gs.gameData.revealResult = result;
+  broadcastState();
+  setTimeout(() => {
+    if (gs.gameData.round >= gs.gameData.maxRounds) {
+      alive().forEach(p => { if ((gs.gameData.marbles[p.id] || 0) <= 0) p.alive = false; });
+      eliminatePhase(3);
+    } else {
+      gs.gameData.round++;
+      const alv2 = alive(), sh2 = [...alv2].sort(() => Math.random() - 0.5);
+      let oo = sh2.length % 2 !== 0 ? sh2.pop() : null;
+      const p2 = [];
+      for (let i = 0; i < sh2.length; i += 2) p2.push([sh2[i].id, sh2[i+1].id]);
+      gs.gameData.pairs = p2; gs.gameData.oddOne = oo?.id || null;
+      runG4Round();
+    }
+  }, 3000);
+}
+
+function hostRunG5() {
+  const safe = Array.from({ length: 8 }, () => Math.random() < 0.5 ? 'left' : 'right');
+  const order = alive().map(p => p.id);
+  gs.gameData = { rows: 8, safe, revealed: Array(8).fill(false), order,
+    currentTurnIdx: 0, frontier: 0, progress: {}, turnTimer: 10, broken: [] };
+  order.forEach(id => { gs.gameData.progress[id] = 0; });
+  broadcastState(); runG5Turn();
+}
+
+function runG5Turn() {
+  clearHostTick(); gs.gameData.turnTimer = 10;
+  const cId = gs.gameData.order[gs.gameData.currentTurnIdx];
+  if (!cId) { endG5(); return; }
+  const p = gs.players.find(x => x.id === cId);
+  if (!p || !p.alive) { advanceG5Turn(); return; }
+  broadcastState();
+  let elapsed = 0;
+  hostTickInterval = setInterval(() => {
+    elapsed += 0.1; gs.gameData.turnTimer = Math.max(0, 10 - elapsed);
+    broadcastState();
+    if (gs.gameData.turnTimer <= 0) {
+      clearHostTick();
+      const cur = gs.players.find(x => x.id === cId);
+      if (cur) cur.alive = false;
+      advanceG5Turn();
+    }
+  }, 100);
+}
+
+function advanceG5Turn() {
+  clearHostTick(); gs.gameData.currentTurnIdx++;
+  while (gs.gameData.currentTurnIdx < gs.gameData.order.length) {
+    const id = gs.gameData.order[gs.gameData.currentTurnIdx];
+    const p = gs.players.find(x => x.id === id);
+    if (p && p.alive) break;
+    gs.gameData.currentTurnIdx++;
+  }
+  gs.gameData.currentTurnIdx >= gs.gameData.order.length ? endG5() : runG5Turn();
+}
+
+const endG5 = () => { clearHostTick(); eliminatePhase(4); };
+
+function hostRunG6() {
+  const alv = alive();
+  gs.gameData = { mingleRound: 1, groupSize: alv.length <= 3 ? 2 : 3, groups: {}, timeLeft: 10 };
+  alv.forEach(p => { gs.gameData.groups[p.id] = null; });
+  broadcastState(); runG6Round();
+}
+
+function runG6Round() {
+  clearHostTick(); gs.gameData.timeLeft = 10; gs.gameData.groups = {};
+  alive().forEach(p => { gs.gameData.groups[p.id] = null; });
+  broadcastState();
+  let elapsed = 0;
+  hostTickInterval = setInterval(() => {
+    elapsed += 0.1; gs.gameData.timeLeft = Math.max(0, 10 - elapsed);
+    broadcastState();
+    if (gs.gameData.timeLeft <= 0) {
+      clearHostTick();
+      const size = gs.gameData.groupSize, gm = {};
+      alive().forEach(p => { const g = gs.gameData.groups[p.id]; if (g) { if (!gm[g]) gm[g] = []; gm[g].push(p.id); } });
+      alive().forEach(p => { const g = gs.gameData.groups[p.id]; if (!g || !gm[g] || gm[g].length !== size) p.alive = false; });
+      if (gs.gameData.mingleRound < 2 && alive().length >= 2) {
+        gs.gameData.mingleRound = 2;
+        gs.gameData.groupSize = Math.max(2, Math.floor(alive().length / 2));
+        runG6Round();
+      } else eliminatePhase(5);
+    }
+  }, 100);
+}
+
+function hostRunG7() {
+  const alv = alive();
+  gs.gameData = { timeLeft: 30, hp: {} };
+  alv.forEach(p => { gs.gameData.hp[p.id] = 100; });
+  let elapsed = 0; broadcastState();
+  hostTickInterval = setInterval(() => {
+    elapsed += 0.1; gs.gameData.timeLeft = Math.max(0, 30 - elapsed);
+    const still = alive().filter(p => (gs.gameData.hp[p.id] || 0) > 0);
+    if (still.length <= 1 || gs.gameData.timeLeft <= 0) {
+      clearHostTick();
+      alive().sort((a, b) => (gs.gameData.hp[b.id] || 0) - (gs.gameData.hp[a.id] || 0)).slice(1).forEach(p => p.alive = false);
+      eliminatePhase(6); return;
+    }
+    broadcastState();
+  }, 100);
+}
+
+function handlePlayerInput(payload) {
+  if (!isHost || !gs) return;
+  const { id, type } = payload;
+  const player = gs.players.find(p => p.id === id);
+  if (!player) return;
+  switch (type) {
+    case 'move':
+      if (gs.phase === 'g1' && gs.gameData.moving) gs.gameData.moving[id] = payload.val;
+      break;
+    case 'chip':
+      if (gs.phase === 'g2' && gs.gameData.taps) gs.gameData.taps[id] = (gs.gameData.taps[id] || 0) + 1;
+      break;
+    case 'pull':
+      if (gs.phase === 'g3' && player.alive) gs.gameData.score += player.team === 'A' ? -1 : 1;
+      break;
+    case 'marble_pick':
+      if (gs.phase === 'g4' && player.alive && !gs.gameData.revealed) gs.gameData.picks[id] = payload.val;
+      break;
+    case 'glass': {
+      if (gs.phase !== 'g5' || !player.alive) break;
+      const cId = gs.gameData.order[gs.gameData.currentTurnIdx];
+      if (id !== cId) break;
+      clearHostTick();
+      const row = gs.gameData.frontier;
+      gs.gameData.revealed[row] = true;
+      if (payload.val === gs.gameData.safe[row]) {
+        gs.gameData.progress[id] = row + 1;
+        gs.gameData.frontier = row + 1;
+      } else {
+        player.alive = false;
+        gs.gameData.broken.push(row);
+      }
+      broadcastState(); advanceG5Turn();
+      break;
+    }
+    case 'mingle':
+      if (gs.phase === 'g6' && player.alive) {
+        const gk = [id, payload.targetId].sort().join('_');
+        gs.gameData.groups[id] = gk;
+        if (!gs.gameData.groups[payload.targetId]) gs.gameData.groups[payload.targetId] = gk;
+      }
+      break;
+    case 'attack':
+      if (gs.phase === 'g7' && player.alive && (gs.gameData.hp[id] || 0) > 0) {
+        const targets = alive().filter(p => p.id !== id && (gs.gameData.hp[p.id] || 0) > 0);
+        if (targets.length > 0) {
+          const t = targets[Math.floor(Math.random() * targets.length)];
+          gs.gameData.hp[t.id] = Math.max(0, (gs.gameData.hp[t.id] || 100) - 15);
+        }
+      }
+      break;
+  }
+}
+
+const isAlive = () => !!gs?.players.find(p => p.id === myId && p.alive);
+const playerColor = id => { const i = gs.players.findIndex(p => p.id === id); return COLORS[i % COLORS.length]; };
+
+window.setMoving = val => {
+  if (!isAlive() || gs?.phase !== 'g1') return;
+  channel.send({ type: 'broadcast', event: 'input', payload: { id: myId, type: 'move', val } });
+  if (isHost && gs.gameData.moving) gs.gameData.moving[myId] = val;
+};
+window.sendChip = () => {
+  if (!isAlive() || gs?.phase !== 'g2') return;
+  channel.send({ type: 'broadcast', event: 'input', payload: { id: myId, type: 'chip' } });
+  if (isHost && gs.gameData.taps) gs.gameData.taps[myId] = (gs.gameData.taps[myId] || 0) + 1;
+};
+window.sendPull = () => {
+  if (!isAlive() || gs?.phase !== 'g3') return;
+  channel.send({ type: 'broadcast', event: 'input', payload: { id: myId, type: 'pull' } });
+};
+window.sendMarblePick = val => {
+  if (!isAlive() || gs?.phase !== 'g4' || g4Picked) return;
+  g4Picked = true;
+  channel.send({ type: 'broadcast', event: 'input', payload: { id: myId, type: 'marble_pick', val } });
+  document.querySelectorAll('#g4-pick .btn').forEach(b => b.disabled = true);
+};
+window.sendGlass = val => {
+  if (!isAlive() || gs?.phase !== 'g5' || g5Picked) return;
+  g5Picked = true;
+  channel.send({ type: 'broadcast', event: 'input', payload: { id: myId, type: 'glass', val } });
+  document.getElementById('g5-pick').style.display = 'none';
+};
+window.sendMingle = tid => {
+  if (!isAlive() || gs?.phase !== 'g6') return;
+  channel.send({ type: 'broadcast', event: 'input', payload: { id: myId, type: 'mingle', targetId: tid } });
+};
+window.sendAttack = () => {
+  if (!isAlive() || gs?.phase !== 'g7') return;
+  channel.send({ type: 'broadcast', event: 'input', payload: { id: myId, type: 'attack' } });
+};
+
+const ALL_SCREENS = ['menu-screen','lobby-screen','countdown-screen','g1-screen','g2-screen','g3-screen','g4-screen','g5-screen','g6-screen','g7-screen'];
+
+function renderPhase() {
+  ALL_SCREENS.forEach(hide);
+  hide('elim-overlay'); hide('winner-overlay');
+  g4Picked = false; g5Picked = false;
+  if (!gs) return;
+  updateHeader();
+  const phase = gs.phase;
+  if (phase === 'lobby') { show('lobby-screen'); renderLobby(); }
+  else if (phase === 'countdown') { show('countdown-screen'); renderCountdown(); }
+  else if (phase === 'g1') { show('g1-screen'); renderG1(); }
+  else if (phase === 'g1_elim') showElimOverlay();
+  else if (phase === 'g2') { show('g2-screen'); renderG2(); }
+  else if (phase === 'g2_elim') showElimOverlay();
+  else if (phase === 'g3') { show('g3-screen'); renderG3(); }
+  else if (phase === 'g3_elim') showElimOverlay();
+  else if (phase === 'g4') { show('g4-screen'); renderG4(); }
+  else if (phase === 'g4_elim') showElimOverlay();
+  else if (phase === 'g5') { show('g5-screen'); renderG5(); }
+  else if (phase === 'g5_elim') showElimOverlay();
+  else if (phase === 'g6') { show('g6-screen'); renderG6(); }
+  else if (phase === 'g6_elim') showElimOverlay();
+  else if (phase === 'g7') { show('g7-screen'); renderG7(); }
+  else if (phase === 'g7_elim' || phase === 'winner') renderWinner();
+}
+
+function renderCurrentPhase() {
+  if (!gs) return;
+  updateHeader();
+  const p = gs.phase;
+  if (p === 'lobby') renderLobby();
+  else if (p === 'countdown') renderCountdown();
+  else if (p === 'g1') renderG1();
+  else if (p === 'g2') renderG2();
+  else if (p === 'g3') renderG3();
+  else if (p === 'g4') renderG4();
+  else if (p === 'g5') renderG5();
+  else if (p === 'g6') renderG6();
+  else if (p === 'g7') renderG7();
+}
+
+function updateHeader() {
+  if (!gs) return;
+  const aliveCount = gs.players.filter(p => p.alive).length;
+  document.getElementById('header-players').textContent = `👥 ${aliveCount}/${gs.players.length}`;
+  const labels = { g1:'GAME 1/7',g2:'GAME 2/7',g3:'GAME 3/7',g4:'GAME 4/7',g5:'GAME 5/7',g6:'GAME 6/7',g7:'GAME 7/7',lobby:'LOBBY',countdown:'STARTING…' };
+  document.getElementById('header-title').textContent = labels[gs.phase] || 'SQUID GAME';
+}
+
+function renderLobby() {
+  const aliveCount = gs.players.filter(p => p.alive).length;
+  document.getElementById('lobby-status').textContent = `${aliveCount} player${aliveCount !== 1 ? 's' : ''} online`;
+  const list = document.getElementById('lobby-player-list');
+  list.innerHTML = '';
+  gs.players.forEach(p => {
+    const d = document.createElement('div');
+    d.className = 'player-item' + (p.alive ? '' : ' dead');
+    const c = playerColor(p.id);
+    d.innerHTML = `<div class="avatar" style="background:${c}22;color:${c}">${p.name.charAt(0).toUpperCase()}</div>
+      <div class="pname">${p.alive ? '' : '✗ '}${p.name}${p.id === myId ? ' (you)' : ''}</div>
+      ${p.id === gs.hostId ? '<div class="badge">HOST</div>' : ''}`;
+    list.appendChild(d);
+  });
+  const sb2 = document.getElementById('start-btn');
+  if (isHost) {
+    sb2.style.display = 'block';
+    sb2.disabled = aliveCount < 2;
+    document.getElementById('lobby-info').textContent = aliveCount < 2 ? 'Need at least 2 players to start.' : 'Press START GAME when ready!';
   } else {
-    startBtn.style.display='none'; lobbyWait.style.display='block';
-    document.getElementById('lobbyErr').textContent='';
+    sb2.style.display = 'none';
+    document.getElementById('lobby-info').textContent = 'Waiting for the host to start the game.';
   }
 }
 
-function renderCountdown(){
-  showScreen('sCountdown');
-  var n = gs.gameData.gameNum||gs.round||1;
-  document.getElementById('cdGameName').textContent = 'GAME '+n+'/7';
-  document.getElementById('cdNum').textContent = gs.gameData.cdVal||'GO!';
-  document.getElementById('cdSub').textContent = GAME_NAMES[n]||'';
+const renderCountdown = () => { document.getElementById('countdown-num').textContent = gs.countdownVal; };
+
+function renderG1() {
+  const gd = gs.gameData; if (!gd) return;
+  const t = Math.ceil(gd.timeLeft || 0);
+  const te = document.getElementById('g1-timer');
+  te.textContent = t; te.className = 'timer' + (t <= 10 ? ' danger' : '');
+  const le = document.getElementById('g1-light');
+  if (gd.light === 'green') { le.textContent = '🟢 GREEN LIGHT'; le.className = 'light-indicator light-green'; }
+  else { le.textContent = '🔴 RED LIGHT'; le.className = 'light-indicator light-red'; }
+  document.getElementById('g1-spectator').classList.toggle('hidden', isAlive());
+  document.getElementById('g1-move-btn').disabled = !isAlive();
+  drawG1();
 }
 
-function renderElim(){
-  showScreen('sElim');
-  var n = gs.elimForGame||gs.round;
-  document.getElementById('elimTitle').textContent = '☠ ELIMINIERT';
-  document.getElementById('elimGameName').textContent = 'NACH GAME '+n+'/7: '+GAME_NAMES[n];
-  var list = document.getElementById('elimList');
-  var elims = gs.elimNewList||[];
-  if(!elims.length) list.innerHTML='<div class="elim-item" style="color:rgba(0,217,192,.6)">Niemand eliminiert!</div>';
-  else list.innerHTML = elims.map(e=>`<div class="elim-item">✗ ${esc(e.name)}</div>`).join('');
-  var survivors = gs.players.filter(p=>p.alive).length;
-  document.getElementById('elimSurvivors').textContent = survivors+' SPIELER ÜBRIG';
+function drawG1() {
+  const canvas = document.getElementById('g1-canvas');
+  const gd = gs?.gameData; if (!canvas || !gd) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 320; canvas.width = W; canvas.height = 180;
+  ctx.fillStyle = '#0d0d1a'; ctx.fillRect(0, 0, W, 180);
+  ctx.fillStyle = '#1a1a2e'; ctx.fillRect(40, 0, W - 80, 180);
+  ctx.strokeStyle = '#00d9c0'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(W - 42, 0); ctx.lineTo(W - 42, 180); ctx.stroke();
+  ctx.fillStyle = '#00d9c0'; ctx.font = '10px Exo 2'; ctx.textAlign = 'left'; ctx.fillText('FINISH', W - 70, 14);
+  const alv = gs.players.filter(p => p.alive || gd.progress?.[p.id] !== undefined);
+  const rowH = Math.min(40, 180 / Math.max(alv.length, 1));
+  alv.forEach((p, i) => {
+    const prog = gd.progress?.[p.id] || 0;
+    const x = 42 + (prog / 100) * (W - 84), y = (i + 0.5) * rowH;
+    const c = playerColor(p.id);
+    ctx.beginPath(); ctx.arc(x, y, 12, 0, Math.PI * 2);
+    ctx.fillStyle = p.alive ? c : '#333'; ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 10px Exo 2';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(p.name.charAt(0), x, y);
+    if (gd.moving?.[p.id] && p.alive) {
+      ctx.beginPath(); ctx.arc(x, y, 16, 0, Math.PI * 2);
+      ctx.strokeStyle = '#00d9c0'; ctx.lineWidth = 2; ctx.stroke();
+    }
+  });
 }
 
-function renderWinner(){
-  showScreen('sResults');
-  var w = gs.winner;
-  document.getElementById('winnerName').textContent = w ? w.name : '???';
-  document.getElementById('winnerSub').textContent = w&&w.id===myId ? '🎉 DAS BIST DU!' : '';
+function renderG2() {
+  const gd = gs.gameData; if (!gd) return;
+  const t = Math.ceil(gd.timeLeft || 0);
+  const te = document.getElementById('g2-timer');
+  te.textContent = t; te.className = 'timer' + (t <= 10 ? ' danger' : '');
+  const myTaps = gd.taps?.[myId] || 0;
+  document.getElementById('g2-my-bar').style.width = Math.min(100, (myTaps / 80) * 100) + '%';
+  document.getElementById('g2-tap-count').textContent = `${myTaps} / 80 taps`;
+  document.getElementById('g2-my-shape').textContent = gd.shapes?.[myId] || '?';
+  document.getElementById('g2-spectator').classList.toggle('hidden', isAlive());
+  document.getElementById('g2-chip-btn').disabled = !isAlive();
+  const bars = document.getElementById('g2-player-bars'); bars.innerHTML = '';
+  gs.players.filter(p => p.id !== myId).forEach(p => {
+    const taps = gd.taps?.[p.id] || 0, pct = Math.min(100, (taps / 80) * 100), c = playerColor(p.id);
+    const row = document.createElement('div'); row.className = 'player-bar-row';
+    row.innerHTML = `<div class="bar-name" style="color:${p.alive ? c : '#555'}">${p.alive ? '' : '✗ '}${p.name}</div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%;background:${p.alive ? c : '#333'}"></div></div>
+      <div class="bar-val">${taps}</div>`;
+    bars.appendChild(row);
+  });
 }
 
-function renderGame(){
-  showScreen('sGame');
-  var n = gs.round;
-  document.getElementById('ghTitle').textContent = 'GAME '+n+'/7 — '+GAME_NAMES[n];
-  var timeLeft = Math.max(0, Math.ceil((gs.timerEnd - Date.now())/1000));
-  var timerEl = document.getElementById('ghTimer');
-  timerEl.textContent = timeLeft > 0 ? timeLeft+'s' : '';
-  timerEl.classList.toggle('urgent', timeLeft <= 10 && timeLeft > 0);
-
-  renderPbar();
-
-  var myP = gs.players.find(p=>p.id===myId);
-  var amAlive = myP && myP.alive;
-  document.getElementById('specBadge').style.display = amAlive ? 'none' : 'flex';
-
-  var area = document.getElementById('gameArea');
-  if(n===1) renderG1(area, amAlive);
-  else if(n===2) renderG2(area, amAlive);
-  else if(n===3) renderG3(area, amAlive);
-  else if(n===4) renderG4(area, amAlive);
-  else if(n===5) renderG5(area, amAlive);
-  else if(n===6) renderG6(area, amAlive);
-  else if(n===7) renderG7(area, amAlive);
+function renderG3() {
+  const gd = gs.gameData; if (!gd) return;
+  const t = Math.ceil(gd.timeLeft || 0);
+  const te = document.getElementById('g3-timer');
+  te.textContent = t; te.className = 'timer' + (t <= 10 ? ' danger' : '');
+  const me = gs.players.find(p => p.id === myId);
+  document.getElementById('g3-team-info').innerHTML = `Team: <strong style="color:${me?.team === 'A' ? 'var(--pink)' : 'var(--teal)'}">${me?.team || '?'}</strong> — Pull for your team!`;
+  document.getElementById('g3-spectator').classList.toggle('hidden', isAlive());
+  document.getElementById('g3-pull-btn').disabled = !isAlive();
+  drawG3(gd.score || 0);
 }
 
-function renderPbar(){
-  var pbar = document.getElementById('pbar');
-  pbar.innerHTML = gs.players.map(p=>{
-    var me = p.id===myId;
-    var cls = 'pchip '+(p.alive?'alive':'dead')+(me?' me':'');
-    return `<div class="${cls}">${p.alive?'':'✗ '}${esc(p.name)}</div>`;
-  }).join('');
+function drawG3(score) {
+  const canvas = document.getElementById('g3-canvas'); if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 320; canvas.width = W; canvas.height = 120;
+  ctx.fillStyle = '#0d0d1a'; ctx.fillRect(0, 0, W, 120);
+  const midY = 60, markerX = W / 2 + (score / 10) * ((W - 80) / 2);
+  ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 8; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(40, midY); ctx.lineTo(W - 40, midY); ctx.stroke();
+  ctx.beginPath(); ctx.arc(markerX, midY, 14, 0, Math.PI * 2);
+  ctx.fillStyle = '#fff'; ctx.fill();
+  ctx.strokeStyle = '#ff2d6e'; ctx.lineWidth = 3; ctx.stroke();
+  ctx.fillStyle = '#ff2d6e'; ctx.font = 'bold 12px Exo 2'; ctx.textAlign = 'left'; ctx.fillText('Team A', 4, 20);
+  ctx.fillStyle = '#00d9c0'; ctx.textAlign = 'right'; ctx.fillText('Team B', W - 4, 20);
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 20px Russo One'; ctx.textAlign = 'center';
+  ctx.fillText(score > 0 ? `+${score}` : score, W / 2, midY - 24);
 }
 
-// ── GAME 1: RED LIGHT GREEN LIGHT ──
-function renderG1(area, amAlive){
-  var d = gs.gameData;
-  var light = d.light || 'green';
-  var alive = gs.players.filter(p=>p.alive);
-  var html = `
-    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
-      <div class="light-circle ${light==='green'?'light-green':'light-red'}">${light==='green'?'🟢':'🔴'}</div>
-      <div style="font-family:'Russo One',sans-serif;font-size:14px;letter-spacing:4px;color:${light==='green'?'#00d9c0':'#ff2d6e'}">${light==='green'?'GREEN LIGHT — MOVE!':'RED LIGHT — STOP!'}</div>
-    </div>
-    <div class="track-container">
-      ${gs.players.map(p=>{
-        var me=p.id===myId, dead=!p.alive;
-        var prog=d.progress[p.id]||0;
-        var cls='track-row '+(dead?'track-dead':me?'track-me':'track-other');
-        return `<div class="${cls}"><div class="track-name">${esc(p.name)}</div><div class="track-bar"><div class="track-fill" style="width:${prog}%"></div></div><div class="finish-flag">${prog>=100?'✅':''}</div></div>`;
-      }).join('')}
-    </div>
-    ${amAlive?`<button class="big-btn ${light==='green'?'big-btn-teal':'big-btn-red'}" id="moveBtn" style="font-size:18px;padding:22px"
-      ontouchstart="startMove()" ontouchend="stopMove()" onmousedown="startMove()" onmouseup="stopMove()" onmouseleave="stopMove()">
-      ${light==='green'?'🏃 BEWEGEN (HALTEN)':'🛑 NICHT BEWEGEN!'}
-    </button>`:''}`;
-  area.innerHTML = html;
+function renderG4() {
+  const gd = gs.gameData; if (!gd) return;
+  document.getElementById('g4-round').textContent = gd.round || 1;
+  const myPair = gd.pairs?.find(pair => pair.includes(myId));
+  const isOddOne = gd.oddOne === myId;
+  document.getElementById('g4-odd-one-out').classList.toggle('hidden', !isOddOne);
+  if (myPair) {
+    const opId = myPair.find(id => id !== myId);
+    const op = gs.players.find(p => p.id === opId);
+    document.getElementById('g4-pair-info').classList.remove('hidden');
+    document.getElementById('g4-opponent').textContent = op?.name || '?';
+    document.getElementById('g4-my-marbles').textContent = gd.marbles?.[myId] ?? 5;
+  } else if (!isOddOne) document.getElementById('g4-pair-info').classList.add('hidden');
+  const timer = Math.ceil(gd.roundTimer || 0);
+  document.getElementById('g4-status').innerHTML = `Round <strong>${gd.round || 1}</strong>/5 — Timer: <strong>${timer}s</strong>`;
+  const pickDiv = document.getElementById('g4-pick');
+  if (isAlive() && myPair && !gd.revealed && !gd.picks?.[myId] && !isOddOne) {
+    pickDiv.style.display = 'grid';
+    pickDiv.querySelectorAll('.btn').forEach(b => b.disabled = false);
+  } else pickDiv.style.display = 'none';
+  const resultDiv = document.getElementById('g4-result-info');
+  if (gd.revealed && gd.revealResult?.[myId]) {
+    resultDiv.classList.remove('hidden');
+    const r = gd.revealResult[myId];
+    resultDiv.innerHTML = `Marbles: <strong>${r.marbles}</strong> (${r.marbles % 2 === 0 ? 'even' : 'odd'}) — Picked <strong>${r.pick}</strong> — <strong style="color:${r.correct ? 'var(--teal)' : 'var(--pink)'}">${r.correct ? '✓ +1 marble' : '✗ -1 marble'}</strong>`;
+  } else resultDiv.classList.add('hidden');
+  const bars = document.getElementById('g4-marble-bars'); bars.innerHTML = '';
+  gs.players.forEach(p => {
+    const m = gd.marbles?.[p.id] ?? 5, pct = Math.min(100, (m / 10) * 100), c = playerColor(p.id);
+    const row = document.createElement('div'); row.className = 'player-bar-row';
+    row.innerHTML = `<div class="bar-name" style="color:${p.alive ? c : '#555'}">${p.alive ? '' : '✗ '}${p.name}</div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%;background:${p.alive ? c : '#333'}"></div></div>
+      <div class="bar-val">${m}🔵</div>`;
+    bars.appendChild(row);
+  });
+  document.getElementById('g4-spectator').classList.toggle('hidden', isAlive() || isOddOne);
 }
 
-window.startMove = function(){
-  if(!gs||gs.gameData.light==='red') return;
-  localMoving = true;
-  sendInput({type:'move',val:true});
-};
-window.stopMove = function(){
-  localMoving = false;
-  sendInput({type:'move',val:false});
-};
-
-// ── GAME 2: HONEYCOMB ──
-function renderG2(area, amAlive){
-  var d = gs.gameData;
-  var myTaps = d.taps[myId]||0;
-  var pct = Math.min(100, Math.round(myTaps/80*100));
-  var html = `
-    <div style="text-align:center">
-      <div style="font-family:'Russo One',sans-serif;font-size:50px">${d.shape&&d.shape[myId]?d.shape[myId]:'?'}</div>
-      <div style="font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:3px;color:rgba(255,255,255,.4);margin-top:4px">DEINE FORM — 80 TAPS NÖTIG</div>
-    </div>
-    <div style="width:100%;max-width:300px">
-      <div style="display:flex;justify-content:space-between;font-family:'Russo One',sans-serif;font-size:11px;color:rgba(255,255,255,.4);margin-bottom:4px"><span>${myTaps}/80</span><span>${pct}%</span></div>
-      <div class="progress-wrap"><div class="progress-fill progress-teal" style="width:${pct}%"></div></div>
-    </div>
-    <div style="display:flex;flex-wrap:wrap;gap:6px;width:100%;max-width:400px;justify-content:center">
-      ${gs.players.filter(p=>p.alive&&p.id!==myId).map(p=>{
-        var t=d.taps[p.id]||0,pct2=Math.min(100,Math.round(t/80*100));
-        return `<div style="font-family:'Russo One',sans-serif;font-size:10px;color:rgba(255,255,255,.4);text-align:center;min-width:80px"><div>${esc(p.name)}</div><div style="background:rgba(255,255,255,.06);border-radius:6px;height:6px;width:80px;overflow:hidden;margin-top:3px"><div style="height:100%;background:#00d9c0;border-radius:6px;width:${pct2}%"></div></div></div>`;
-      }).join('')}
-    </div>
-    ${amAlive&&myTaps<80?`<button class="big-btn big-btn-teal" onclick="tapHoneycomb()">🍬 CHIP! (${myTaps}/80)</button>`:''}
-    ${myTaps>=80?`<div style="font-family:'Russo One',sans-serif;font-size:18px;color:#00d9c0;letter-spacing:3px">✅ GESCHAFFT!</div>`:''}`;
-  area.innerHTML = html;
-}
-window.tapHoneycomb = function(){ sendInput({type:'tap'}); };
-
-// ── GAME 3: TUG OF WAR ──
-function renderG3(area, amAlive){
-  var d = gs.gameData;
-  var score = d.score||0;
-  var pctA = Math.max(0, Math.min(100, 50 - score));
-  var pctB = Math.max(0, Math.min(100, 50 + score));
-  var myP = gs.players.find(p=>p.id===myId);
-  var myTeam = myP&&myP.team;
-  var html = `
-    <div style="display:flex;gap:16px;align-items:center;width:100%;max-width:360px;justify-content:center">
-      <div class="team-label team-a">TEAM A</div>
-      <div style="font-family:'Russo One',sans-serif;font-size:11px;color:rgba(255,255,255,.3)">${Math.abs(score)>0?Math.abs(score)+'pt':'-'}</div>
-      <div class="team-label team-b">TEAM B</div>
-    </div>
-    <div class="rope-wrap">
-      <div class="rope-fill-a" style="width:${pctA}%"></div>
-      <div class="rope-fill-b" style="width:${pctB}%"></div>
-      <div class="rope-center">🪢</div>
-    </div>
-    <div style="display:flex;gap:10px;width:100%;max-width:400px;justify-content:space-between">
-      <div style="flex:1">
-        ${(d.teamA||[]).map(pid=>{ var p=gs.players.find(x=>x.id===pid); return p?`<div style="font-family:'Russo One',sans-serif;font-size:11px;color:#ff7aaa;text-align:center">${esc(p.name)}</div>`:''; }).join('')}
-      </div>
-      <div style="flex:1">
-        ${(d.teamB||[]).map(pid=>{ var p=gs.players.find(x=>x.id===pid); return p?`<div style="font-family:'Russo One',sans-serif;font-size:11px;color:#7affed;text-align:center">${esc(p.name)}</div>`:''; }).join('')}
-      </div>
-    </div>
-    ${amAlive?`<button class="big-btn ${myTeam==='A'?'big-btn-red':'big-btn-teal'}" onclick="pullRope()">💪 ZIEHEN (TEAM ${myTeam||'?'})</button>`:''}`;
-  area.innerHTML = html;
-}
-window.pullRope = function(){ sendInput({type:'pull'}); };
-
-// ── GAME 4: MARBLES ──
-function renderG4(area, amAlive){
-  var d = gs.gameData;
-  var myM = d.marbles&&d.marbles[myId]!==undefined ? d.marbles[myId] : 5;
-  var partnerId = d.pairs&&d.pairs[myId];
-  var partner = partnerId ? gs.players.find(p=>p.id===partnerId) : null;
-  var partnerM = partner&&d.marbles ? (d.marbles[partner.id]||5) : 0;
-  var solo = d.solo===myId;
-  var lastRound = d.rounds&&d.rounds[d.rounds.length-1];
-  var myPick = d.picks&&d.picks[myId];
-
-  var roundInfo = '';
-  if(lastRound&&(lastRound.p1===myId||lastRound.p2===myId)){
-    var iWon = (lastRound.p1===myId&&lastRound.p1pick===lastRound.actual)||(lastRound.p2===myId&&lastRound.p2pick===lastRound.actual);
-    roundInfo = `<div style="font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:2px;color:${iWon?'#00d9c0':'#ff2d6e'}">${iWon?'✅ GEWONNEN':'❌ VERLOREN'} — Anzahl: ${lastRound.count} (${lastRound.actual.toUpperCase()})</div>`;
+function renderG5() {
+  const gd = gs.gameData; if (!gd) return;
+  const t = Math.ceil(gd.turnTimer || 0);
+  const te = document.getElementById('g5-timer');
+  te.textContent = t; te.className = 'timer' + (t <= 5 ? ' danger' : '');
+  const cId = gd.order?.[gd.currentTurnIdx];
+  const cur = gs.players.find(p => p.id === cId);
+  document.getElementById('g5-status').innerHTML = cur ? `<strong style="color:var(--teal)">${cur.name}</strong>'s turn — pick a tile!` : 'Game over!';
+  const queue = document.getElementById('g5-queue'); queue.innerHTML = '';
+  gd.order?.forEach(id => {
+    const p = gs.players.find(x => x.id === id); if (!p) return;
+    const span = document.createElement('span');
+    span.className = 'queue-item' + (id === cId ? ' active-player' : '') + (!p.alive ? ' dead' : '');
+    span.textContent = p.name + (id === myId ? ' (you)' : '');
+    queue.appendChild(span);
+  });
+  const grid = document.getElementById('g5-grid'); grid.innerHTML = '';
+  for (let row = 0; row < gd.rows; row++) {
+    const rowDiv = document.createElement('div'); rowDiv.className = 'glass-row';
+    ['left', 'right'].forEach(side => {
+      const tile = document.createElement('div'); tile.className = 'glass-tile';
+      if (gd.revealed?.[row]) {
+        if (side === gd.safe?.[row]) { tile.classList.add('safe'); tile.textContent = '✓ SAFE'; }
+        else { tile.classList.add('broken'); tile.textContent = '✗ BROKEN'; }
+      } else tile.textContent = `${row + 1} ${side.toUpperCase()}`;
+      rowDiv.appendChild(tile);
+    });
+    grid.appendChild(rowDiv);
   }
-
-  var html = `
-    <div style="text-align:center">
-      <div class="marble-count">${myM} 🔮</div>
-      <div style="font-family:'Russo One',sans-serif;font-size:10px;letter-spacing:3px;color:rgba(255,200,0,.5)">DEINE MURMELN — RUNDE ${(d.roundNum||0)+1}/5</div>
-    </div>
-    ${partner?`<div style="font-family:'Russo One',sans-serif;font-size:13px;color:rgba(255,255,255,.4)">vs ${esc(partner.name)} (${partnerM} 🔮)</div>`:''}
-    ${roundInfo}
-    ${solo?`<div style="font-family:'Russo One',sans-serif;font-size:14px;color:#00d9c0;letter-spacing:2px">✅ DU BIST ALLEIN — AUTOMATISCH SICHER</div>`:''}
-    ${amAlive&&!solo&&!myPick?`
-      <div style="font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:3px;color:rgba(255,255,255,.3)">GERADE ODER UNGERADE?</div>
-      <div class="pick-row">
-        <button class="pick-btn" onclick="pickMarble('odd')">UNGERADE</button>
-        <button class="pick-btn" onclick="pickMarble('even')">GERADE</button>
-      </div>`:''}
-    ${myPick?`<div style="font-family:'Russo One',sans-serif;font-size:13px;color:rgba(255,255,255,.4);letter-spacing:2px">Gewählt: ${myPick==='odd'?'UNGERADE':'GERADE'} — Warte auf Partner...</div>`:''}`;
-  area.innerHTML = html;
+  const isMyTurn = cId === myId && isAlive();
+  const pickDiv = document.getElementById('g5-pick');
+  const waitDiv = document.getElementById('g5-waiting');
+  if (isMyTurn && !g5Picked) { pickDiv.style.display = 'grid'; waitDiv.classList.add('hidden'); }
+  else { pickDiv.style.display = 'none'; isAlive() && !isMyTurn ? waitDiv.classList.remove('hidden') : waitDiv.classList.add('hidden'); }
+  document.getElementById('g5-spectator').classList.toggle('hidden', isAlive());
 }
-window.pickMarble = function(val){ sendInput({type:'marble',val}); };
 
-// ── GAME 5: GLASS BRIDGE ──
-function renderG5(area, amAlive){
-  var d = gs.gameData;
-  var currentPlayer = d.currentPlayer;
-  var isMyTurn = currentPlayer === myId;
-  var frontier = d.frontier||0;
-  var timeLeft = Math.max(0,Math.ceil((d.turnEnd-Date.now())/1000));
-  var curP = gs.players.find(p=>p.id===currentPlayer);
-
-  var html = `
-    <div style="font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:2px;color:rgba(255,255,255,.4);text-align:center">
-      ${isMyTurn?'🚶 DU BIST DRAN!':'🚶 '+esc(curP?curP.name:'?')+' ist dran'}
-      ${isMyTurn?` — ${timeLeft}s`:''}
-    </div>
-    <div style="font-family:'Russo One',sans-serif;font-size:11px;color:rgba(255,255,255,.3);letter-spacing:2px">REIHE ${frontier+1}/10</div>
-    ${Array.from({length:Math.min(10,frontier+3)}).map((_,i)=>{
-      var rowIdx = i;
-      var safe = d.rows[rowIdx];
-      var rev = d.revealed[rowIdx];
-      var isCurrent = rowIdx===frontier;
-      if(rowIdx<frontier){
-        // Already crossed — show safe
-        return `<div class="bridge-row"><div class="glass-tile ${safe==='left'?'safe':'broken'}" style="opacity:.5">LEFT ${safe==='left'?'✅':''}</div><div class="glass-tile ${safe==='right'?'safe':'broken'}" style="opacity:.5">RIGHT ${safe==='right'?'✅':''}</div></div>`;
-      }
-      if(rev){
-        return `<div class="bridge-row"><div class="glass-tile ${rev==='left'?'safe':'broken'}">LEFT ${rev==='left'?'✅':'💥'}</div><div class="glass-tile ${rev==='right'?'safe':'broken'}">RIGHT ${rev==='right'?'✅':'💥'}</div></div>`;
-      }
-      return `<div class="bridge-row">
-        <button class="glass-tile unknown" ${(!isMyTurn||!amAlive)?'disabled':''} onclick="pickGlass('left')" style="${isCurrent?'border-color:rgba(255,200,0,.5);color:#ffc800':''}">LEFT</button>
-        <button class="glass-tile unknown" ${(!isMyTurn||!amAlive)?'disabled':''} onclick="pickGlass('right')" style="${isCurrent?'border-color:rgba(255,200,0,.5);color:#ffc800':''}">RIGHT</button>
-      </div>`;
-    }).join('')}`;
-  area.innerHTML = html;
+function renderG6() {
+  const gd = gs.gameData; if (!gd) return;
+  const t = Math.ceil(gd.timeLeft || 0);
+  const te = document.getElementById('g6-timer');
+  te.textContent = t; te.className = 'timer' + (t <= 5 ? ' danger' : '');
+  document.getElementById('g6-group-size').textContent = gd.groupSize || '?';
+  document.getElementById('g6-status').innerHTML = `Round ${gd.mingleRound}/2 — Form a group of <strong>${gd.groupSize}</strong>! (${t}s)`;
+  const container = document.getElementById('g6-players'); container.innerHTML = '';
+  gs.players.filter(p => p.alive && p.id !== myId).forEach(p => {
+    const myGk = gd.groups?.[myId], pGk = gd.groups?.[p.id];
+    const same = myGk && myGk === pGk;
+    const btn = document.createElement('button');
+    btn.className = 'mingle-player-btn' + (same ? ' selected' : '');
+    btn.textContent = p.name; btn.disabled = !isAlive();
+    btn.onclick = () => sendMingle(p.id);
+    container.appendChild(btn);
+  });
+  document.getElementById('g6-spectator').classList.toggle('hidden', isAlive());
 }
-window.pickGlass = function(val){ sendInput({type:'glass',val}); };
 
-// ── GAME 6: MINGLE ──
-function renderG6(area, amAlive){
-  var d = gs.gameData;
-  var gSize = d.groupSize||2;
-  var timeLeft = Math.max(0,Math.ceil((d.roundEnd-Date.now())/1000));
-  var myGroup = d.groups&&d.groups[myId];
-  var groupCount = myGroup ? Object.values(d.groups).filter(g=>g===myGroup).length : 0;
-  var alive = gs.players.filter(p=>p.alive);
-
-  var html = `
-    <div style="text-align:center">
-      <div class="mingle-label">BILDE GRUPPEN VON</div>
-      <div class="mingle-num">${gSize}</div>
-      <div style="font-family:'Russo One',sans-serif;font-size:13px;color:#00d9c0;letter-spacing:2px">${timeLeft}s — RUNDE ${(d.roundNum||0)+1}/${(d.roundSizes||[]).length}</div>
-    </div>
-    ${myGroup?`<div style="font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:2px;color:${groupCount===gSize?'#00d9c0':'rgba(255,200,0,.8)'}">Deine Gruppe: ${groupCount}/${gSize} ${groupCount===gSize?'✅':''}</div>`:''}
-    <div class="mingle-grid">
-      ${alive.filter(p=>p.id!==myId).map(p=>{
-        var theirGroup=d.groups&&d.groups[p.id];
-        var sameGroup=myGroup&&theirGroup===myGroup;
-        return `<button class="mingle-chip ${sameGroup?'in-group':''}" onclick="mingleJoin('${p.id}')">${esc(p.name)}${sameGroup?' ✓':''}</button>`;
-      }).join('')}
-    </div>`;
-  area.innerHTML = html;
+function renderG7() {
+  const gd = gs.gameData; if (!gd) return;
+  const t = Math.ceil(gd.timeLeft || 0);
+  const te = document.getElementById('g7-timer');
+  te.textContent = t; te.className = 'timer' + (t <= 10 ? ' danger' : '');
+  document.getElementById('g7-attack-btn').disabled = !isAlive();
+  document.getElementById('g7-spectator').classList.toggle('hidden', isAlive());
+  const list = document.getElementById('g7-hp-list'); list.innerHTML = '';
+  gs.players.filter(p => p.alive).forEach(p => {
+    const hp = gd.hp?.[p.id] ?? 100, c = playerColor(p.id);
+    const row = document.createElement('div'); row.className = 'hp-row';
+    row.innerHTML = `<div class="hp-name"><span style="color:${c}">${p.name}${p.id === myId ? ' (you)' : ''}</span><span>${hp} HP</span></div>
+      <div class="hp-wrap"><div class="hp-fill${hp < 30 ? ' low' : ''}" style="width:${hp}%;background:${hp < 30 ? 'var(--pink)' : c}"></div></div>`;
+    list.appendChild(row);
+  });
 }
-window.mingleJoin = function(targetId){ sendInput({type:'mingle',targetId}); };
 
-// ── GAME 7: LAST STAND ──
-function renderG7(area, amAlive){
-  var d = gs.gameData;
-  var alive = gs.players.filter(p=>p.alive);
-  var html = `
-    <div style="font-family:'Russo One',sans-serif;font-size:14px;letter-spacing:4px;color:#ff2d6e;text-align:center">⚔ LETZTER ÜBERLEBENDE GEWINNT</div>
-    <div style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:400px">
-      ${gs.players.map(p=>{
-        var hp=d.hp&&d.hp[p.id]!==undefined?d.hp[p.id]:100;
-        var me=p.id===myId;
-        return `<div class="hp-row">
-          <div class="hp-name" style="${me?'color:#ff7aaa':!p.alive?'color:rgba(255,255,255,.2)':''}">${me?'👤 ':''}${esc(p.name)}</div>
-          <div class="hp-bar-wrap"><div class="hp-bar-fill" style="width:${p.alive?hp:0}%;${hp<30?'background:linear-gradient(90deg,#9c0030,#ff2d6e)':''}"></div></div>
-          <div class="hp-val">${p.alive?hp:0}</div>
-        </div>`;
-      }).join('')}
-    </div>
-    ${amAlive?`<button class="big-btn big-btn-red" onclick="attackPlayer()">⚔ ANGREIFEN</button>`:''}`;
-  area.innerHTML = html;
+function showElimOverlay() {
+  show('elim-overlay');
+  const me = gs?.players.find(p => p.id === myId);
+  document.querySelector('#elim-overlay .big-text').textContent = !me?.alive ? 'ELIMINATED' : 'ROUND OVER';
+  document.getElementById('elim-sub').textContent = !me?.alive ? 'You did not survive this round.' : 'Some players have been eliminated.';
 }
-window.attackPlayer = function(){ sendInput({type:'attack'}); };
 
-function esc(s){ var d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+function renderWinner() {
+  const winner = gs?.players.find(p => p.id === gs?.gameData?.winnerId);
+  document.getElementById('winner-name').textContent = winner?.name || 'Unknown';
+  show('winner-overlay');
+  spawnConfetti();
+}
 
-// ── PERIODIC UI REFRESH (for timer) ──
-setInterval(()=>{ if(gs&&gs.phase&&gs.phase.startsWith('g')) renderGame(); }, 500);
-
-// On page load
-setLoading(false);
-
+function spawnConfetti() {
+  const wrap = document.getElementById('confetti-wrap'); wrap.innerHTML = '';
+  const cols = ['#ff2d6e','#00d9c0','#ffd700','#a78bfa','#fb923c'];
+  for (let i = 0; i < 80; i++) {
+    const el = document.createElement('div'); el.className = 'confetti-piece';
+    el.style.cssText = `left:${Math.random()*100}%;top:-20px;background:${cols[Math.floor(Math.random()*cols.length)]};width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;border-radius:${Math.random()<0.5?'50%':'0'};animation-delay:${Math.random()*2}s;animation-duration:${2+Math.random()*2}s;`;
+    wrap.appendChild(el);
+  }
+}
 </script>
 </body>
 </html>
