@@ -7,9 +7,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{background:#1a1a2e;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;overflow:hidden;font-family:'Russo One',sans-serif}
-#wrap{position:relative;width:100%;max-width:800px}
-canvas{display:block;width:100%;image-rendering:pixelated}
+html,body{width:100%;height:100%;overflow:hidden}
+body{background:#000;display:flex;align-items:center;justify-content:center;font-family:'Russo One',sans-serif}
+#wrap{position:relative;width:100vw;height:100vh}
+canvas{display:block;width:100%;height:100%;image-rendering:pixelated;object-fit:fill}
 /* OVERLAY SCREENS */
 .ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(10,8,20,.88);border-radius:0}
 .ov.hide{display:none}
@@ -29,9 +30,12 @@ canvas{display:block;width:100%;image-rendering:pixelated}
 .hud-s2{color:#f4a234}
 #hud-center{font-family:'Press Start 2P',monospace;font-size:clamp(7px,2vw,11px);color:rgba(255,255,255,.5);text-align:center;padding-top:4px}
 /* MOBILE CONTROLS */
-#mobileCtrl{position:absolute;bottom:0;left:0;right:0;display:none;height:100px;pointer-events:none}
-.mc-zone{position:absolute;bottom:0;height:100%;width:50%;display:flex;align-items:center;justify-content:center;pointer-events:auto;opacity:.3}
-.mc-zone:active{opacity:.6}
+#mobileCtrl{position:absolute;bottom:0;left:0;right:0;display:none;justify-content:space-between;align-items:flex-end;padding:0 18px 24px;pointer-events:none;z-index:50}
+.mc-pad{display:flex;gap:12px;pointer-events:auto}
+.mc-btn{width:68px;height:68px;border-radius:14px;background:rgba(244,162,52,.18);border:3px solid rgba(244,162,52,.5);display:flex;align-items:center;justify-content:center;pointer-events:auto;user-select:none;-webkit-user-select:none;touch-action:none}
+.mc-btn:active{background:rgba(244,162,52,.4);transform:scale(.92)}
+.mc-btn.jump{width:88px;background:rgba(57,255,20,.18);border-color:rgba(57,255,20,.5)}
+.mc-btn.jump:active{background:rgba(57,255,20,.4)}
 .mc-icon{font-family:'Press Start 2P',monospace;font-size:24px;color:#fff;text-shadow:2px 2px 0 #000;user-select:none;-webkit-user-select:none}
 /* GOAL FLASH */
 #goalFlash{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .15s}
@@ -58,8 +62,13 @@ canvas{display:block;width:100%;image-rendering:pixelated}
 
   <!-- MOBILE CONTROLS -->
   <div id="mobileCtrl">
-    <div class="mc-zone" style="left:0" id="mcL" ontouchstart="mcJump(0)" ontouchend="mcRelease(0)"><div class="mc-icon">↑</div></div>
-    <div class="mc-zone" style="right:0" id="mcR" ontouchstart="mcJump(1)" ontouchend="mcRelease(1)"><div class="mc-icon">↑</div></div>
+    <div class="mc-pad">
+      <div class="mc-btn" id="mcLeft"><div class="mc-icon">←</div></div>
+      <div class="mc-btn" id="mcRight"><div class="mc-icon">→</div></div>
+    </div>
+    <div class="mc-pad">
+      <div class="mc-btn jump" id="mcJumpBtn"><div class="mc-icon">↑</div></div>
+    </div>
   </div>
 
   <!-- MENU -->
@@ -162,9 +171,7 @@ document.addEventListener('keydown', e=>{
 });
 document.addEventListener('keyup', e=>{ keys[e.code] = false; });
 
-var mobileJump = [false, false];
-window.mcJump = (i)=>{ mobileJump[i]=true; };
-window.mcRelease = (i)=>{ mobileJump[i]=false; };
+var mob = {left:false, right:false, jump:false};
 
 // ── SCREENS ──
 function ov(id){ document.getElementById(id).classList.remove('hide'); }
@@ -354,25 +361,26 @@ function update(now){
   if(rallyTimer>3000){ rallyTimer=0; resetBall(0); } // unstuck ball after very long time
 
   // ── PLAYER INPUT ──
+  // Player 0 = local player on this device (mobile + WASD). Player 1 = arrows (local 2P) or remote.
   var input = [
     {
-      left: keys['KeyA']||keys['ArrowLeft']||(mode==='online'&&!isOnlineHost&&remoteKeys.left),
-      right: keys['KeyD']||keys['ArrowRight']||(mode==='online'&&!isOnlineHost&&remoteKeys.right),
-      jump: keys['KeyW']||keys['Space']||(mode==='online'&&!isOnlineHost&&remoteKeys.jump)||mobileJump[0],
+      left: keys['KeyA']||mob.left||(mode==='online'&&!isOnlineHost&&remoteKeys.left),
+      right: keys['KeyD']||mob.right||(mode==='online'&&!isOnlineHost&&remoteKeys.right),
+      jump: keys['KeyW']||keys['Space']||mob.jump||(mode==='online'&&!isOnlineHost&&remoteKeys.jump),
     },
     {
       left: keys['ArrowLeft']||(mode==='online'&&isOnlineHost&&remoteKeys.left),
       right: keys['ArrowRight']||(mode==='online'&&isOnlineHost&&remoteKeys.right),
-      jump: keys['ArrowUp']||(mode==='online'&&isOnlineHost&&remoteKeys.jump)||mobileJump[1],
+      jump: keys['ArrowUp']||(mode==='online'&&isOnlineHost&&remoteKeys.jump),
     }
   ];
 
   // Online guest sends input to host
   if(mode==='online'&&!isOnlineHost&&onlineCh){
     onlineCh.send({type:'broadcast',event:'input',payload:{keys:{
-      left: keys['KeyA']||mobileJump[0],
-      right: keys['KeyD'],
-      jump: keys['KeyW']||keys['Space']||mobileJump[0],
+      left: keys['KeyA']||keys['ArrowLeft']||mob.left,
+      right: keys['KeyD']||keys['ArrowRight']||mob.right,
+      jump: keys['KeyW']||keys['Space']||keys['ArrowUp']||mob.jump,
     }}});
     return; // guest doesn't simulate, only renders from host state
   }
@@ -719,15 +727,21 @@ requestAnimationFrame(loop);
 // Show menu initially
 document.getElementById('ovMenu').classList.remove('hide');
 
-// Mobile detection
-if('ontouchstart' in window){
-  document.getElementById('mobileCtrl').style.display='flex';
-  // For local mobile: tap zones
-  document.getElementById('mcL').ontouchstart = (e)=>{ e.preventDefault(); mobileJump[0]=true; };
-  document.getElementById('mcL').ontouchend = ()=>mobileJump[0]=false;
-  document.getElementById('mcR').ontouchstart = (e)=>{ e.preventDefault(); mobileJump[1]=true; };
-  document.getElementById('mcR').ontouchend = ()=>mobileJump[1]=false;
+// Mobile control buttons (left / right / jump)
+function bindHold(id, key){
+  var el=document.getElementById(id);
+  var on=(e)=>{ e.preventDefault(); mob[key]=true; };
+  var off=(e)=>{ if(e)e.preventDefault(); mob[key]=false; };
+  el.addEventListener('touchstart',on,{passive:false});
+  el.addEventListener('touchend',off,{passive:false});
+  el.addEventListener('touchcancel',off,{passive:false});
+  el.addEventListener('mousedown',on);
+  el.addEventListener('mouseup',off);
+  el.addEventListener('mouseleave',off);
 }
+bindHold('mcLeft','left');
+bindHold('mcRight','right');
+bindHold('mcJumpBtn','jump');
 </script>
 </body>
 </html>
